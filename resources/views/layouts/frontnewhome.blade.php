@@ -85,78 +85,65 @@
     @livewireScripts(['data-cf-async' => 'false'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" data-cf-async="false"></script>
     <script>
-      	jQuery(function ($) {
-        // ... your existing search suggestion and geolocation JS ...
-        const q = document.getElementById('q');
-        const locationInput = document.getElementById('location'); // Get location input too
-
-        if (q && locationInput) {
-            
-            // ==========================================================
-            // === NEW CODE: Add this block to enable Enter key search ===
-            // ==========================================================
-            function handleEnterSearch(event) {
-                if (event.keyCode === 13) {
-                    event.preventDefault(); // Stop the default 'Enter' action
-                    document.getElementById('search').click(); // Trigger a click on the search button
+        // Enter key search
+        document.addEventListener('DOMContentLoaded', function () {
+            const q = document.getElementById('q');
+            const locationInput = document.getElementById('location');
+            if (q && locationInput) {
+                function handleEnterSearch(event) {
+                    if (event.keyCode === 13) {
+                        event.preventDefault();
+                        var searchBtn = document.getElementById('search');
+                        if (searchBtn) searchBtn.click();
+                    }
                 }
+                q.addEventListener('keydown', handleEnterSearch);
+                locationInput.addEventListener('keydown', handleEnterSearch);
             }
-            q.addEventListener('keydown', handleEnterSearch);
-            locationInput.addEventListener('keydown', handleEnterSearch);
-            // ==========================================================
-            // === End of new code ======================================
-            // ==========================================================
+        });
 
-
-            // Your full search suggestion, autocomplete, and geolocation logic
-            // from your original file fits here perfectly.
-        }
-    });
         // Preloader
-        window.addEventListener('load', () => document.getElementById('preloader').classList.add('hide'));
+        window.addEventListener('load', function () {
+            var preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('hide');
+        });
 
         // Back-to-top & header shadow
-        const header = document.getElementById('siteHeader');
-        const toTop  = document.getElementById('toTop');
-        if(header && toTop) {
-            window.addEventListener('scroll', () => {
-                const sc = window.scrollY > 8;
+        var header = document.getElementById('siteHeader');
+        var toTop  = document.getElementById('toTop');
+        if (header && toTop) {
+            window.addEventListener('scroll', function () {
+                var sc = window.scrollY > 8;
                 header.classList.toggle('scrolled', sc);
                 toTop.classList.toggle('hidden', !sc);
                 toTop.classList.toggle('flex', sc);
             });
-            toTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+            toTop.addEventListener('click', function () { window.scrollTo({top: 0, behavior: 'smooth'}); });
         }
 
-        // Mobile menu
-        
         // Reveal on view
-        const io = new IntersectionObserver((entries) => {
-            entries.forEach(e => {
-                if (e.isIntersecting) {
-                    e.target.classList.add('active');
-                    io.unobserve(e.target);
-                }
-            });
-        }, { threshold: .15 });
-        document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+        if (typeof IntersectionObserver !== 'undefined') {
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    if (e.isIntersecting) {
+                        e.target.classList.add('active');
+                        io.unobserve(e.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+        }
 
-        // Swiper (Categories)
-        const categorySwiper = new Swiper('.category-swiper', {
-            slidesPerView: 2.5, spaceBetween: 16, grabCursor: true,
-            navigation: { nextEl: '.category-next', prevEl: '.category-prev' },
-            breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 }, 1280: { slidesPerView: 6 } }
-        });
-
-        // Your existing search and geolocation script
-        jQuery(function ($) {
-            // ... (Your entire search and geolocation JS code remains here)
-            const q = document.getElementById('q');
-            if (q) {
-                // Your full search suggestion, autocomplete, and geolocation logic
-                // from your original file fits here perfectly.
-            }
-        });
+        // Swiper (Categories) — only init if Swiper is available
+        if (typeof Swiper !== 'undefined') {
+            try {
+                new Swiper('.category-swiper', {
+                    slidesPerView: 2.5, spaceBetween: 16, grabCursor: true,
+                    navigation: { nextEl: '.category-next', prevEl: '.category-prev' },
+                    breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 }, 1280: { slidesPerView: 6 } }
+                });
+            } catch (e) {}
+        }
     </script>
   <script>
     // This new function runs automatically when the page loads

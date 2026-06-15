@@ -25,7 +25,9 @@
     </style>
 </head>
 <body class="bg-gray-50">
-
+    @php
+        $settings = App\Models\Setting::get_logos();
+    @endphp
     @include('layouts.headernew')
 	
     <main>

@@ -122,10 +122,19 @@ class PostController extends Controller
     // ==================================================
     public function store(Request $request)
     {
-        // 4.1 Validation
+        // Determine user: authenticated user OR user_id from request
+        $userId = Auth::id();
+        if (!$userId && $request->has('user_id')) {
+            $userId = $request->user_id;
+        }
+        if (!$userId) {
+            return response()->json(['success' => false, 'message' => 'user_id is required when not authenticated.'], 422);
+        }
+
+        // Validation
         $validator = Validator::make($request->all(), [
             'title' => 'required|max:255',
-            'category_id' => 'required|exists:tbl_categories,id', // Subcategory ID
+            'category_id' => 'required|exists:tbl_categories,id',
             'price' => 'required|numeric|min:0',
             'description' => 'required',
             'package_id' => 'required|exists:packages,id',
@@ -134,9 +143,9 @@ class PostController extends Controller
             'country_long' => 'required',
             'state_short' => 'required',
             'state_long' => 'required',
-            'city_name' => 'required', // Locality
-            'main_city_name' => 'required', // Main City
-            'uploaded_images' => 'required|array|min:1', // Array of paths from uploadImage API
+            'city_name' => 'required',
+            'main_city_name' => 'required',
+            'uploaded_images' => 'required|array|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -144,20 +153,19 @@ class PostController extends Controller
         }
 
         try {
-            // 4.2 Location Logic (Create if not exists)
+            // Location Logic
             $locationData = $this->processLocationData($request);
 
-            // 4.3 Package Logic
+            // Package Logic
             $package = Package::find($request->package_id);
             $active_status = ($package && $package->short_name == 'free') ? 1 : 0;
             
-            // Generate Slug
             $slug = Str::slug($request->title, "-") . '-' . (TblPost::count() + 1);
-            $imagesString = implode(',', $request->uploaded_images); // Comma separated paths
+            $imagesString = implode(',', $request->uploaded_images);
 
-            // 4.4 Create Post
+            // Create Post
             $post = TblPost::create([
-                'user_id' => Auth::id(),
+                'user_id' => $userId,
                 'category_id' => $request->category_id,
                 'title' => $request->title,
                 'description' => $request->description,
@@ -184,7 +192,7 @@ class PostController extends Controller
 
             // 4.6 Handle Package Info (Free)
             if ($active_status == 1) {
-                $this->handlePackage($post->id, $package);
+                $this->handlePackage($post->id, $package, $userId);
                 return response()->json([
                     'success' => true, 
                     'message' => 'Post created successfully!',
@@ -297,13 +305,13 @@ class PostController extends Controller
         }
     }
 
-    private function handlePackage($post_id, $package)
+    private function handlePackage($post_id, $package, $userId = null)
     {
         $curr_date = date('Y-m-d');
         $end_date = date('Y-m-d', strtotime($curr_date . "+" . $package->duration . " days"));
 
         TblPostedAdPackageInfo::create([
-            'user_id' => Auth::id(),
+            'user_id' => $userId ?? Auth::id(),
             'post_id' => $post_id,
             'ad_type' => 'free',
             'start_date' => $curr_date,

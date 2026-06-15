@@ -26,11 +26,9 @@ Route::middleware('api')->group(function () {
     Route::get('/categories/sub/{id}', [PostController::class, 'getSubCategories']);
     Route::get('/get-custom-fields-api/{id}', [CustomFieldController::class, 'getCustomFields']);
 
-    // Protected routes (require auth token)
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
-        Route::post('/post/store', [PostController::class, 'store']);
-    });
+    // Post creation routes (work with or without auth token)
+    Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
+    Route::post('/post/store', [PostController::class, 'store']);
 
 
     // --- EXISTING ROUTES BELOW ---

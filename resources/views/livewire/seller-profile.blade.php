@@ -97,13 +97,13 @@
             </div>
 
             {{-- Loading State --}}
-            <div wire:loading.flex class="sp-loading">
+            <div wire:loading.flex wire:target="filterByCategory, sortBy, gotoPage, previousPage, nextPage" class="sp-loading">
                 <div class="sp-loading-spinner"></div>
                 <span>Loading...</span>
             </div>
 
             {{-- Ads Grid/List --}}
-            <div wire:loading.remove>
+            <div wire:loading.remove wire:target="filterByCategory, sortBy, gotoPage, previousPage, nextPage">
                 @if($sellerPosts->count() > 0)
                     <div class="{{ $view === 'grid' ? 'sp-grid' : 'sp-list' }}">
                         @foreach($sellerPosts as $ad)

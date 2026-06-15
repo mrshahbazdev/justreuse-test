@@ -20,6 +20,10 @@ class SearchDetail extends Component
 
     public $customFilters = [];
     public $customFieldsForView = [];
+
+    public $showFilterModal = false;
+    public $modalHistory = [];
+    public $modalSearchTerm = '';
     
     public Collection $allCategories;
     public $selectedCategory;
@@ -86,6 +90,48 @@ class SearchDetail extends Component
             'general' => 'fas fa-sliders-h',
             default => 'fas fa-info-circle',
         };
+    }
+
+    public function getCurrentFilterProperty()
+    {
+        if (empty($this->modalHistory)) {
+            return null;
+        }
+        $index = end($this->modalHistory);
+        return $this->allFilters[$index] ?? null;
+    }
+
+    public function openFilterModal($filterIndex)
+    {
+        $this->modalHistory = [$filterIndex];
+        $this->modalSearchTerm = '';
+        $this->showFilterModal = true;
+    }
+
+    public function closeFilterModal()
+    {
+        $this->showFilterModal = false;
+        $this->modalHistory = [];
+        $this->modalSearchTerm = '';
+    }
+
+    public function navigateBack()
+    {
+        array_pop($this->modalHistory);
+        $this->modalSearchTerm = '';
+        if (empty($this->modalHistory)) {
+            $this->showFilterModal = false;
+        }
+    }
+
+    public function navigateToNextStep()
+    {
+        $currentIndex = end($this->modalHistory);
+        $nextIndex = $currentIndex + 1;
+        if (isset($this->allFilters[$nextIndex])) {
+            $this->modalHistory[] = $nextIndex;
+            $this->modalSearchTerm = '';
+        }
     }
 
     public function getAllFiltersProperty(): Collection

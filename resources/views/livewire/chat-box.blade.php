@@ -479,45 +479,25 @@ class="flex flex-col h-full bg-white">
         </div>
     </template>
   <style>
-  	/* Fix for chat interface scrolling */
-body {
-    overflow: hidden !important;
-    height: 100vh;
-}
-
-main {
-    height: 100vh;
-    overflow: hidden;
-}
-
-.flex.h-screen.antialiased.text-gray-800 {
-    height: 100vh;
-    overflow: hidden;
-}
-
-.flex-row.h-full.w-full.overflow-x-hidden {
-    height: 92vh;
-    overflow: hidden;
-}
-
-/* Make only the chat messages scrollable */
-#chat-box-container {
-    height: calc(100vh - 200px); /* Adjust based on header and input height */
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-/* Ensure header stays fixed */
-.header.sticky {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 10;
-}
-
-/* Adjust main content to account for fixed header */
-main {
-    padding-top: 80px; /* Adjust based on header height */
-}
+    /* Chat container layout */
+    #chat-box-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+    }
+    #chat-box-container::-webkit-scrollbar {
+        width: 5px;
+    }
+    #chat-box-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #chat-box-container::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+    }
+    #chat-box-container::-webkit-scrollbar-thumb:hover {
+        background: #d1d5db;
+    }
   </style>
 </div>

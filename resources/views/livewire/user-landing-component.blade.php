@@ -1,4 +1,5 @@
 
+
     
        
 
@@ -58,6 +59,8 @@
                         <a href="{{ $searchUrl }}" class="hero-btn-primary"><i class="fas fa-search"></i> Browse Listings</a>
                         @if(auth()->check())
                             <a href="{{ url('/post/add') }}" class="hero-btn-secondary"><i class="fas fa-plus"></i> Post an Ad</a>
+                        @else
+                            <a href="{{ url('/login') }}" class="hero-btn-secondary"><i class="fas fa-plus"></i> Post an Ad</a>
                         @endif
                     </div>
                 </div>
@@ -82,6 +85,7 @@
             <section class="listings-section reveal">
                 <div class="section-header">
                     <h2 class="section-title"><i class="fas fa-th-large"></i> Browse by Category</h2>
+                    <a href="{{ $searchUrl }}" class="section-view-all">View All <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="category-buttons">
                     @foreach($main_categories as $main_category)
@@ -96,47 +100,88 @@
                 </div>
             </section>
 
-            {{-- ===== AD CONTAINER 1 ===== --}}
-            <div class="container mx-auto">
-                <div class="ad-container">
-                    <div class="h-32 bg-gray-100 animate-pulse rounded-lg"></div>
+            {{-- ===== BANNER ADS SECTION 1 ===== --}}
+            @if(!empty($banner_ads) && count($banner_ads) > 0)
+            <section class="banner-section reveal">
+                <div class="banner-slider" id="bannerSlider1">
+                    @foreach(array_slice($banner_ads, 0, 2) as $banner)
+                        <a href="{{ $banner['url'] ?? '#' }}" class="banner-slide" target="_blank" rel="noopener">
+                            <img src="{{ $banner['image'] }}" alt="Advertisement" loading="lazy">
+                        </a>
+                    @endforeach
                 </div>
-            </div>
+            </section>
+            @endif
 
             {{-- ===== TOP ADS ===== --}}
             <section class="listings-section reveal">
                 <div class="section-header">
                     <h2 class="section-title"><i class="fas fa-fire"></i> {{__('landing.top ads')}}</h2>
+                    <a href="{{ $searchUrl }}" class="section-view-all">See More <i class="fas fa-arrow-right"></i></a>
                 </div>
-                 <div class="product-grid">
+                <div class="product-grid">
                     @forelse($top_ads_list as $ad)
                         {!! App\Models\Setting::htmlAdBlock($ad['id']) !!}
                     @empty
-                        <p class="empty-ads-msg">No popular ads found.</p>
+                        <div class="empty-ads-state">
+                            <div class="empty-ads-icon">
+                                <i class="fas fa-fire-flame-curved"></i>
+                            </div>
+                            <h4>No Top Ads Yet</h4>
+                            <p>Premium listings will appear here. <a href="{{ url('/post/add') }}">Post your ad</a> to get started!</p>
+                        </div>
                     @endforelse
                 </div>
             </section>
             
-            {{-- ===== AD CONTAINER 2 ===== --}}
-            <div class="container mx-auto">
-              <div class="ad-container">
-                  <div class="h-32 bg-gray-100 animate-pulse rounded-lg"></div>
-              </div>
-          </div>
+            {{-- ===== BANNER ADS SECTION 2 ===== --}}
+            @if(!empty($banner_ads) && count($banner_ads) > 2)
+            <section class="banner-section reveal">
+                <div class="banner-slider">
+                    @foreach(array_slice($banner_ads, 2) as $banner)
+                        <a href="{{ $banner['url'] ?? '#' }}" class="banner-slide" target="_blank" rel="noopener">
+                            <img src="{{ $banner['image'] }}" alt="Advertisement" loading="lazy">
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+            @endif
 
             {{-- ===== FEATURED ADS ===== --}}
             <section class="listings-section reveal">
                 <div class="section-header">
                     <h2 class="section-title"><i class="fas fa-star"></i> {{__('landing.feature ads')}}</h2>
+                    <a href="{{ $searchUrl }}" class="section-view-all">See More <i class="fas fa-arrow-right"></i></a>
                 </div>
                 <div class="product-grid">
                     @forelse($featurs_ad_list as $ad)
                         {!! App\Models\Setting::htmlAdBlock($ad['id']) !!}
                     @empty
-                        <p class="empty-ads-msg">No featured ads found.</p>
+                        <div class="empty-ads-state">
+                            <div class="empty-ads-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h4>No Featured Ads Yet</h4>
+                            <p>Featured listings will appear here. <a href="{{ url('/post/add') }}">Post your ad</a> to get featured!</p>
+                        </div>
                     @endforelse
                 </div>
             </section>
+
+            {{-- ===== LATEST ADS ===== --}}
+            @if(!empty($posts) && count($posts) > 0)
+            <section class="listings-section reveal">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-clock"></i> Latest Listings</h2>
+                    <a href="{{ $searchUrl }}" class="section-view-all">Browse All <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="product-grid">
+                    @foreach($posts as $ad)
+                        {!! App\Models\Setting::htmlAdBlock($ad['id']) !!}
+                    @endforeach
+                </div>
+            </section>
+            @endif
             
             {{-- ===== TRUST FEATURES ===== --}}
             <section class="features-section reveal">
@@ -206,21 +251,6 @@
                     </div>
                 </div>
             </section>
-
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            window.addEventListener('load', function() {
-                const adContainers = document.querySelectorAll('.ad-container');
-                adContainers.forEach((container, index) => {
-                    fetch(`/get-ad/home?position=${index + 1}`)
-                        .then(response => response.text())
-                        .then(html => {
-                            container.innerHTML = html;
-                        });
-                });
-            });
-        });
-        </script>
 
     <style>
         /* ===== Landing Page Variables ===== */
@@ -408,6 +438,19 @@
             color: var(--brand-orange);
             font-size: 20px;
         }
+        .section-view-all {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--brand-orange);
+            transition: all 0.2s ease;
+        }
+        .section-view-all:hover {
+            gap: 10px;
+            color: var(--brand-orange-dark);
+        }
 
         /* ===== Category Buttons ===== */
         .category-buttons {
@@ -441,18 +484,81 @@
             border-radius: 6px;
         }
 
+        /* ===== Banner Ads ===== */
+        .banner-section {
+            margin-bottom: 40px;
+        }
+        .banner-slider {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .banner-slide {
+            display: block;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .banner-slide:hover {
+            transform: scale(1.01);
+        }
+        .banner-slide img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 16px;
+        }
+
         /* ===== Product Grid ===== */
         .product-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
         }
-        .empty-ads-msg {
+
+        /* ===== Empty Ads State ===== */
+        .empty-ads-state {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 40px;
-            color: var(--text-muted);
-            font-size: 15px;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #fef7f0 0%, #fff 100%);
+            border-radius: 16px;
+            border: 2px dashed var(--border-color);
+        }
+        .empty-ads-state .empty-ads-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--bg-warm);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .empty-ads-state .empty-ads-icon i {
+            font-size: 24px;
+            color: var(--brand-orange);
+        }
+        .empty-ads-state h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        .empty-ads-state p {
+            font-size: 14px;
+            color: var(--text-light);
+            max-width: 360px;
+            margin: 0 auto;
+        }
+        .empty-ads-state p a {
+            color: var(--brand-orange);
+            font-weight: 500;
+        }
+        .empty-ads-state p a:hover {
+            text-decoration: underline;
         }
 
         /* ===== Features Section ===== */
@@ -548,7 +654,7 @@
 
         /* ===== Responsive ===== */
         @media (max-width: 1024px) {
-            .product-grid { grid-template-columns: repeat(2, 1fr); }
+            .product-grid { grid-template-columns: repeat(3, 1fr); }
             .features-section { grid-template-columns: repeat(2, 1fr); }
             .hero-section { flex-direction: column; gap: 40px; }
             .hero-text { text-align: center; flex-basis: auto; }
@@ -572,12 +678,14 @@
             .app-download-text h2 { font-size: 24px; }
             .app-image img { width: 160px; }
             .hero-btn-primary, .hero-btn-secondary { padding: 12px 22px; font-size: 14px; width: 100%; justify-content: center; }
+            .banner-slide img { height: 120px; }
         }
         @media (max-width: 480px) {
             .hero-text h1 { font-size: 28px; letter-spacing: -1px; }
             .hero-text p { font-size: 15px; }
-            .product-grid { grid-template-columns: 1fr; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .hero-image-grid { grid-template-columns: repeat(2, 1fr); }
+            .banner-slide img { height: 100px; }
         }
     </style>
 

@@ -1,32 +1,32 @@
 <!-- Followers List Modal -->
 <div x-data="{ show: @entangle('showFollowersModal') }" x-show="show" @keydown.escape.window="show = false" class="fixed z-50 inset-0 overflow-y-auto" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <!-- Background overlay -->
-        <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <!-- Modal panel -->
-        <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-             class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full"
-             role="dialog" aria-modal="true">
-            <div class="bg-white px-6 py-4">
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Followers</h3>
-                <div class="max-h-96 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="show = false"></div>
+        
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+             class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Followers</h3>
+                    <button @click="show = false" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+                <div class="max-h-80 overflow-y-auto -mx-2 px-2">
                     @forelse($followers as $follower)
-                    <a href="{{ route('seller.profile', $follower->id) }}" class="flex items-center py-3 border-b hover:bg-gray-50">
-                        <img class="w-12 h-12 rounded-full mr-4" src="{{ $follower->profile_photo_path ? Storage::url($follower->profile_photo_path) : asset('storage/profile-avatar.jpg') }}" alt="{{ $follower->name }}">
-                        <span class="font-medium text-gray-800">{{ $follower->name }}</span>
+                    <a href="{{ route('seller.profile', $follower->id) }}" class="flex items-center p-3 rounded-xl hover:bg-gray-50 transition">
+                        <img class="w-11 h-11 rounded-full object-cover border-2 border-gray-100" src="{{ $follower->profile_photo_path ? Storage::url($follower->profile_photo_path) : asset('storage/profile-avatar.jpg') }}" alt="{{ $follower->name }}">
+                        <span class="ml-3 font-medium text-gray-800">{{ $follower->name }}</span>
                     </a>
                     @empty
-                    <p class="text-gray-500 text-center py-4">This user has no followers yet.</p>
+                    <div class="text-center py-8">
+                        <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-users text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-500 text-sm">No followers yet.</p>
+                    </div>
                     @endforelse
                 </div>
-            </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button @click="show = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
-                    Close
-                </button>
             </div>
         </div>
     </div>

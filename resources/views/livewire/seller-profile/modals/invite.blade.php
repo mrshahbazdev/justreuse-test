@@ -1,26 +1,30 @@
 <!-- Invite Friends Modal -->
 <div x-data="{ show: @entangle('showInviteModal') }" x-show="show" @keydown.escape.window="show = false" class="fixed z-50 inset-0 overflow-y-auto" style="display: none;">
-    <div class="flex items-center justify-center min-h-screen">
-         <div x-show="show" x-transition.opacity class="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-        </div>
-        <div x-show="show" x-transition class="inline-block bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:max-w-lg w-full">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="show = false"></div>
+
+        <div x-show="show" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+             class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <form wire:submit.prevent="sendInvite">
-                <div class="bg-white px-6 py-4">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Invite Friends</h3>
-                    <p class="text-gray-600 mb-4">Invite your friends to join via email.</p>
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-5">
+                        <h3 class="text-lg font-bold text-gray-900">Invite Friends</h3>
+                        <button @click="show = false" type="button" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 hover:text-gray-600 transition">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Invite your friends to join JustReused via email.</p>
                     <div>
-                        <label for="invite_emails" class="block text-sm font-medium text-gray-700">Email Address</label>
-                        <input wire:model="inviteEmails" type="email" id="invite_emails" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="friend@example.com">
-                        @error('inviteEmails') <span class="text-red-500 text-sm mt-1">{{ $message }}</span> @enderror
+                        <label for="invite_emails" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input wire:model="inviteEmails" type="email" id="invite_emails" placeholder="friend@example.com" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition">
+                        @error('inviteEmails') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
-                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" wire:loading.attr="disabled" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                        <span wire:loading wire:target="sendInvite" class="animate-spin mr-2">&#9696;</span> Send Invite
-                    </button>
-                    <button @click="show = false" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm">
-                        Cancel
+                <div class="px-6 pb-6 flex gap-3">
+                    <button @click="show = false" type="button" class="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition text-sm">Cancel</button>
+                    <button type="submit" wire:loading.attr="disabled" class="flex-1 py-2.5 px-4 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition text-sm">
+                        <span wire:loading.remove wire:target="sendInvite"><i class="fas fa-paper-plane mr-1"></i> Send Invite</span>
+                        <span wire:loading wire:target="sendInvite"><i class="fas fa-spinner fa-spin"></i></span>
                     </button>
                 </div>
             </form>

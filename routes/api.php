@@ -29,6 +29,8 @@ Route::middleware('api')->group(function () {
     // Post creation routes (work with or without auth token)
     Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
     Route::post('/post/store', [PostController::class, 'store']);
+    Route::get('/post/my-posts', [PostController::class, 'myPosts']);
+    Route::get('/post/{id}', [PostController::class, 'getPost']);
 
 
     // --- EXISTING ROUTES BELOW ---

@@ -13,11 +13,15 @@
             <p>&copy; {{ date('Y') }} JustReused. All Rights Reserved.</p>
         </div>
 
-        {{-- Right Side: Links --}}
-        <div class="flex items-center justify-center sm:justify-end gap-x-6 text-sm">
-            <a href="#" class="font-medium text-slate-600 hover:text-primary transition-colors">About</a>
-            <a href="#" class="font-medium text-slate-600 hover:text-primary transition-colors">Privacy</a>
-            <a href="#" class="font-medium text-slate-600 hover:text-primary transition-colors">Terms</a>
+        {{-- Right Side: Links (dynamic from admin Static Pages) --}}
+        @php
+            $footerPages = \App\Models\TblStaticpage::select('title', 'slug')->get();
+        @endphp
+        <div class="flex items-center justify-center sm:justify-end gap-x-6 text-sm flex-wrap">
+            <a href="{{ URL::to('/contact-us') }}" class="font-medium text-slate-600 hover:text-primary transition-colors">{{ __('messages.contact us') }}</a>
+            @foreach($footerPages as $page)
+                <a href="{{ URL::to('/pages/' . $page->slug) }}" class="font-medium text-slate-600 hover:text-primary transition-colors">{{ $page->title }}</a>
+            @endforeach
         </div>
 
     </div>

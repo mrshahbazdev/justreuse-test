@@ -1,47 +1,10 @@
 <div class="min-h-screen bg-warm-light py-8">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Header with Stats -->
+        <!-- Header -->
         <div class="mb-8 text-center">
-            
-            <h1 class="text-4xl font-bold text-primary mb-2">Profile Settings</h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">Manage your personal information and account preferences</p>
-            
-            <!-- Quick Stats -->
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                <div class="card-warm rounded-xl p-4 shadow-sm border border-primary-light">
-                    <div class="text-2xl font-bold text-primary">{{ $mobile_verified ? '✓' : '!' }}</div>
-                    <div class="text-sm text-gray-600 mt-1">Phone {{ $mobile_verified ? 'Verified' : 'Pending' }}</div>
-                </div>
-                <div class="card-warm rounded-xl p-4 shadow-sm border border-primary-light">
-                    <div class="text-2xl font-bold text-accent-green">{{ $profile_photo_path ? '✓' : '+' }}</div>
-                    <div class="text-sm text-gray-600 mt-1">Photo {{ $profile_photo_path ? 'Uploaded' : 'Missing' }}</div>
-                </div>
-                <div class="card-warm rounded-xl p-4 shadow-sm border border-primary-light">
-                    <div class="text-2xl font-bold text-accent-purple">!</div>
-                    <div class="text-sm text-gray-600 mt-1">Profile Strength</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Steps -->
-        <div class="mb-8 max-w-4xl mx-auto">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">1</div>
-                    <div class="ml-2 text-sm font-medium text-gray-700">Basic Info</div>
-                </div>
-                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
-                <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">2</div>
-                    <div class="ml-2 text-sm font-medium text-gray-500">Contact</div>
-                </div>
-                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
-                <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center text-sm font-bold">3</div>
-                    <div class="ml-2 text-sm font-medium text-gray-500">Preferences</div>
-                </div>
-            </div>
+            <h1 class="text-3xl font-bold text-primary mb-2">Profile Settings</h1>
+            <p class="text-gray-600 max-w-xl mx-auto">Manage your personal information and account preferences</p>
         </div>
 
         @if (session()->has('message'))
@@ -91,13 +54,23 @@
                     </nav>
                     
                     <!-- Profile Completion -->
+                    @php
+                        $completionScore = 0;
+                        if($name) $completionScore += 15;
+                        if($first_name) $completionScore += 15;
+                        if($last_name) $completionScore += 15;
+                        if($phone) $completionScore += 15;
+                        if($mobile_verified) $completionScore += 10;
+                        if($profile_photo_path) $completionScore += 15;
+                        if($currentLocation) $completionScore += 15;
+                    @endphp
                     <div class="mt-8 pt-6 border-t border-gray-200">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm font-medium text-gray-700">Profile Completion</span>
-                            <span class="text-sm font-bold text-primary">65%</span>
+                            <span class="text-sm font-bold text-primary">{{ $completionScore }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="progress-bar h-2 rounded-full" style="width: 65%"></div>
+                            <div class="progress-bar h-2 rounded-full" style="width: {{ $completionScore }}%"></div>
                         </div>
                     </div>
                 </div>
@@ -646,45 +619,142 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 </script>
 
 <style>
-/* Custom animations */
+/* ===== Color System ===== */
+:root {
+    --mp-primary: #F97316;
+    --mp-primary-dark: #ea580c;
+    --mp-primary-light: #fed7aa;
+    --mp-primary-lighter: #fff7ed;
+    --mp-secondary: #39763a;
+    --mp-secondary-dark: #2c5f2d;
+    --mp-danger: #ef4444;
+    --mp-danger-dark: #dc2626;
+    --mp-success: #22c55e;
+    --mp-warning: #f59e0b;
+    --mp-accent-green: #10b981;
+    --mp-accent-purple: #8b5cf6;
+}
+
+/* ===== Base Utilities ===== */
+.bg-warm-light { background-color: #fefbf7; }
+.bg-warm-lighter { background-color: #fffcf8; }
+.card-warm { background: #fff; }
+.card { background: #fff; }
+
+.text-primary { color: var(--mp-primary) !important; }
+.text-primary-dark { color: var(--mp-primary-dark); }
+.bg-primary { background-color: var(--mp-primary) !important; }
+.bg-primary-lighter { background-color: var(--mp-primary-lighter); }
+.border-primary { border-color: var(--mp-primary) !important; }
+.border-primary-light { border-color: var(--mp-primary-light); }
+.bg-primary-gradient { background: linear-gradient(135deg, var(--mp-primary) 0%, #fb923c 100%); }
+
+.text-accent-green { color: var(--mp-accent-green); }
+.bg-accent-green-light { background-color: #ecfdf5; }
+.text-accent-purple { color: var(--mp-accent-purple); }
+.bg-accent-purple-light { background-color: #f5f3ff; }
+
+.text-danger { color: var(--mp-danger); }
+.text-danger-dark { color: var(--mp-danger-dark); }
+.bg-danger { background-color: var(--mp-danger); }
+.bg-danger-light { background-color: #fef2f2; }
+.border-danger { border-color: var(--mp-danger); }
+.hover\:bg-danger-dark:hover { background-color: var(--mp-danger-dark); }
+.hover\:text-danger-dark:hover { color: var(--mp-danger-dark); }
+
+.text-success { color: var(--mp-success); }
+.text-success-dark { color: #16a34a; }
+.border-success { border-color: #bbf7d0; }
+.text-warning { color: var(--mp-warning); }
+
+/* ===== Buttons ===== */
+.btn-primary {
+    background: var(--mp-primary);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-primary:hover {
+    background: var(--mp-primary-dark);
+    box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+}
+
+.btn-secondary {
+    background: var(--mp-secondary);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-secondary:hover { background: var(--mp-secondary-dark); }
+
+.btn-outline-primary {
+    background: #fff;
+    color: var(--mp-primary);
+    border: 2px solid var(--mp-primary);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.btn-outline-primary:hover {
+    background: var(--mp-primary-lighter);
+}
+
+/* ===== Alerts & Badges ===== */
+.alert-success {
+    background-color: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+.alert-danger {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+.badge-primary {
+    background-color: var(--mp-primary-lighter);
+    color: var(--mp-primary);
+}
+
+/* ===== Form Elements ===== */
+.form-input, .form-select {
+    display: block;
+    width: 100%;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #334155;
+    background-color: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus, .form-select:focus {
+    border-color: var(--mp-primary) !important;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.1) !important;
+    outline: none !important;
+}
+
+/* ===== Progress Bar ===== */
+.progress-bar {
+    background: linear-gradient(90deg, var(--mp-primary) 0%, #fb923c 100%);
+    transition: width 0.5s ease;
+}
+
+/* ===== Animations ===== */
 @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
 }
-
 @keyframes scale-in {
     from { transform: scale(0.9); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.3s ease-out; }
 
-.animate-fade-in {
-    animation: fade-in 0.3s ease-out;
-}
-
-.animate-scale-in {
-    animation: scale-in 0.3s ease-out;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* Google Places Autocomplete styling */
+/* ===== Google Places Autocomplete ===== */
 .pac-container {
     border: none;
     border-radius: 12px;
@@ -692,65 +762,35 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     margin-top: 8px;
     font-family: inherit;
 }
-
 .pac-item {
     padding: 12px 16px;
     border-bottom: 1px solid #f3f4f6;
     cursor: pointer;
     transition: background-color 0.2s;
 }
+.pac-item:hover { background-color: #f8fafc; }
+.pac-item-selected { background-color: #fff7ed; }
+.pac-icon { margin-right: 12px; }
+.pac-item-query { font-size: 14px; color: #1f2937; }
 
-.pac-item:hover {
-    background-color: #f8fafc;
-}
+/* ===== Loading & Disabled ===== */
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.pac-item-selected {
-    background-color: #eff6ff;
-}
-
-.pac-icon {
-    margin-right: 12px;
-}
-
-.pac-item-query {
-    font-size: 14px;
-    color: #1f2937;
-}
-
-/* Focus states for better accessibility */
-input:focus, select:focus, button:focus {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
-}
-
-/* Loading states */
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-  /* Gender Selection Styles */
-.gender-option {
-    transition: all 0.3s ease-in-out;
-}
-
-.gender-option.selected {
-    border-color: var(--primary);
-    background-color: var(--primary-lighter);
-    color: var(--primary-dark);
-    box-shadow: var(--shadow-sm);
-}
-
-/* Radio button custom styling */
+/* ===== Gender / Radio Selection ===== */
 input[type="radio"]:checked + div {
-    border-color: var(--primary);
-    background-color: var(--primary-lighter);
-    color: var(--primary-dark);
-    box-shadow: var(--shadow-sm);
+    border-color: var(--mp-primary) !important;
+    background-color: var(--mp-primary-lighter) !important;
+    color: var(--mp-primary-dark) !important;
 }
 
-/* Hover effects */
-.gender-option:hover {
-    background-color: var(--gray-50);
-    border-color: var(--primary-light);
+/* ===== Scrollbar ===== */
+.min-h-screen::-webkit-scrollbar { width: 6px; }
+.min-h-screen::-webkit-scrollbar-track { background: #f8f8f8; border-radius: 10px; }
+.min-h-screen::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+.min-h-screen::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+/* ===== Responsive Tweaks ===== */
+@media (max-width: 1024px) {
+    .lg\:col-span-1 .sticky { position: relative !important; top: 0 !important; }
 }
 </style>

@@ -451,6 +451,75 @@ class PostController extends Controller
         ]);
     }
 
+    // ==================================================
+    // 7. REPUBLISH ALL EXPIRED ADS
+    // ==================================================
+    public function republishExpired(Request $request)
+    {
+        $days = $request->input('days', 30);
+        $userId = $request->input('user_id'); // optional: filter by user
+
+        $currDate = date('Y-m-d');
+
+        // Find all expired package info records
+        $query = TblPostedAdPackageInfo::where('active', '1')
+            ->whereDate('end_date', '<', $currDate);
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $expiredPackages = $query->get();
+
+        if ($expiredPackages->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No expired ads found.',
+                'republished_count' => 0,
+            ]);
+        }
+
+        $republishedCount = 0;
+        $republishedPosts = [];
+
+        foreach ($expiredPackages as $pkgInfo) {
+            $post = TblPost::where('id', $pkgInfo->post_id)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if (!$post) continue;
+
+            // Extend the package end_date
+            $newEndDate = date('Y-m-d', strtotime($currDate . '+' . $days . ' days'));
+            $pkgInfo->start_date = $currDate;
+            $pkgInfo->end_date = $newEndDate;
+            $pkgInfo->save();
+
+            // Ensure post is active
+            if (!$post->active) {
+                $post->active = 1;
+                $post->save();
+            }
+
+            $republishedCount++;
+            $republishedPosts[] = [
+                'post_id' => $post->id,
+                'title' => $post->title,
+                'user_id' => $post->user_id,
+                'new_end_date' => $newEndDate,
+                'url' => URL::to('/ad/' . $post->slug),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Republished {$republishedCount} expired ad(s).",
+            'republished_count' => $republishedCount,
+            'days_extended' => $days,
+            'data' => $republishedPosts,
+        ]);
+    }
+
     // ==================== HELPER FUNCTIONS ====================
 
     private function processLocationData($request)

@@ -527,21 +527,42 @@
         --pa-radius-lg: 16px;
     }
 
-    /* ===== RESET ===== */
+    /* ===== LAYOUT FIX — push footer to bottom ===== */
     .pa-shell *, .pa-shell *::before, .pa-shell *::after { box-sizing: border-box; }
 
-    .page-wrapper { min-height: auto !important; }
-    body { overflow-x: hidden; min-height: 100vh !important; display: flex !important; flex-direction: column !important; margin: 0 !important; }
-    .page-wrapper { flex-grow: 1 !important; display: flex !important; flex-direction: column !important; }
-    footer { flex-shrink: 0 !important; width: 100% !important; }
+    body {
+        overflow-x: hidden;
+        min-height: 100vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        margin: 0 !important;
+        background: var(--pa-bg) !important;
+    }
+    .page-wrapper {
+        flex-grow: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+    }
+    .page-wrapper > main,
+    .page-wrapper > div:not(footer):not(:first-child) {
+        flex-grow: 1 !important;
+    }
+    footer {
+        flex-shrink: 0 !important;
+        width: 100% !important;
+        background: var(--pa-bg) !important;
+        border-top-color: #e5e7eb !important;
+    }
 
     /* ===== SHELL ===== */
     .pa-shell {
         max-width: 880px;
         margin: 0 auto;
-        padding: 24px 16px 40px;
+        padding: 24px 16px 60px;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
         color: var(--pa-ink);
+        flex-grow: 1;
     }
 
     /* ===== PROGRESS BAR ===== */

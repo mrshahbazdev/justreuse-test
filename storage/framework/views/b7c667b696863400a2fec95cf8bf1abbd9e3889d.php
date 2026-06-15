@@ -1,1 +1,0 @@
-<?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/layouts/demo_register.blade.php ENDPATH**/ ?>

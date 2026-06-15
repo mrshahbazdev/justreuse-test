@@ -1,1 +1,0 @@
-<?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/livewire/sample_content.blade.php ENDPATH**/ ?>

@@ -1,1 +1,0 @@
-<?php echo $content;?><?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/livewire/admin/email-template/smtp.blade.php ENDPATH**/ ?>

@@ -1,3 +1,0 @@
-<script src="<?php echo e(URL::to('js/adminformbuilder/jquery.min.js')); ?>"></script>
-<script src="<?php echo e(URL::to('js/adminformbuilder/jquery-ui.min.js')); ?>"></script>
-<script src="<?php echo e(URL::to('js/adminformbuilder/form-builder-cf.min.js')); ?>"></script><?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/livewire/admin/category/js_css_category.blade.php ENDPATH**/ ?>

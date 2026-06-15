@@ -26,10 +26,6 @@ class SearchDetail extends Component
     public Collection $subCategories;
     public $perPage = 12;
 
-    public $showFilterModal = false;
-    public $modalHistory = [];
-    public $modalSearchTerm = '';
-
     protected $queryString = [
         'searchQuery' => ['except' => '', 'as' => 's'],
         'categorySlug' => ['except' => '', 'as' => 'c'],
@@ -145,14 +141,6 @@ class SearchDetail extends Component
         return $allFilters;
     }
 
-    public function getCurrentFilterProperty()
-    {
-        if (empty($this->modalHistory)) {
-            return null;
-        }
-        $currentIndex = end($this->modalHistory);
-        return $this->allFilters->get($currentIndex);
-    }
     
     public function mount()
     {
@@ -163,34 +151,20 @@ class SearchDetail extends Component
         }
     }
 
-    public function openFilterModal($filterIndex)
+    public function clearAllFilters()
     {
-        $this->reset(['modalHistory', 'modalSearchTerm']);
-        $this->modalHistory[] = $filterIndex;
-        $this->showFilterModal = true;
+        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance']);
+        $this->selectedCategory = null;
+        $this->subCategories = collect();
+        $this->minPrice = 0;
+        $this->maxPrice = 500000;
+        $this->distance = 500;
     }
 
-    public function closeFilterModal()
+    public function clearPriceFilter()
     {
-        $this->reset(['showFilterModal', 'modalHistory', 'modalSearchTerm']);
-    }
-
-    public function navigateToNextStep()
-    {
-        $currentIndex = end($this->modalHistory);
-        $nextIndex = $currentIndex + 1;
-        if ($this->allFilters->has($nextIndex)) {
-            $this->modalHistory[] = $nextIndex;
-            $this->reset('modalSearchTerm');
-        }
-    }
-
-    public function navigateBack()
-    {
-        if (count($this->modalHistory) > 1) {
-            array_pop($this->modalHistory);
-            $this->reset('modalSearchTerm');
-        }
+        $this->minPrice = 0;
+        $this->maxPrice = 500000;
     }
 
     public function updatedCategorySlug($slug)

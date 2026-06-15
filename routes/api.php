@@ -30,6 +30,7 @@ Route::middleware('api')->group(function () {
     Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
     Route::post('/post/store', [PostController::class, 'store']);
     Route::get('/post/my-posts', [PostController::class, 'myPosts']);
+    Route::post('/post/republish-expired', [PostController::class, 'republishExpired']);
     Route::get('/post/{id}', [PostController::class, 'getPost']);
 
 

@@ -148,7 +148,6 @@ $chat_url = App\Models\Setting::check_active_chat_system($currentURL, $chat_seg)
                         </div>
                         
                         <input 
-                            style="border 1px solid"
                             type="text"
                             placeholder="Search products..."
                             x-model="searchTerm"
@@ -156,7 +155,10 @@ $chat_url = App\Models\Setting::check_active_chat_system($currentURL, $chat_seg)
                             @keydown.enter.prevent="performSearch()"
                             @focus="if (suggestions.length > 0) showSuggestions = true"
                             @click.outside="showSuggestions = false"
-                            class="block w-full rounded-full border-0 bg-slate-100 py-2.5 pl-11 pr-4 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6">
+                            class="block w-full rounded-full bg-white py-2.5 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 sm:text-sm sm:leading-6"
+                            style="border: 1.5px solid #cbd5e1; outline: none; box-shadow: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 3px rgba(245,158,11,0.12)';"
+                            onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';">
                         
                         {{-- Search Suggestions Dropdown --}}
                         <div x-show="showSuggestions && suggestions.length > 0" 

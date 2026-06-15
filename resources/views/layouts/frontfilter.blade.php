@@ -869,99 +869,125 @@
 	{!! config('app.google_map_script') !!}
 
     <script>
-      jQuery(function ($) {
-		    // Google Places Autocomplete Initialization
-		    var input = document.getElementById('location');
-		    var autocomplete = new google.maps.places.Autocomplete(input);
+    (function () {
+        // Google Places Autocomplete Initialization
+        function initPlacesAutocomplete() {
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+            var input = document.getElementById('location');
+            if (!input) return;
+            var autocomplete = new google.maps.places.Autocomplete(input);
 
-		    google.maps.event.addDomListener(input, 'keydown', function (event) {
-		        if (event.keyCode === 13) {
-		            event.preventDefault();
-		        }
-		    });
+            google.maps.event.addDomListener(input, 'keydown', function (event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                }
+            });
 
-		    google.maps.event.addListener(autocomplete, 'place_changed', function () {
-		        $('#cityName').val('');
-		        $('#countryName').val('');
-		        $('#stateName').val('');
-		        $('#locality').val('');
-		        var place = autocomplete.getPlace();
-		        var address = place.address_components;
-		        var city, state;
+            google.maps.event.addListener(autocomplete, 'place_changed', function () {
+                var els = {
+                    cityName: document.getElementById('cityName'),
+                    countryName: document.getElementById('countryName'),
+                    stateName: document.getElementById('stateName'),
+                    locality: document.getElementById('locality'),
+                    currentCountry: document.getElementById('currentCountry'),
+                    latitude: document.getElementById('latitude'),
+                    longitude: document.getElementById('longitude')
+                };
+                if (els.cityName) els.cityName.value = '';
+                if (els.countryName) els.countryName.value = '';
+                if (els.stateName) els.stateName.value = '';
+                if (els.locality) els.locality.value = '';
 
-		        address.forEach(function (component) {
-		            var types = component.types;
-		            if (types.indexOf('administrative_area_level_2') > -1) {
-		                city = component.long_name;
-		            }
-		            if (types.indexOf('administrative_area_level_1') > -1) {
-		                state = component.long_name;
-		            }
-		        });
+                var place = autocomplete.getPlace();
+                if (!place || !place.address_components) return;
+                var city = '', state = '';
 
-		        const country = place.address_components.find(item => item.types.includes('country'));
+                place.address_components.forEach(function (component) {
+                    var types = component.types;
+                    if (types.indexOf('administrative_area_level_2') > -1) {
+                        city = component.long_name;
+                    }
+                    if (types.indexOf('administrative_area_level_1') > -1) {
+                        state = component.long_name;
+                    }
+                });
 
-		        $('#locality').val(place.name);
-		        $('#cityName').val(city);
-		        $('#countryName').val(country.long_name);
-		        $('#currentCountry').val(country.long_name);
-		        $('#stateName').val(state);
-		        $('#latitude').val(place.geometry.location.lat());
-		        $('#longitude').val(place.geometry.location.lng());
-		    });
-      // === Preloader Hide on Full Page Load ===
-        window.addEventListener('load', function() {
-            const preloader = document.getElementById('preloader');
-            preloader.classList.add('hide');
+                var country = place.address_components.find(function (item) { return item.types.includes('country'); });
+
+                if (els.locality) els.locality.value = place.name;
+                if (els.cityName) els.cityName.value = city;
+                if (country) {
+                    if (els.countryName) els.countryName.value = country.long_name;
+                    if (els.currentCountry) els.currentCountry.value = country.long_name;
+                }
+                if (els.stateName) els.stateName.value = state;
+                if (place.geometry) {
+                    if (els.latitude) els.latitude.value = place.geometry.location.lat();
+                    if (els.longitude) els.longitude.value = place.geometry.location.lng();
+                }
+            });
+        }
+
+        // Try init immediately, or wait for Google Maps callback
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            initPlacesAutocomplete();
+        } else {
+            var _origInitMap = window.initMap;
+            window.initMap = function () {
+                if (typeof _origInitMap === 'function') _origInitMap();
+                initPlacesAutocomplete();
+            };
+        }
+
+        // Preloader
+        window.addEventListener('load', function () {
+            var preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('hide');
             document.body.classList.remove('loading');
         });
-        // Back to top button functionality
-        const backToTopButton = document.querySelector('.back-to-top');
-        
-        window.addEventListener('scroll', () => {
-            if (window.pageYOffset > 300) {
-                backToTopButton.classList.add('visible');
-            } else {
-                backToTopButton.classList.remove('visible');
-            }
-        });
-        
-        backToTopButton.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+
+        // Back to top button
+        var backToTopButton = document.querySelector('.back-to-top');
+        if (backToTopButton) {
+            window.addEventListener('scroll', function () {
+                if (window.pageYOffset > 300) {
+                    backToTopButton.classList.add('visible');
+                } else {
+                    backToTopButton.classList.remove('visible');
+                }
             });
-        });
-        
-        // Price range slider functionality
+            backToTopButton.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Price range slider
         function setupPriceSlider(minSlider, maxSlider, track, priceValues) {
+            if (!minSlider || !maxSlider || !track || !priceValues) return;
             function updateSlider() {
-                const minVal = parseInt(minSlider.value);
-                const maxVal = parseInt(maxSlider.value);
-                
+                var minVal = parseInt(minSlider.value);
+                var maxVal = parseInt(maxSlider.value);
                 if (minVal > maxVal) {
                     minSlider.value = maxVal;
                     maxSlider.value = minVal;
                     updateSlider();
                     return;
                 }
-                
-                const minPercent = (minVal / parseInt(minSlider.max)) * 100;
-                const maxPercent = (maxVal / parseInt(maxSlider.max)) * 100;
-                
+                var minPercent = (minVal / parseInt(minSlider.max)) * 100;
+                var maxPercent = (maxVal / parseInt(maxSlider.max)) * 100;
                 track.style.left = minPercent + '%';
                 track.style.width = (maxPercent - minPercent) + '%';
-                
-                priceValues.querySelector('span:first-child').textContent = '$' + minVal.toLocaleString();
-                priceValues.querySelector('span:last-child').textContent = '$' + maxVal.toLocaleString();
+                var firstSpan = priceValues.querySelector('span:first-child');
+                var lastSpan = priceValues.querySelector('span:last-child');
+                if (firstSpan) firstSpan.textContent = '$' + minVal.toLocaleString();
+                if (lastSpan) lastSpan.textContent = '$' + maxVal.toLocaleString();
             }
-            
             minSlider.addEventListener('input', updateSlider);
             maxSlider.addEventListener('input', updateSlider);
             updateSlider();
         }
 
-        const defaultPriceSlider = document.querySelector('#filter-vehicles .price-range-slider');
+        var defaultPriceSlider = document.querySelector('#filter-vehicles .price-range-slider');
         if (defaultPriceSlider) {
             setupPriceSlider(
                 defaultPriceSlider.querySelector('.slider-min'),
@@ -971,12 +997,11 @@
             );
         }
 
-        // Wishlist button functionality
-        const wishlistButtons = document.querySelectorAll('.wishlist-btn');
-        
-        wishlistButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const icon = this.querySelector('i');
+        // Wishlist button
+        document.querySelectorAll('.wishlist-btn').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var icon = this.querySelector('i');
+                if (!icon) return;
                 if (icon.classList.contains('far')) {
                     icon.classList.remove('far');
                     icon.classList.add('fas');
@@ -989,48 +1014,46 @@
             });
         });
 
-        // Dynamic Filter Functionality
-        const mainCategorySelect = document.getElementById('mainCategorySelect');
-        const sidebar = document.querySelector('.sidebar');
-        const filterSections = document.querySelectorAll('.filter-section');
-
-        mainCategorySelect.addEventListener('change', function() {
-            const selectedCategory = this.value;
-
-            // Hide all filter sections
-            filterSections.forEach(section => {
-                section.classList.remove('active');
-            });
-
-            // Show filters based on the selected category
-            if (selectedCategory === 'vehicles') {
-                document.getElementById('filter-vehicles').classList.add('active');
-            } else if (selectedCategory === 'electronics') {
-                document.getElementById('filter-electronics').classList.add('active');
-            } else {
-                // Default to showing 'All Categories' and other common filters
-                document.getElementById('filter-all').classList.add('active');
-            }
-        });
-        
-        // Load More Button Functionality
-        const loadMoreBtn = document.querySelector('.load-more-btn');
-        const hiddenCards = document.querySelectorAll('.card.hidden');
-        const cardsToShow = 4; // Number of cards to show on each click
-        let cardsShown = 0;
-
-        loadMoreBtn.addEventListener('click', () => {
-            for (let i = 0; i < cardsToShow; i++) {
-                if (hiddenCards[cardsShown]) {
-                    hiddenCards[cardsShown].classList.remove('hidden');
-                    cardsShown++;
+        // Dynamic Filter
+        var mainCategorySelect = document.getElementById('mainCategorySelect');
+        if (mainCategorySelect) {
+            mainCategorySelect.addEventListener('change', function () {
+                var selectedCategory = this.value;
+                document.querySelectorAll('.filter-section').forEach(function (section) {
+                    section.classList.remove('active');
+                });
+                if (selectedCategory === 'vehicles') {
+                    var el = document.getElementById('filter-vehicles');
+                    if (el) el.classList.add('active');
+                } else if (selectedCategory === 'electronics') {
+                    var el = document.getElementById('filter-electronics');
+                    if (el) el.classList.add('active');
                 } else {
-                    loadMoreBtn.style.display = 'none'; // Hide the button when all cards are shown
-                    break;
+                    var el = document.getElementById('filter-all');
+                    if (el) el.classList.add('active');
                 }
-            }
-        });
-	
+            });
+        }
+
+        // Load More
+        var loadMoreBtn = document.querySelector('.load-more-btn');
+        if (loadMoreBtn) {
+            var hiddenCards = document.querySelectorAll('.card.hidden');
+            var cardsToShow = 4;
+            var cardsShown = 0;
+            loadMoreBtn.addEventListener('click', function () {
+                for (var i = 0; i < cardsToShow; i++) {
+                    if (hiddenCards[cardsShown]) {
+                        hiddenCards[cardsShown].classList.remove('hidden');
+                        cardsShown++;
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                        break;
+                    }
+                }
+            });
+        }
+    })();
     </script>
   @livewireScripts
 </body>

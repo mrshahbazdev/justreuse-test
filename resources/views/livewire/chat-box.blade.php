@@ -55,21 +55,36 @@ class="flex flex-col h-full bg-white">
                 <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
             </button>
             
-             <div x-show="showOptionsMenu" @click.outside="showOptionsMenu = false" ...>
-                <div class="py-2"> 
+             <div x-show="showOptionsMenu" 
+                 @click.outside="showOptionsMenu = false"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-100"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                 style="display: none;">
+                <div class="py-1.5">
                     @if($isBlocked)
-                        <button @click="confirmText = 'Are you sure you want to unblock this user?'; confirmAction = 'unblockUser'; showConfirmModal = true; showOptionsMenu = false;" class="w-full text-left ...">
+                        <button @click="confirmText = 'Are you sure you want to unblock this user?'; confirmAction = 'unblockUser'; showConfirmModal = true; showOptionsMenu = false;" 
+                                class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                             Unblock User
                         </button>
                     @else
-                        <button @click="confirmText = 'Are you sure you want to block this user?'; confirmAction = 'blockUser'; showConfirmModal = true; showOptionsMenu = false;" class="w-full text-left ...">
+                        <button @click="confirmText = 'Are you sure you want to block this user?'; confirmAction = 'blockUser'; showConfirmModal = true; showOptionsMenu = false;" 
+                                class="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                            <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                             Block User
                         </button>
                     @endif
                     
-                    <div class="border-t my-1"></div>
+                    <div class="border-t border-gray-100 my-1"></div>
                     
-                    <button @click="confirmText = 'Are you sure you want to delete this chat?'; confirmAction = 'deleteChat'; showConfirmModal = true; showOptionsMenu = false;" class="w-full text-left text-red-600 ...">
+                    <button @click="confirmText = 'Are you sure you want to delete this chat?'; confirmAction = 'deleteChat'; showConfirmModal = true; showOptionsMenu = false;" 
+                            class="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center transition-colors">
+                        <svg class="w-4 h-4 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                         Delete Chat
                     </button>
                 </div>
@@ -139,7 +154,7 @@ class="flex flex-col h-full bg-white">
                                     </svg>
                                     <h3 class="font-bold text-xs text-green-600">Offer Received</h3>
                                 </div>
-                                <p class="text-2xl font-bold text-center py-1 text-gray-800">€{{ number_format($message->msg) }}</p>
+                                <p class="text-2xl font-bold text-center py-1 text-gray-800">€{{ number_format((float)$message->msg) }}</p>
                                 
                                 {{-- NAYA FEATURE: Offer Accept/Deny Buttons --}}
                                 @if($message->make_offer && $message->accept_offer == 0 && $message->denied_offer == 0)
@@ -193,7 +208,7 @@ class="flex flex-col h-full bg-white">
                                     </svg>
                                     <h3 class="font-bold text-xs">Your Offer</h3>
                                 </div>
-                                <p class="text-2xl font-bold text-center py-1">€{{ number_format($message->msg) }}</p>
+                                <p class="text-2xl font-bold text-center py-1">€{{ number_format((float)$message->msg) }}</p>
                                  
                                 @if($message->make_offer && $message->accept_offer == 0 && $message->denied_offer == 0)
                                  <!--<div class="mt-2 pt-2 border-t border-white/20">
@@ -365,14 +380,32 @@ class="flex flex-col h-full bg-white">
         </div>
       @endif
     </div>
-	<div x-show="showConfirmModal" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" style="display: none;">
-        <div @click.outside="showConfirmModal = false" class="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 text-center">
-            <h3 class="text-lg font-medium text-gray-900 mb-4" x-text="confirmText"></h3>
-            <div class="flex justify-center space-x-4">
-                <button @click="showConfirmModal = false" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+	<div x-show="showConfirmModal" 
+         x-transition:enter="ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" 
+         style="display: none;">
+        <div @click.outside="showConfirmModal = false" 
+             x-transition:enter="ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div class="bg-red-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="confirmText"></h3>
+            <p class="text-sm text-gray-500 mb-5">This action cannot be undone.</p>
+            <div class="flex justify-center space-x-3">
+                <button @click="showConfirmModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors">
                     Cancel
                 </button>
-                <button @click="$wire.call(confirmAction); showConfirmModal = false;" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                <button @click="$wire.call(confirmAction); showConfirmModal = false;" class="px-5 py-2.5 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors shadow-sm">
                     Confirm
                 </button>
             </div>

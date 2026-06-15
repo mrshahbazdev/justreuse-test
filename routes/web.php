@@ -768,6 +768,23 @@ Route::get('/sitemap_categories.xml', [Common::class, 'getxmlContent']);
 Route::get('/sitemap_pages.xml', [Common::class, 'getstaticpageContent']);
 Route::get('/sitemap_staticpages.xml', [Common::class, 'getpageContent']);
 Route::get('/sitemap_posts.xml', [Common::class, 'getposts']);
+// Search suggestions (JSON) — must be before the catch-all
+Route::get('/search', function () {
+    $q = request('q', '');
+    if (empty(trim($q))) {
+        return response()->json(['data' => []]);
+    }
+    $posts = \App\Models\TblPost::where('title', 'like', '%' . $q . '%')
+        ->where('active', 1)
+        ->where('sold_status', 0)
+        ->whereNull('deleted_at')
+        ->select('id', 'title', 'category_id')
+        ->limit(7)
+        ->get()
+        ->map(fn($p) => ['id' => $p->id, 'value' => $p->title, 'category_id' => $p->category_id]);
+    return response()->json(['data' => $posts]);
+});
+
 //search page
 Route::get('{any}', function () {
     if (isset($_GET['loc']) || isset($_GET['q'])) {

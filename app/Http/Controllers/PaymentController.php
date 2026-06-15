@@ -5,12 +5,53 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\UserAdvertisement;
 use App\Models\TblPayments;
+use App\Models\TblPaymentsMethod;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 
 class PaymentController extends Controller
 {
+    public function showStripeForm(Request $request)
+    {
+        $totalAmount = Session::get('payment_total_amount');
+
+        if (!$totalAmount || !is_numeric($totalAmount) || $totalAmount <= 0) {
+            return redirect('/')->with('error', 'Invalid payment amount. Please try again.');
+        }
+
+        try {
+            $keys = TblPaymentsMethod::where('name', 'stripe')->value('keys_value');
+            $stripeKeys = json_decode($keys, true);
+            $stripeSecretKey = $stripeKeys[0]['STRIPE_SECRET_KEY'] ?? env('STRIPE_SECRET');
+            $stripePublicKey = $stripeKeys[0]['STRIPE_PUBLISHABLE_KEY'] ?? config('services.stripe.key');
+
+            Stripe::setApiKey($stripeSecretKey);
+
+            $paymentIntent = PaymentIntent::create([
+                'amount' => intval($totalAmount * 100),
+                'currency' => 'usd',
+                'description' => 'Business Package Purchase',
+            ]);
+
+            $currency = Setting::get_admin_default_currency();
+            $currencySymbol = !empty($currency) ? $currency['currency_hex'] : '$';
+
+            return view('payment.stripe-checkout', [
+                'clientSecret' => $paymentIntent->client_secret,
+                'stripeKey' => $stripePublicKey,
+                'totalAmount' => $totalAmount,
+                'currencySymbol' => $currencySymbol,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Stripe checkout error: ' . $e->getMessage());
+            return redirect('/')->with('error', 'Could not initialize payment. Please try again.');
+        }
+    }
+
     public function success(Request $request)
     {
         Log::info('=== PAYMENT SUCCESS CALLBACK START ===');

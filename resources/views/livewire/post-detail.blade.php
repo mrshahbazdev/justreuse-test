@@ -73,6 +73,17 @@ if (auth()->check()) {
     $is_favorited = App\Models\TblSavedPosts::where('user_id', auth()->id())->where('post_id', $product[0]->id)->exists();
 }
 
+$product_condition = '';
+$condition_color = 'green';
+if (!empty($product[0]->product_condition)) {
+    if ($product[0]->product_condition == 1) { $product_condition = 'Like New'; $condition_color = 'green'; }
+    elseif ($product[0]->product_condition == 2) { $product_condition = 'Lightly Used'; $condition_color = 'blue'; }
+    elseif ($product[0]->product_condition == 3) { $product_condition = 'Heavily Used'; $condition_color = 'orange'; }
+}
+
+$posted_ago = \Carbon\Carbon::parse($product[0]->created_at)->diffForHumans();
+$views_count = $product[0]->views_count ?? 0;
+
 ?>
 
 @section('meta_title', $meta_title)
@@ -81,27 +92,46 @@ if (auth()->check()) {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 <div class="root-element-div" {{$class_dir}}>
 
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+    <main class="pd-main container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
 
-            <div class="lg:col-span-7 flex flex-col gap-8">
-                <div class="card p-4 space-y-3">
+        {{-- Breadcrumb --}}
+        @if(!empty($category_name))
+        <nav class="pd-breadcrumb flex items-center text-sm text-gray-500 mb-5 flex-wrap" aria-label="Breadcrumb">
+            <a href="{{ url('/') }}" class="hover:text-green-600 transition"><i class="fa fa-home mr-1"></i>Home</a>
+            <i class="fa fa-chevron-right text-[10px] mx-2 text-gray-300"></i>
+            <a href="{{ url('/search?category=' . ($product[0]->category_id ?? '')) }}" class="hover:text-green-600 transition">{{ $category_name }}</a>
+            <i class="fa fa-chevron-right text-[10px] mx-2 text-gray-300"></i>
+            <span class="text-gray-800 font-medium truncate max-w-[200px]">{{ $product[0]->title }}</span>
+        </nav>
+        @endif
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                {{-- Image Gallery --}}
+                <div class="pd-gallery-card relative">
                     @if($is_sold)
                         <div class="absolute top-4 right-4 z-20">
-                            <div class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg shadow-lg">
-                                SOLD
-                            </div>
+                            <div class="pd-sold-badge"><i class="fa fa-ban mr-1"></i>SOLD</div>
                         </div>
                     @endif
                     
                     @if(empty($jsImages) || empty($jsImages[0]))
-                        <div class="relative aspect-w-16 aspect-h-12 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
-                           <p class="text-gray-500 font-semibold">{{__('post_detail.no images to preview')}}</p>
+                        <div class="pd-no-images">
+                            <i class="fa fa-image text-4xl text-gray-300 mb-2"></i>
+                            <p class="text-gray-500 font-semibold">{{__('post_detail.no images to preview')}}</p>
                         </div>
                     @else
-                        <div class="relative aspect-w-16 aspect-h-12 rounded-xl overflow-hidden">
+                        <div class="pd-main-image-wrap" id="main-image-wrap">
                             <div id="image-loader" class="absolute inset-0 skeleton-loader"></div>
-                            <img id="main-image" src="" alt="Main product image" class="w-full h-full object-contain opacity-0 transition-opacity duration-300" loading="lazy">
+                            <img id="main-image" src="" alt="{{ $product[0]->title }}" class="pd-main-image" loading="lazy">
+                            
+                            {{-- Image navigation arrows --}}
+                            <button id="img-prev" class="pd-img-nav pd-img-nav-left" title="Previous"><i class="fa fa-chevron-left"></i></button>
+                            <button id="img-next" class="pd-img-nav pd-img-nav-right" title="Next"><i class="fa fa-chevron-right"></i></button>
+
+                            {{-- Image counter --}}
+                            <div id="image-counter" class="pd-img-counter"></div>
                             
                             <?php
                             $ad_type = App\Models\TblPost::getAddtype($product[0]->id);
@@ -110,30 +140,30 @@ if (auth()->check()) {
                             ?>
                             @if($ad_type)
                             <div class="absolute left-0 top-0 z-10">
-                                <h3 class="text-xs text-white font-semibold relative"><span class="{{$ad_type_class}} px-2 py-1 rounded-tr-lg rounded-br-lg uppercase inline-block">{{$ad_type}}</span></h3>
+                                <span class="pd-ad-type-badge {{$ad_type_class}}">{{$ad_type}}</span>
                             </div>
                             @endif
 
                             @if(!empty($product[0]->video_url))
-                            <div class="absolute right-0 top-0 z-10">
-                                <button class="inline-block px-2 pt-0 pb-1 rounded-tl-lg rounded-bl-lg text-lg text-white font-normal bg-red-600" id="view_video"><i class="fa fa-youtube-play" aria-hidden="true"></i></button>
-                            </div>
+                            <button class="pd-video-btn" id="view_video" title="Watch Video">
+                                <i class="fa fa-play-circle mr-1"></i> Video
+                            </button>
                             @endif
                         </div>
-                        <div id="thumbnail-gallery" class="grid grid-cols-5 gap-3 mt-2">
+                        <div id="thumbnail-gallery" class="pd-thumbnails">
                         </div>
                     @endif
                 </div>
 
-                <div class="card p-6 lg:p-8">
+                <div class="pd-card pd-tabs-card">
                     <div class="border-b border-gray-200">
-                        <nav class="flex space-x-8" id="tab-buttons">
-                      		<button data-tab="features" class="tab-btn active" style="box-shadow:none;">{{__('post_detail.item details')}}</button>
+                        <nav class="flex space-x-6" id="tab-buttons">
+                            <button data-tab="features" class="pd-tab-btn active">{{__('post_detail.item details')}}</button>
                             @if(!empty($allFeatures))
-                                <button data-tab="description" class="tab-btn " style="box-shadow:none;">{{__('post_detail.description')}}</button>
+                                <button data-tab="description" class="pd-tab-btn">{{__('post_detail.description')}}</button>
                             @endif
                             @if(!empty($features) && $product[0]->category_id == '64')
-                               <button data-tab="other-features" class="tab-btn" style="box-shadow:none;">Other Features</button>
+                               <button data-tab="other-features" class="pd-tab-btn">Other Features</button>
                             @endif
                         </nav>
                     </div>
@@ -148,7 +178,7 @@ if (auth()->check()) {
                             <div id="features-list-long-wrapper" class="features-hidden">
                                 <ul id="features-list-long" class="text-base space-y-0"></ul>
                             </div>
-                            <button id="toggle-features-btn" class=" font-semibold mt-4" style="box-shadow:none;">Show More <i class="fa fa-chevron-down text-xs ml-1 transition-transform"></i></button>
+                            <button id="toggle-features-btn" class="text-green-600 font-semibold mt-4 text-sm hover:text-green-700 transition" style="box-shadow:none;border:none;background:none;cursor:pointer;">Show More <i class="fa fa-chevron-down text-xs ml-1 transition-transform"></i></button>
                         </div>
                         @endif
 
@@ -206,92 +236,99 @@ if (auth()->check()) {
             </div>
 
             <div class="lg:col-span-5">
-                <div class="sticky top-28 flex flex-col gap-8">
-                    <div class="card p-6">
-                        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $product[0]->title }}</h1>
-                        <p class="text-gray-500 text-sm mb-6">Ad ID: #JR-{{ $product[0]->ff }}</p>
+                <div class="sticky top-28 flex flex-col gap-6">
+                    <div class="pd-card pd-info-card">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{{ $product[0]->title }}</h1>
+                        
+                        {{-- Meta row: Ad ID, posted time, views --}}
+                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 mb-4 text-sm text-gray-500">
+                            <span>Ad ID: #JR-{{ $product[0]->ff }}</span>
+                            <span class="hidden sm:inline">&middot;</span>
+                            <span><i class="fa fa-clock-o mr-1"></i>{{ $posted_ago }}</span>
+                            @if($views_count > 0)
+                            <span class="hidden sm:inline">&middot;</span>
+                            <span><i class="fa fa-eye mr-1"></i>{{ number_format($views_count) }} views</span>
+                            @endif
+                        </div>
 
                         @if($is_sold)
-                            <div class="bg-red-50 rounded-xl p-4 mb-6">
+                            <div class="pd-price-box pd-price-sold">
                                 <div class="flex justify-between items-center">
                                     <div>
-                                        <p class="text-sm font-semibold text-red-800">Status</p>
-                                        <p class="text-4xl font-bold text-red-700">SOLD</p>
+                                        <p class="text-sm font-semibold text-red-800 mb-1">Status</p>
+                                        <p class="text-3xl font-bold text-red-700">SOLD</p>
                                     </div>
-                                    <div class="text-red-600 text-4xl">
-                                        <i class="fa fa-times-circle"></i>
-                                    </div>
+                                    <div class="text-red-400 text-5xl opacity-30"><i class="fa fa-times-circle"></i></div>
                                 </div>
                             </div>
                         @else
-                            <div class="bg-green-50 rounded-xl p-4 mb-6">
-                                <div class="flex justify-between items-center">
+                            <div class="pd-price-box pd-price-available">
+                                <div class="flex justify-between items-start">
                                     <div>
-                                        <p class="text-sm font-semibold text-green-800">Price</p>
-                                        <p class="text-4xl font-bold text-green-700 {{$linethrough}}"><?php echo $currency_symbol[0]; ?>{{ number_format($product[0]->price) }}</p>
+                                        <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">Price</p>
+                                        <p class="text-3xl sm:text-4xl font-extrabold text-green-700 {{$linethrough}}"><?php echo $currency_symbol[0]; ?>{{ number_format($product[0]->price) }}</p>
                                         @if($product[0]->currency_id != $settings['default_currency'] )
-                                            <span class="font-bold text-xl block"> <?php echo $user_currency['convert_sym']; ?> {{ $user_currency['convert_cur']}} <?php echo $user_currency['convert_code']; ?> </span>
+                                            <span class="font-bold text-lg block text-green-600 mt-0.5"><?php echo $user_currency['convert_sym']; ?> {{ $user_currency['convert_cur']}} <?php echo $user_currency['convert_code']; ?></span>
                                         @endif
                                     </div>
-                                    
-                                    <div class="flex flex-col gap-2 items-end">
+                                    <div class="flex flex-col gap-2 items-end flex-shrink-0">
+                                        @if(!empty($product_condition))
+                                        <span class="pd-badge pd-badge-{{ $condition_color }}"><i class="fa fa-certificate mr-1 text-[10px]"></i>{{ $product_condition }}</span>
+                                        @endif
                                         @if($product[0]->fixed_price == 0)
-                                        <div class="bg-green-200 text-green-800 text-xs font-bold px-3 py-1 rounded-full">NEGOTIABLE</div>
+                                        <span class="pd-badge pd-badge-green">NEGOTIABLE</span>
                                         @endif
-                                    
                                         @if($product[0]->exchange_to_buy == 1)
-                                        <div class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
-                                            {{ ('EXCHANGE POSSIBLE') }}
-                                        </div>
+                                        <span class="pd-badge pd-badge-indigo">EXCHANGE</span>
                                         @endif
                                     </div>
-                            
                                 </div>
                             </div>
                         @endif
                         
                         @if(!$is_sold)
-                        <div class="flex flex-col gap-3 mb-6">
+                        <div class="pd-actions">
                             @if ($currentUserId != $adPostedUserId)
-                          <a href="/messages?to={{ $adPostedUserId }}&p={{ $product[0]->id }}"><button  class="btn btn-primary w-full text-lg"><i class="fa fa-comments mr-1"></i>{{__('post_detail.chat with seller')}}</button></a>
-                              @if($product[0]->fixed_price == 0 && auth()->user() && auth()->user()->hasRole('User'))
-                                  <button id="user_make_offer" class="btn btn-secondary w-full text-lg">
-                                      <i class="fa fa-tag mr-1"></i>  {{__('post_detail.make an offer')}}
-                                  </button>
-                              @endif
-                          @endif
-							
+                            <a href="/messages?to={{ $adPostedUserId }}&p={{ $product[0]->id }}" class="pd-btn pd-btn-primary">
+                                <i class="fa fa-comments mr-2"></i>{{__('post_detail.chat with seller')}}
+                            </a>
+                            @if($product[0]->fixed_price == 0 && auth()->user() && auth()->user()->hasRole('User'))
+                                <button id="user_make_offer" class="pd-btn pd-btn-offer">
+                                    <i class="fa fa-tag mr-2"></i>{{__('post_detail.make an offer')}}
+                                </button>
+                            @endif
+                            @endif
+
                             @if(auth()->user() && $check_is_paid->count()==0 && auth()->user()->hasRole('User'))
                                 <?php $urlnew = URL::to('/selectPackage?post=' . $product[0]->id . ''); ?>
                                 @if ($adPostedUserId == $currentUserId)
-                                    <a href="{{$urlnew}}" class="btn btn-secondary w-full text-lg">{{__('post_detail.sell fast')}}</a>
+                                    <a href="{{$urlnew}}" class="pd-btn pd-btn-secondary"><i class="fa fa-rocket mr-2"></i>{{__('post_detail.sell fast')}}</a>
                                 @endif
                             @endif
                             
                             @if($currentUserId == $adPostedUserId && auth()->user() && auth()->user()->hasRole('User'))
                                 <?php $insight_id = URL::to('/insights/' . $product[0]->id . ''); ?>
-                                <a class="btn btn-secondary w-full text-lg" href="{{$insight_id}}">{{__('post_detail.insights')}}</a>
+                                <a class="pd-btn pd-btn-secondary" href="{{$insight_id}}"><i class="fa fa-bar-chart mr-2"></i>{{__('post_detail.insights')}}</a>
                             @endif
-
                         </div>
                         @endif
                          
-                         <div class="flex justify-center space-x-6 text-gray-500">
+                        <div class="pd-quick-actions">
                             @auth
-                                <button id="toggle-favorite-btn" data-post-id="{{ $product[0]->id }}" class="transition flex items-center gap-2" style="box-shadow:none;">
-                                    <i class="fa {{ $is_favorited ? 'fa-heart text-red-500' : 'fa-heart-o text-gray-500 hover:text-red-500' }}"></i>
-                                    <span class="button-text">{{ $is_favorited ? 'FAVORITED' : 'Favorite' }}</span>
+                                <button id="toggle-favorite-btn" data-post-id="{{ $product[0]->id }}" class="pd-quick-btn">
+                                    <i class="fa {{ $is_favorited ? 'fa-heart text-red-500' : 'fa-heart-o' }}"></i>
+                                    <span class="button-text">{{ $is_favorited ? 'Saved' : 'Save' }}</span>
                                 </button>
                             @else
-                                <a href="{{ route('login') }}" class="transition flex items-center gap-2 text-gray-500 hover:text-red-500" style="box-shadow:none;">
+                                <a href="{{ route('login') }}" class="pd-quick-btn">
                                     <i class="fa fa-heart-o"></i>
-                                    <span>Favorite</span>
+                                    <span>Save</span>
                                 </a>
                             @endauth
                             
-                             <div class="relative inline-block text-left" x-data="{ open: false }">
-                                <button @click="open = !open" class="hover:text-green-600 transition flex items-center gap-2" style="box-shadow:none;">
-                                    <i class="fa fa-share-alt"></i>Share
+                            <div class="relative inline-block text-left" x-data="{ open: false }">
+                                <button @click="open = !open" class="pd-quick-btn">
+                                    <i class="fa fa-share-alt"></i><span>Share</span>
                                 </button>
                                 <div x-show="open" @click.away="open = false" x-transition class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                                     <div style="padding: 4px 0;" role="menu" aria-orientation="vertical">
@@ -330,63 +367,62 @@ if (auth()->check()) {
                               </div>
 
                             @if (auth()->user() && auth()->user()->id != $product[0]->user_id && auth()->user()->hasRole('User'))
-                                <button id="report_ad" class="hover:text-yellow-600 transition flex items-center gap-2" style="box-shadow:none;"><i class="fa fa-flag"></i>Report</button>
+                                <button id="report_ad" class="pd-quick-btn"><i class="fa fa-flag"></i><span>Report</span></button>
                             @endif
                         </div>
                     </div>
 
-                    <div class="card p-6">
-                        <h3 class="text-xl font-bold mb-4 font-poppins">Seller Information</h3>
+                    <div class="pd-card pd-seller-card">
+                        <h3 class="pd-section-title"><i class="fa fa-user-circle mr-2 text-gray-400"></i>Seller Information</h3>
                         <div class="flex items-center gap-4">
-                            <div class="relative">
+                            <div class="relative flex-shrink-0">
                                 @if($info_user[0]->profile_photo_path !="")
-                                    <img src="<?php echo URL::to('storage/' . $info_user[0]->profile_photo_path); ?>" alt="{{ $info_user[0]->name }}" class="w-16 h-16 rounded-full object-cover">
+                                    <img src="<?php echo URL::to('storage/' . $info_user[0]->profile_photo_path); ?>" alt="{{ $info_user[0]->name }}" class="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100">
                                 @else
-                                    <img src="<?php echo URL::to('storage/noimage150.png'); ?>" alt="Default Avatar" class="w-16 h-16 rounded-full object-cover">
+                                    <img src="<?php echo URL::to('storage/noimage150.png'); ?>" alt="Default Avatar" class="w-14 h-14 rounded-full object-cover ring-2 ring-gray-100">
                                 @endif
                                 <?php $active_class = ($info_user[0]->current_chat_status == 'online') ? 'bg-green-500' : 'bg-gray-400'; ?>
-                                <span class="absolute bottom-0 right-0 {{$active_class}} border-2 border-white rounded-full w-4 h-4" title="{{ucfirst($info_user[0]->current_chat_status)}}"></span>
+                                <span class="absolute bottom-0 right-0 {{$active_class}} border-2 border-white rounded-full w-3.5 h-3.5" title="{{ucfirst($info_user[0]->current_chat_status)}}"></span>
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <p class="font-bold text-lg text-gray-800">{{ $info_user[0]->name }}</p>
-                                </div>
-                                <p class="text-sm text-gray-500">Member since {{ \Carbon\Carbon::parse($info_user[0]->created_at)->isoFormat('MMM YYYY') }}</p>
-                                 <div class="mt-1" id="review_list_click" data-seller-id="{{$adPostedUserId}}">
+                            <div class="min-w-0">
+                                <p class="font-bold text-lg text-gray-800 truncate">{{ $info_user[0]->name }}</p>
+                                <?php $active_label = ($info_user[0]->current_chat_status == 'online') ? 'Online now' : 'Offline'; ?>
+                                <p class="text-xs text-gray-400">{{ $active_label }} &middot; Member since {{ \Carbon\Carbon::parse($info_user[0]->created_at)->isoFormat('MMM YYYY') }}</p>
+                                <div class="mt-1" id="review_list_click" data-seller-id="{{$adPostedUserId}}">
                                     <?php
                                     $seller_rate = App\Models\TblSellerReviews::rate_avg($adPostedUserId);
                                     $seller_count = App\Models\TblSellerReviews::revi_count($adPostedUserId);
                                     $seller_rating = round($seller_rate);
                                     ?>
-                                    <div class="flex items-center text-yellow-400">
+                                    <div class="flex items-center">
                                         @for ($i = 1; $i <= 5; $i++)
-                                            <i class="fa fa-star{{ $i <= $seller_rating ? '' : '-o' }}"></i>
+                                            <i class="fa fa-star{{ $i <= $seller_rating ? '' : '-o' }} text-yellow-400 text-sm"></i>
                                         @endfor
-                                        <span class="text-xs text-gray-500 ml-2">({{$seller_count}} Reviews)</span>
+                                        <span class="text-xs text-gray-500 ml-1.5">({{$seller_count}})</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3">
-                            <a href="<?php echo URL::to('seller-profile/' . $info_user[0]->id ); ?>" class="btn btn-secondary w-full text-sm !py-2.5">All Ads</a>
-                            <a href="<?php echo URL::to('seller-profile/' . $info_user[0]->id); ?>" class="btn btn-secondary w-full text-sm !py-2.5">Profile</a>
+                            <a href="<?php echo URL::to('seller-profile/' . $info_user[0]->id ); ?>" class="pd-btn pd-btn-outline text-sm"><i class="fa fa-th-large mr-1"></i>All Ads</a>
+                            <a href="<?php echo URL::to('seller-profile/' . $info_user[0]->id); ?>" class="pd-btn pd-btn-outline text-sm"><i class="fa fa-user mr-1"></i>Profile</a>
                         </div>
                     </div>
 
-                    <div class="card p-6">
-                        <h3 class="text-xl font-bold mb-2 font-poppins">Location</h3>
-                        <p class="text-gray-600 mb-4"><i class="fa fa-map-marker-alt mr-2 text-gray-400"></i>{{ $final_city_name }}</p>
-                        <div class="rounded-xl overflow-hidden h-48 border">
+                    <div class="pd-card pd-location-card">
+                        <h3 class="pd-section-title"><i class="fa fa-map-marker mr-2 text-gray-400"></i>Location</h3>
+                        <p class="text-gray-600 text-sm mb-3">{{ $final_city_name }}</p>
+                        <div class="rounded-xl overflow-hidden h-44 border border-gray-200">
                             <div id="map" class="w-full h-full"></div>
                         </div>
                     </div>
 
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                        <h3 class="font-bold text-blue-900 mb-2 flex items-center gap-2 text-lg"><i class="fa fa-shield"></i>Safety Tips</h3>
-                        <ul class="text-blue-800 text-sm space-y-1.5 pl-1">
-                            <li><i class="fa fa-check-circle-o text-xs mr-2"></i>Meet in a safe, public place.</li>
-                            <li><i class="fa fa-check-circle-o text-xs mr-2"></i>Inspect the item thoroughly before paying.</li>
-                            <li><i class="fa fa-check-circle-o text-xs mr-2"></i>Never pay in advance.</li>
+                    <div class="pd-safety-card">
+                        <h3 class="font-bold text-blue-900 mb-3 flex items-center text-base"><i class="fa fa-shield mr-2 text-blue-500"></i>Safety Tips</h3>
+                        <ul class="text-blue-800 text-sm space-y-2">
+                            <li class="flex items-start"><i class="fa fa-check-circle text-blue-400 mr-2 mt-0.5 text-xs"></i>Meet in a safe, public place.</li>
+                            <li class="flex items-start"><i class="fa fa-check-circle text-blue-400 mr-2 mt-0.5 text-xs"></i>Inspect the item thoroughly before paying.</li>
+                            <li class="flex items-start"><i class="fa fa-check-circle text-blue-400 mr-2 mt-0.5 text-xs"></i>Never pay in advance.</li>
                         </ul>
                     </div>
 
@@ -394,10 +430,10 @@ if (auth()->check()) {
             </div>
         </div>
 
-        <div class="mt-12 lg:mt-16 border-t pt-12 lg:pt-16">
-            <h2 class="text-3xl font-bold mb-6">{{__('post_detail.related ads')}}</h2>
+        <div class="mt-10 lg:mt-14 border-t border-gray-200 pt-10 lg:pt-14">
+            <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fa fa-th-large text-gray-400 mr-3"></i>{{__('post_detail.related ads')}}</h2>
             @if(count($related_products) > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                  @foreach($related_products as $d)
                     <?php $userExistCheck = App\Models\User::where('id', $d['user_id'])->get()->count(); ?>
                     @if ($userExistCheck > 0)
@@ -406,33 +442,35 @@ if (auth()->check()) {
                 @endforeach
             </div>
             @else
-                <p class='text-lg font-semibold my-5'>No Related Products Found</p>
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fa fa-search text-3xl mb-2"></i>
+                    <p class="text-base font-medium">No Related Products Found</p>
+                </div>
             @endif
         </div>
     </main>
 
-   <!-- <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
+    <div class="pd-mobile-bar lg:hidden">
         <div class="flex justify-between items-center gap-3">
-            <div class="flex flex-col">
-                <span class="text-sm text-gray-500">Price</span>
+            <div class="flex flex-col min-w-0">
+                <span class="text-xs text-gray-500">Price</span>
                 @if($is_sold)
-                    <span class="font-bold text-xl text-red-600">SOLD</span>
+                    <span class="font-bold text-lg text-red-600">SOLD</span>
                 @else
-                    <span class="font-bold text-xl text-green-600">{{$currency_symbol[0]}}{{ number_format($product[0]->price) }}</span>
+                    <span class="font-bold text-lg text-green-700">{{$currency_symbol[0]}}{{ number_format($product[0]->price) }}</span>
                 @endif
             </div>
             @if (!$is_sold && $currentUserId != $adPostedUserId)
-                 <button id="mobile-chat-with-seller" 
-                    data-user-id="{{ $adPostedUserId }}" 
-                    data-post-id="{{ $product[0]->id }}"
-                    class="btn btn-primary flex-1">Chat Now</button>
+                <a href="/messages?to={{ $adPostedUserId }}&p={{ $product[0]->id }}" class="pd-btn pd-btn-primary flex-1 text-center !py-2.5">
+                    <i class="fa fa-comments mr-1"></i>Chat Now
+                </a>
             @elseif($is_sold)
-                <span class="text-gray-500 font-semibold">Item Sold</span>
+                <span class="text-gray-400 font-semibold text-sm">Item Sold</span>
             @else
-                <span class="text-gray-500 font-semibold">This is your Ad</span>
+                <span class="text-gray-400 font-semibold text-sm">Your Ad</span>
             @endif
         </div>
-    </div> !-->
+    </div>
 </div>
 
 <div class="fixed z-50 inset-0 overflow-y-auto" id="report" style="display:none">
@@ -621,9 +659,15 @@ if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*
         const featuresLongWrapper = document.getElementById('features-list-long-wrapper');
         const featuresLong = document.getElementById('features-list-long');
 
+        let currentImageIndex = 0;
+        const imgCounter = document.getElementById('image-counter');
+        const imgPrev = document.getElementById('img-prev');
+        const imgNext = document.getElementById('img-next');
+
         if (images.length > 0) {
             function updateMainImage(index) {
                 if (!images[index] || !mainImage) return;
+                currentImageIndex = index;
                 imageLoader.style.display = 'block';
                 mainImage.style.opacity = '0';
                 mainImage.src = images[index];
@@ -631,17 +675,31 @@ if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*
                     imageLoader.style.display = 'none';
                     mainImage.style.opacity = '1';
                 };
-                document.querySelectorAll('.thumbnail-container').forEach((t, i) => t.classList.toggle('active', i === index));
+                document.querySelectorAll('.pd-thumb').forEach((t, i) => t.classList.toggle('active', i === index));
+                if (imgCounter) imgCounter.textContent = (index + 1) + ' / ' + images.length;
             }
 
             images.forEach((src, index) => {
                 const thumbContainer = document.createElement('div');
-                thumbContainer.className = 'thumbnail-container border-2 rounded-xl transition-all cursor-pointer aspect-w-1 aspect-h-1 overflow-hidden';
-                thumbContainer.innerHTML = `<img src="${src}" alt="Thumbnail ${index+1}" class="w-full h-full object-cover" loading="lazy">`;
+                thumbContainer.className = 'pd-thumb';
+                thumbContainer.innerHTML = `<img src="${src}" alt="Thumbnail ${index+1}" loading="lazy">`;
                 thumbContainer.addEventListener('click', () => updateMainImage(index));
                 thumbnailGallery.appendChild(thumbContainer);
             });
             updateMainImage(0);
+
+            if (imgPrev) imgPrev.addEventListener('click', () => {
+                updateMainImage((currentImageIndex - 1 + images.length) % images.length);
+            });
+            if (imgNext) imgNext.addEventListener('click', () => {
+                updateMainImage((currentImageIndex + 1) % images.length);
+            });
+
+            if (images.length <= 1) {
+                if (imgPrev) imgPrev.style.display = 'none';
+                if (imgNext) imgNext.style.display = 'none';
+                if (imgCounter) imgCounter.style.display = 'none';
+            }
         }
 
         if(tabButtons) {
@@ -915,57 +973,346 @@ if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*
 </script>
 
 <style>
-  .space-x-6 > :not([hidden]) ~ :not([hidden]) {
-    margin-left: 1.5rem;
-  }
-  .gap-2 {
-    padding: 10px  !important;
-   }
-    
-    .skeleton-loader { background-color: #e2e8f0; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    /* ===== Product Detail — Scoped Styles ===== */
 
-    #main-image {
-        width: 100%;
-        height: 500px;
+    .pd-main { max-width: 1200px; }
+
+    /* Breadcrumb */
+    .pd-breadcrumb a { text-decoration: none; }
+
+    /* Cards */
+    .pd-card {
+        background: #fff;
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04), 0 1px 2px -1px rgba(0,0,0,0.03);
+        padding: 1.25rem;
     }
-    
-    #thumbnail-gallery .thumbnail-container {
-        aspect-ratio: 1 / 1;
-        width: 100%;
+    .pd-info-card, .pd-tabs-card, .pd-seller-card, .pd-location-card { padding: 1.5rem; }
+    @media (min-width: 640px) {
+        .pd-info-card, .pd-tabs-card { padding: 1.75rem; }
+    }
+
+    .pd-section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Gallery */
+    .pd-gallery-card {
+        background: #fff;
+        border-radius: 1rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.04);
+        padding: 0.75rem;
         overflow: hidden;
     }
-
-    #thumbnail-gallery .thumbnail-container img {
+    .pd-main-image-wrap {
+        position: relative;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+    .pd-main-image {
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: 420px;
+        object-fit: contain;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    @media (max-width: 640px) {
+        .pd-main-image { height: 280px; }
+    }
+    .pd-no-images {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 300px;
+        background: #f9fafb;
+        border-radius: 0.75rem;
     }
 
+    /* Image navigation */
+    .pd-img-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.85);
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #374151;
+        font-size: 14px;
+        opacity: 0;
+        transition: opacity 0.2s ease, background 0.2s ease;
+        z-index: 5;
+    }
+    .pd-img-nav:hover { background: #fff; }
+    .pd-main-image-wrap:hover .pd-img-nav { opacity: 1; }
+    .pd-img-nav-left { left: 12px; }
+    .pd-img-nav-right { right: 12px; }
+
+    .pd-img-counter {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        z-index: 5;
+    }
+
+    .pd-ad-type-badge {
+        display: inline-block;
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 0 8px 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .pd-video-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        background: #dc2626;
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition: background 0.2s;
+    }
+    .pd-video-btn:hover { background: #b91c1c; }
+
+    .pd-sold-badge {
+        background: #dc2626;
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 14px;
+        box-shadow: 0 2px 8px rgba(220,38,38,0.3);
+    }
+
+    /* Thumbnails */
+    .pd-thumbnails {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .pd-thumb {
+        aspect-ratio: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+    }
+    .pd-thumb:hover { border-color: #d1d5db; transform: scale(1.03); }
+    .pd-thumb.active { border-color: #16a34a; box-shadow: 0 0 0 2px rgba(22,163,74,0.2); }
+    .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Price box */
+    .pd-price-box {
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+    .pd-price-available { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0; }
+    .pd-price-sold { background: #fef2f2; border: 1px solid #fecaca; }
+
+    /* Badges */
+    .pd-badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    .pd-badge-green { background: #dcfce7; color: #166534; }
+    .pd-badge-blue { background: #dbeafe; color: #1e40af; }
+    .pd-badge-orange { background: #ffedd5; color: #9a3412; }
+    .pd-badge-indigo { background: #e0e7ff; color: #3730a3; }
+
+    /* Action buttons */
+    .pd-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 1.25rem;
+    }
+    .pd-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.625rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        line-height: 1.4;
+    }
+    .pd-btn-primary {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+    }
+    .pd-btn-primary:hover { background: linear-gradient(135deg, #15803d, #166534); box-shadow: 0 4px 12px rgba(22,163,74,0.3); transform: translateY(-1px); }
+    .pd-btn-offer {
+        background: #fff;
+        color: #16a34a;
+        border: 2px solid #16a34a;
+    }
+    .pd-btn-offer:hover { background: #f0fdf4; }
+    .pd-btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+    }
+    .pd-btn-secondary:hover { background: #e5e7eb; }
+    .pd-btn-outline {
+        background: #fff;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    .pd-btn-outline:hover { background: #f9fafb; border-color: #9ca3af; }
+
+    /* Quick action row (Save, Share, Report) */
+    .pd-quick-actions {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f3f4f6;
+    }
+    .pd-quick-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #6b7280;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .pd-quick-btn:hover { color: #111827; background: #f3f4f6; }
+
+    /* Tabs */
+    .pd-tab-btn {
+        position: relative;
+        padding-bottom: 0.75rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #9ca3af;
+        transition: color 0.2s ease;
+        border: none;
+        background: none;
+        cursor: pointer;
+        box-shadow: none !important;
+    }
+    .pd-tab-btn::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #16a34a;
+        border-radius: 3px 3px 0 0;
+        transform: scaleX(0);
+        transition: transform 0.25s ease;
+    }
+    .pd-tab-btn:hover { color: #374151; }
+    .pd-tab-btn.active { color: #16a34a; }
+    .pd-tab-btn.active::after { transform: scaleX(1); }
+
     .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
+    .tab-content.active { display: block; animation: pdFadeIn 0.3s ease; }
+    @keyframes pdFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
     .features-hidden { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
     .features-visible { max-height: 1000px; transition: max-height 0.5s ease-in-out; }
 
     .accordion-content { transition: max-height 0.3s ease-out; overflow: hidden; max-height: 0; }
     .accordion-content:not(.hidden) { max-height: 1000px; }
-    
     .rotate-180 { transform: rotate(180deg); }
 
+    /* Safety tips */
+    .pd-safety-card {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 1rem;
+        padding: 1.25rem;
+    }
+
+    /* Seller card */
+    .pd-seller-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+
+    /* Mobile sticky bar */
+    .pd-mobile-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-top: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+        z-index: 40;
+    }
+
+    /* Skeleton loader */
+    .skeleton-loader { background-color: #e2e8f0; animation: pdPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pdPulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+    /* Legacy compat */
     .card { border-radius: 0.75rem; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05); }
     .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; }
     .btn-primary { background-color: #16a34a; color: white; border: 1px solid transparent; }
     .btn-primary:hover { background-color: #15803d; }
-    .btn-secondary { background-color: #f29c11; color: #374151; border: 1px solid #d1d5db; }
-    .btn-secondary:hover { background-color: #f9fafb; }
+    .btn-secondary { background-color: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+    .btn-secondary:hover { background-color: #e5e7eb; }
 
-    #mini-chat-modal {
-        z-index: 9999;
-    }
-    
-    #chat-messages {
-        max-height: 16rem;
-        min-height: 16rem;
+    #mini-chat-modal { z-index: 9999; }
+    #chat-messages { max-height: 16rem; min-height: 16rem; }
+
+    /* Add bottom padding for mobile sticky bar */
+    @media (max-width: 1023px) {
+        .pd-main { padding-bottom: 80px; }
     }
 </style>

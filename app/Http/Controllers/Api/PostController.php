@@ -171,7 +171,7 @@ class PostController extends Controller
             return response()->json(['success' => false, 'message' => 'user_id is required when not authenticated.'], 422);
         }
 
-        // Validation — state fields optional, currency defaults from settings
+        // Validation — state fields optional, currency defaults, images optional
         $validator = Validator::make($request->all(), [
             'title' => 'required|max:255',
             'category_id' => 'required|exists:tbl_categories,id',
@@ -182,7 +182,6 @@ class PostController extends Controller
             'country_long' => 'required',
             'city_name' => 'required',
             'main_city_name' => 'required',
-            'uploaded_images' => 'required|array|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -194,6 +193,19 @@ class PostController extends Controller
 
             // Currency: use provided or default
             $currencyId = $request->currency_id ?? ($settings['default_currency'] ?? 1);
+
+            // Auto-resolve parent category to first sub-category
+            $categoryId = $request->category_id;
+            $category = TblCategory::find($categoryId);
+            if ($category) {
+                $hasChildren = TblCategory::where('parent_id', $categoryId)->exists();
+                if ($hasChildren) {
+                    $firstChild = TblCategory::where('parent_id', $categoryId)->orderBy('list_order', 'asc')->first();
+                    if ($firstChild) {
+                        $categoryId = $firstChild->id;
+                    }
+                }
+            }
 
             // Location Logic
             $locationData = $this->processLocationData($request);
@@ -222,7 +234,10 @@ class PostController extends Controller
             }
 
             $slug = Str::slug($request->title, "-") . '-' . (TblPost::count() + 1);
-            $imagesString = implode(',', $request->uploaded_images);
+
+            // Images: use provided or empty string (optional)
+            $uploadedImages = $request->uploaded_images ?? [];
+            $imagesString = !empty($uploadedImages) ? implode(',', $uploadedImages) : '';
 
             // Locality string
             $cityNames = '';
@@ -237,7 +252,7 @@ class PostController extends Controller
             // Create Post
             $post = TblPost::create([
                 'user_id' => $userId,
-                'category_id' => $request->category_id,
+                'category_id' => $categoryId,
                 'title' => $request->title,
                 'description' => $request->description,
                 'price' => $request->price,
@@ -279,7 +294,7 @@ class PostController extends Controller
 
             // Build image URLs for response
             $imageUrls = [];
-            foreach ($request->uploaded_images as $imgPath) {
+            foreach ($uploadedImages as $imgPath) {
                 $imageUrls[] = asset('storage/' . $imgPath);
             }
 

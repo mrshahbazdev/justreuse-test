@@ -374,16 +374,20 @@
       let map, marker;
         function initMap() {
             if (typeof google === 'undefined') {
-                console.error("Google Maps script is not loaded yet.");
                 return;
             }
+
+            const mapEl = document.getElementById('shared_location_map');
+            const latEl = document.getElementById('user_latitude');
+            const lngEl = document.getElementById('user_longitude');
+            if (!mapEl || !latEl || !lngEl) return;
             
             const initialLocation = { lat: 31.7165, lng: 73.7133 };
             
-            document.getElementById('user_latitude').value = initialLocation.lat;
-            document.getElementById('user_longitude').value = initialLocation.lng;
+            latEl.value = initialLocation.lat;
+            lngEl.value = initialLocation.lng;
 
-            map = new google.maps.Map(document.getElementById('shared_location_map'), {
+            map = new google.maps.Map(mapEl, {
                 center: initialLocation,
                 zoom: 13
             });

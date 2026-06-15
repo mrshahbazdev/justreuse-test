@@ -241,7 +241,7 @@
 
         /* Sidebar */
         .sidebar {
-            width: 280px;
+            width: 300px;
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: var(--border-radius);
@@ -250,68 +250,20 @@
             position: sticky;
             top: 90px;
             border: 1px solid var(--light-gray);
+            flex-shrink: 0;
         }
 
         .sidebar-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             color: var(--dark);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--light-gray);
-        }
-
-        .filter-section {
-            margin-bottom: 25px;
-            display: none; /* Hide all by default */
-        }
-        
-        .filter-section.active {
-            display: block; /* Show active filter sections */
-        }
-        
-        .filter-section h2 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 15px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-
-        .filter-section h2 i {
+        .sidebar-title i {
             color: var(--primary);
-        }
-
-        .filter-section ul {
-            list-style: none;
-        }
-
-        .filter-section li {
-            margin-bottom: 10px;
-            padding: 5px 0;
-            transition: var(--transition);
-        }
-
-        .filter-section li:hover {
-            background-color: var(--light);
-            border-radius: 6px;
-            padding-left: 5px;
-        }
-
-        .filter-section label {
-            font-size: 15px;
-            color: var(--dark);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .filter-section input[type="checkbox"] {
-            accent-color: var(--success);
-            transform: scale(1.2);
         }
 
         .count {
@@ -673,11 +625,7 @@
         @media (max-width: 992px) {
             .container {
                 flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                position: static;
+                padding: 15px;
             }
             
             .search-section {

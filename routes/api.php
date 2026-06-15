@@ -18,28 +18,19 @@ use App\Http\Controllers\Api\CustomFieldController;
 Route::middleware('api')->group(function () {
 
     // =============================================================
-    // 🚀 NEW ADD POST ROUTES (REST API) - Added by Gemini
+    // ADD POST ROUTES (REST API)
     // =============================================================
 
-    // 1. Initial Data (Categories, Packages, Currencies)
+    // Public routes (no auth required)
     Route::get('/post/create-data', [PostController::class, 'getCreateData']);
-
-    // 2. Sub Categories (Parent select karny par)
     Route::get('/categories/sub/{id}', [PostController::class, 'getSubCategories']);
-
-    // 3. Image Upload (Single Image -> Return Path)
-    Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
-
-    // 4. Custom Fields (Brand/Model Logic)
-    // Note: Ye aapke purane 'get_custome_fields_addpost' ka advanced version hai
     Route::get('/get-custom-fields-api/{id}', [CustomFieldController::class, 'getCustomFields']);
 
-    // 5. Final Store Post (Submit Button)
-    Route::post('/post/store', [PostController::class, 'store']);
-
-    // =============================================================
-    // 🛑 END NEW ROUTES
-    // =============================================================
+    // Protected routes (require auth token)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/post/upload-image', [PostController::class, 'uploadImage']);
+        Route::post('/post/store', [PostController::class, 'store']);
+    });
 
 
     // --- EXISTING ROUTES BELOW ---

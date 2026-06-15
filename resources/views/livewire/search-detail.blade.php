@@ -238,33 +238,24 @@
                 </div>
             </div>
 
-            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters" class="loading-overlay">
+            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters" style="display:none;" class="loading-overlay">
                 <div class="loading-spinner"></div>
                 <span class="loading-text">Updating results...</span>
             </div>
 
-            <div wire:loading.remove wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters">
-                <div class="card-grid">
-                    @forelse($filtered_data as $product)
-                        {!! App\Models\Setting::htmlAdBlock($product->id) !!}
-                    @empty
-                        <div class="empty-state">
-                            <i class="fas fa-search"></i>
-                            <h3>No products found</h3>
-                            <p>Try adjusting your filters or search query.</p>
-                            @if($hasActiveFilters)
-                                <button class="clear-filters-empty" wire:click="clearAllFilters"><i class="fas fa-undo"></i> Clear Filters</button>
-                            @endif
-                        </div>
-                    @endforelse
-                </div>
-
-                @if($filtered_data->count() < $total_posts)
-                    <div class="load-more-btn-container">
-                        <button class="load-more-btn" wire:click="loadMore"><i class="fas fa-arrow-down"></i> Load More</button>
-                    </div>
-                @endif
+            <div class="card-grid">
+                @forelse($filtered_data as $product)
+                    {!! App\Models\Setting::htmlAdBlock($product->id) !!}
+                @empty
+                    <p style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">No products found matching your criteria.</p>
+                @endforelse
             </div>
+
+            @if($filtered_data->count() < $total_posts)
+                <div class="load-more-btn-container">
+                    <button class="load-more-btn" wire:click="loadMore"><i class="fas fa-arrow-down"></i> Load More</button>
+                </div>
+            @endif
         </main>
     </div>
 

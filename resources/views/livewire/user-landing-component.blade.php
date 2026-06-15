@@ -622,71 +622,73 @@
 
         detectUserLocation();
     });
-             jQuery(function ($) {
-            const searchInput = document.getElementById('q');
-            const suggestionsBox = document.getElementById('suggestions');
-            
-            if (searchInput && suggestionsBox) {
-                let typingTimer;
+    (function () {
+        const searchInput = document.getElementById('q');
+        const suggestionsBox = document.getElementById('suggestions');
 
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(typingTimer);
-                    const searchTerm = searchInput.value.trim();
+        if (!searchInput || !suggestionsBox) return;
 
-                    if (!searchTerm) {
-                        suggestionsBox.innerHTML = '';
+        let typingTimer;
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(typingTimer);
+            const searchTerm = searchInput.value.trim();
+
+            if (!searchTerm) {
+                suggestionsBox.innerHTML = '';
+                suggestionsBox.classList.add('hidden');
+                return;
+            }
+            typingTimer = setTimeout(() => fetchSuggestions(searchTerm), 300);
+        });
+
+        function fetchSuggestions(searchTerm) {
+            fetch(`{{ URL::to('/search') }}?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network error');
+                    return response.json();
+                })
+                .then(data => {
+                    const results = data.data || [];
+
+                    if (results.length === 0) {
                         suggestionsBox.classList.add('hidden');
                         return;
                     }
-                    typingTimer = setTimeout(() => fetchSuggestions(searchTerm), 300);
-                });
 
-                function fetchSuggestions(searchTerm) {
-                    $.ajax({
-                        url: "{{ URL::to('/search') }}",
-                        dataType: "json",
-                        data: { q: searchTerm },
-                        success: function (response) {
-                            const results = response.data || [];
+                    suggestionsBox.innerHTML = '';
+                    results.slice(0, 7).forEach(item => {
+                        const title = item.value || '';
+                        const category = item.category_id;
+                        const row = document.createElement('button');
+                        row.type = 'button';
+                        row.className = 'w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-left';
+                        row.innerHTML = `<i class="fa-solid fa-magnifying-glass text-slate-400"></i><span>${title}</span>`;
 
-                            if (results.length === 0) {
-                                suggestionsBox.classList.add('hidden');
-                                return;
-                            }
-
-                            suggestionsBox.innerHTML = '';
-                            results.slice(0, 7).forEach(item => {
-                                const title = item.value || '';
-                                const category = item.category_id;
-                                const row = document.createElement('button');
-                                row.type = 'button';
-                                row.className = 'w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 text-left';
-                                row.innerHTML = `<i class="fa-solid fa-magnifying-glass text-slate-400"></i><span>${title}</span>`;
-
-                                row.onclick = function () {
-                                    searchInput.value = title;
-                                    $('#subcategory').val(category);
-                                    $('#category').val(category);
-                                    suggestionsBox.classList.add('hidden');
-                                };
-                                suggestionsBox.appendChild(row);
-                            });
-
-                            suggestionsBox.classList.remove('hidden');
-                        },
-                        error: function () {
+                        row.onclick = function () {
+                            searchInput.value = title;
+                            const subCat = document.getElementById('subcategory');
+                            const cat = document.getElementById('category');
+                            if (subCat) subCat.value = category;
+                            if (cat) cat.value = category;
                             suggestionsBox.classList.add('hidden');
-                        }
+                        };
+                        suggestionsBox.appendChild(row);
                     });
-                }
 
-                document.addEventListener('click', (e) => {
-                    if (!suggestionsBox.contains(e.target) && e.target !== searchInput) {
-                        suggestionsBox.classList.add('hidden');
-                    }
+                    suggestionsBox.classList.remove('hidden');
+                })
+                .catch(() => {
+                    suggestionsBox.classList.add('hidden');
                 });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!suggestionsBox.contains(e.target) && e.target !== searchInput) {
+                suggestionsBox.classList.add('hidden');
             }
         });
+    })();
 </script>
         </main>
         

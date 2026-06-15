@@ -1,0 +1,19 @@
+{
+    "name": "postplugins/buynow",
+    "description": "Simple Buynow Post package",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Classified",
+            "email": "myclassified@simplexi.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Postplugins\\Buynow\\": "src/"
+        }
+    },
+    "require": {}
+}

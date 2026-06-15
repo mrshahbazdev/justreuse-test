@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <title>lightSlider Demo</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <link rel="stylesheet"  href="../src/css/lightslider.css"/>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="lightslider.js"></script> 
+    <script>
+    	 $(document).ready(function() {
+
+            $('#image-gallery').lightSlider({
+                gallery:true,
+                item:1,
+                thumbItem:9,
+                slideMargin: 0,
+                loop:false,
+                onSliderLoad: function() {
+                    $('#image-gallery').removeClass('cS-hidden');
+                }  
+            });
+	
+		});
+		
+		
+    </script>
+</head>
+<body>
+	<div class="demo">
+        <div class="item">            
+            <div class="clearfix" style="max-width:474px;">
+                <ul id="image-gallery" class="gallery list-unstyled cS-hidden">
+                    <li data-thumb="img/thumb/cS-1.jpg"> 
+                        <img src="img/cS-1.jpg" />
+                         </li>
+                    <li data-thumb="img/thumb/cS-2.jpg"> 
+                        <img src="img/cS-2.jpg" />
+                         </li>
+                    <li data-thumb="img/thumb/cS-3.jpg"> 
+                        <img src="img/cS-3.jpg" />
+                         </li>
+                    <li data-thumb="img/thumb/cS-4.jpg"> 
+                        <img src="img/cS-4.jpg" />
+                         </li>
+                    <li data-thumb="img/thumb/cS-5.jpg"> 
+                        <img src="img/cS-5.jpg" />
+                         </li>
+                </ul>
+            </div>
+        </div>
+    </div>	
+	
+	
+
+	
+	
+</body>

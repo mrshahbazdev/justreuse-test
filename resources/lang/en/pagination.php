@@ -1,0 +1,20 @@
+<?php
+return array (
+  'previous' => '&laquo; Previous',
+  'next' => 'Next &raquo;',
+  'choose' => 'Choose your Categories',
+  'done' => 'Done',
+  'sell' => 'Sell',
+  'setting' => 'Settings',
+  'Star' => 'Star',
+  'UPHOLSTERY MATERIAL' => 'Upholstery Material',
+  'Brand & Model' => 'Brand & Model',
+  'No Of Doors' => 'No Of Doors',
+  'Body' => 'Body ',
+  'Engine Size' => 'Engine Size',
+  'Computer Table' => 'Computer Table',
+  'Dial Shape' => 'Dial Shape',
+  'Offers' => 'Offers',
+  'online' => 'Online',
+  'offline' => 'Offline',
+);

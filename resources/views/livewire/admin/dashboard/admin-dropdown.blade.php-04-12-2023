@@ -1,0 +1,42 @@
+<nav class="bg-indigo-500 top-0 absolute z-50 w-full flex flex-wrap items-center justify-between px-2 py-3 navbar-expand-lg">
+<div class="container px-4 mx-auto flex flex-wrap items-center justify-between">
+<div class="w-full relative flex justify-between lg:w-auto lg:static lg:block lg:justify-start">
+<a class="text-xl leading-relaxed inline-block mr-4 py-2 whitespace-no-wrap text-white" href="{{ URL::to('admin/dashboard') }}">Dashboard</a>
+<button class="cursor-pointer text-xl leading-none px-3 py-1 border border-solid border-transparent rounded bg-transparent block lg:hidden outline-none  focus:outline-none" type="button" onclick="toggleNavbar('example-collapse-navbar')">
+<i class="text-white fas fa-bars"></i>
+</button>
+</div>	
+<div class="lg:flex flex-grow items-center bg-white lg:bg-transparent lg:shadow-none hidden" id="example-collapse-navbar">
+
+
+
+<?php 
+$userImg = auth()->user()->profile_photo_path;
+
+if (!empty($userImg)) {
+	$userImgUrl = URL::asset('storage/' . $userImg);
+} else {
+	$userImgUrl = URL::asset('storage/profile-avatar.jpg');
+}
+?>
+<ul class="flex flex-col lg:flex-row list-none lg:ml-auto">
+
+<li class="flex items-center">
+<form method="POST" action="{{ route('logout') }}">
+@csrf
+<a href="{{ route('logout') }}" class="lg:text-white lg:hover:text-yellow-300 text-gray-800 px-3 py-4 lg:py-2 flex items-center text-sm" onclick="event.preventDefault(); this.closest('form').submit();"><i class="fa fa-sign-out mr-1" fa-lg=""></i> Logout</a>
+</form>
+</li>
+<li class="inline-block relative mr-10">
+	<a class="lg:text-white lg:hover:text-yellow-300 text-gray-800 px-3 py-4 lg:py-2 flex items-center text-sm" href="#pablo" onclick="openDropdown(event,'demo-pages-dropdown')">
+<img src="{{$userImgUrl}}" class="bg-white rounded-full mr-1" width="30" height="30" alt="your profile"/>
+{{ auth()->user()->name}} <i class="fa fa-angle-down ml-2" fa-lg=""></i></a>
+<div class="bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg hidden" id="demo-pages-dropdown" data-popper-placement="bottom-start" style="width:150px;position: absolute; inset: 0px auto auto 0px; margin: 0px; transform: translate(0px, 38px);">
+<a href="{{ URL::to('admin/my-profile') }}" class="text-sm py-2 px-4 font-normal block w-full whitespace-no-wrap bg-transparent text-gray-800">My Profile</a>
+</div>
+</li>
+<li class="flex items-center">&nbsp;</li>
+</ul>
+</div>
+</div>
+</nav>

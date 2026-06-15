@@ -1,0 +1,21 @@
+<?php
+return array (
+  'failed' => 'These credentials do not match our records.',
+  'password' => 'The provided password is incorrect.',
+  'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+  'choose' => 'Choose your Categories',
+  'done' => 'Done',
+  'sell' => 'Sell',
+  'setting' => 'Settings',
+  'Star' => 'Star',
+  'UPHOLSTERY MATERIAL' => 'Upholstery Material',
+  'Brand & Model' => 'Brand & Model',
+  'No Of Doors' => 'No Of Doors',
+  'Body' => 'Body ',
+  'Engine Size' => 'Engine Size',
+  'Computer Table' => 'Computer Table',
+  'Dial Shape' => 'Dial Shape',
+  'Offers' => 'Offers',
+  'online' => 'Online',
+  'offline' => 'Offline',
+);

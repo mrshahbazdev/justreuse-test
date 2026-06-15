@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#000000" />
+  <?php
+  $settings = App\Models\Setting::get_logos();
+  ?>
+  <!--meta data title and description start-->
+  <title>{{$settings['name']}}</title>
+  <meta name="title" content="{{$settings['meta_title']}}">
+  <meta name="description" content="{{$settings['meta_desc']}}">
+  <!--meta data title and description end-->
+  <!-- css start -->
+  <link rel="stylesheet" href="{{ URL::to('fontawesome-free/css/all.min.css') }}">
+  <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
+  <!-- <link rel="stylesheet" href="{{ URL::to('css/all.min.css') }}"> -->
+  <link href="{{ URL::to('css/toastr.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ URL::to('css/image-uploader.min.css') }}">
+  <link rel="stylesheet" href="{{ URL::to('css/app.css') }}">
+  <!-- css end -->
+  <!-- js start -->
+  <!--script src="{{ URL::to('js/tinymce.min.js') }}"></script-->
+    <script src="{{ URL::to('ckeditor_4_15_1/ckeditor.js') }}"></script>
+  <script src="{{ URL::to('js/jquery.min.js') }}"></script> 
+  <script src="{{ URL::to('js/toastr.min.js') }}"></script>  
+  <script src="{{ URL::to('js/image-uploader.min.js') }}"></script>
+  <script src="{{ URL::to('js/jquery.doubleScroll.js') }}"></script>
+  <script src="{{ URL::to('js/app.js') }}" defer></script>
+  @livewireStyles  
+</head>
+
+<body class="font-sans text-gray-800 antialiased">
+  <div id="root">
+    <!-- Page Content -->
+    @include('livewire.common.sidenav')
+
+    <div class="relative md:ml-64 bg-gray-100">
+      @include('livewire.admin.dashboard.admin-dropdown')
+      {{ $slot }}
+
+
+      @include('livewire.common.footer')
+      @stack('modals')
+      @livewireScripts
+    </div>
+
+
+  </div>
+  <script src="{{ URL::to('js/tailwind_popper.js') }}" defer></script>
+  <script>
+    /* Make dynamic date appear */
+    (function() {
+      if (document.getElementById("get-current-year")) {
+        document.getElementById(
+          "get-current-year"
+        ).innerHTML = new Date().getFullYear();
+      }
+    })();
+    /* Function for opning navbar on mobile */
+    function toggleNavbar(collapseID) {
+      document.getElementById(collapseID).classList.toggle("hidden");
+      document.getElementById(collapseID).classList.toggle("block");
+    }
+    /* Function for dropdowns */
+    function openDropdown(event, dropdownID) {
+      let element = event.target;
+      while (element.nodeName !== "A") {
+        element = element.parentNode;
+      }
+      Popper.createPopper(element, document.getElementById(dropdownID), {
+        placement: "bottom-start",
+      });
+      document.getElementById(dropdownID).classList.toggle("hidden");
+      document.getElementById(dropdownID).classList.toggle("block");
+    }
+  </script>
+
+</body>
+
+
+</html>

@@ -1,0 +1,20 @@
+<?php
+return array (
+  'packages' => 'Paket',
+  'package quotes' => 'Det premium-paketet hjälper säljare att marknadsföra sina produkter eller tjänster genom att ge mer synlighet åt deras annonser för att locka fler köpare och sälja snabbare',
+  'ad' => 'Annons',
+  'availability' => 'Tillgänglighet',
+  'days' => 'Dagar',
+  'promo duration' => 'Kampanjens varaktighet',
+  'ad limit' => 'Annonsbegränsning',
+  'ad type' => 'Annons typ',
+  'business package' => 'Företagspaket',
+  'coupons' => 'Kuponger',
+  'coupon code' => 'Kupongkod',
+  'offer' => 'Erbjudande',
+  'validity' => 'Giltighet',
+  'choose' => 'Välj dina kategorier',
+  'done' => 'Klar',
+  'sell' => 'Sälj',
+  'Star' => 'Stjärna',
+);

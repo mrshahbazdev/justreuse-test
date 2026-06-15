@@ -1,0 +1,272 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.7.0"></script>
+
+<div class="flex flex-wrap">
+  <div class="w-full xl:w-6/12 mb-2 lg:mb-12 xl:mb-0 px-4">
+    <div class="custom-shdaow relative flex flex-col min-w-0 break-words bg-white w-full mb-3 lg:mb-6 rounded">
+      <div class="heading-bg rounded-t mb-0 px-4 py-3 bg-transparent bg-gray-200 ">
+        <div class="flex flex-wrap items-center">
+          <div class="relative w-full max-w-full flex-grow flex-1">
+            <h6 class="uppercase text-gray-500 mb-1 text-xs font-semibold">
+              Overview
+            </h6>
+            <select class="rounded float-right p-1 text-sm" onchange="changeData(this.options[this.selectedIndex].value);">
+              <option value="0">Current Week</option>
+              <option value="1">Last Week</option>
+              <option value="2">Last two Week</option>
+            </select>
+            <h2 class="text-gray-800 text-xl font-semibold">
+              Weekly Sales
+            </h2>
+
+          </div>
+        </div>
+      </div>
+      <div class="p-4 flex-auto">
+        <!-- Chart -->
+        <div><canvas id="myChart"></canvas></div>
+        <!-- Chart end -->
+      </div>
+    </div>
+  </div>
+  <div class=" w-full xl:w-6/12 px-4" wire:ignore>
+    <div class="custom-shdaow relative flex flex-col min-w-0 break-words bg-white w-full mb-3 lg:mb-6 rounded">
+      <div class="heading-bg rounded mb-0 px-4 py-3 bg-transparent bg-gray-200">
+        <div class="flex flex-wrap items-center">
+          <div class="relative w-full max-w-full flex-grow flex-1">
+            <h6 class="uppercase text-gray-500 mb-1 text-xs font-semibold">
+              Performance (packages wise)
+            </h6>
+            <h2 class="text-gray-800 text-xl font-semibold">
+              Total Sales
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 flex-auto">
+        <!-- Chart -->
+        <div><canvas id="totalsalesChart"></canvas></div>
+        <!-- Chart end -->
+      </div>
+    </div>
+  </div>
+</div>
+<!---- new users and new paid ads start --->
+
+<div class="flex flex-wrap">
+  <div class=" w-full xl:w-6/12 mb-2  lg:mb-12 xl:mb-0 px-4">
+    <div class="custom-shdaow relative flex flex-col min-w-0 break-words bg-white w-full mb-3 lg:mb-6  rounded">
+      <div class="heading-bg rounded mb-0 px-4 py-3  bg-transparent bg-gray-200">
+        <div class="flex flex-wrap items-center">
+          <div class="relative w-full max-w-full flex-grow flex-1">
+            <h2 class="text-gray-800 text-xl font-semibold">
+              Active Users <span class="text-gray-500 text-xs font-semibold float-right underline"><a href="<?php echo URL::to("admin/user"); ?>">See all users</a></span>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div class="flex-auto">
+        <?php
+        $blockedUsers = App\Models\User::blocked_users();
+        $activeUsers = App\Models\User::whereNotIn('id', $blockedUsers)->WhereNull('deleted_at')->limit(5)->orderBy('id', 'desc')->get();
+        foreach ($activeUsers as $activeUsers) {
+          $profile_img = !empty($activeUsers['profile_photo_path']) ? URL::to('storage/' . $activeUsers['profile_photo_path']) : URL::to('storage/profile-avatar.jpg');
+        ?>
+          <div class="flex items-center px-4 py-3 border-t border-light-border">
+            <img class="w-12 h-12 mr-3 rounded-full" src="<?php echo $profile_img; ?>" />
+            <div>
+              <h3 class="text-sm text-gray-900"><?php echo $activeUsers['name'] . " - " . $activeUsers['email']; ?></h3>
+              <p class="text-xs text-gray-500">
+                <?php $reg_date = App\Models\TblChat::timeAgo($activeUsers['created_at']); ?>
+                <small class="has-tooltip text-xs"> Registered at : <?php echo $reg_date; ?>
+                  <small class="tooltip"><?php echo "Registered at : " . date('d-m-y h:i a', strtotime($activeUsers['created_at'])); ?></small>
+                </small>
+              </p>
+            </div>
+          </div>
+        <?php } ?>
+      </div>
+    </div>
+  </div>
+  <div class=" w-full xl:w-6/12 mb-2 lg:mb-12 xl:mb-0 px-4">
+    <div class="custom-shdaow relative flex flex-col min-w-0 break-words bg-white w-full mb-6  rounded">
+      <div class="heading-bg rounded mb-0 px-4 py-3  bg-transparent bg-gray-200">
+        <div class="flex flex-wrap items-center">
+          <div class="relative w-full max-w-full flex-grow flex-1">
+            <h2 class="text-gray-800 text-xl font-semibold">
+              New Paid Ads <span class="text-gray-500 text-xs font-semibold float-right underline"><a href="<?php echo URL::to("admin/payments"); ?>">See all paid ads</a></span>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div class="flex-auto">
+        <?php
+        $recentpaidAds = App\Models\TblPayment::WhereNull('deleted_at')->where('active', 1)->limit(6)->orderBy('id', 'desc')->get();
+
+        foreach ($recentpaidAds as $recentpaidAd) {
+          $imgUrlfinal = App\Models\TblChat::getPostImg($recentpaidAd['post_id']);
+          $post_title = App\Models\TblPost::where('id', $recentpaidAd['post_id'])->WhereNull('deleted_at')->first();
+
+          if (!empty($post_title)) {
+            $posturl = App\Models\TblPost::get_post_slug($post_title["slug"]);
+        ?>
+            <div class="flex items-center px-4 py-3 border-t border-light-border">
+              <img class="w-12 h-12 mr-3 rounded-full" src="<?php echo $imgUrlfinal; ?>" />
+              <div>
+                <h3 class="text-sm text-gray-900 underline"><a href="<?php echo e($posturl); ?>" target="_blank"><?php echo $post_title['title']; ?></a></h3>
+                <p class="text-xs text-gray-500">
+                  <?php $paid_at = App\Models\TblChat::timeAgo($recentpaidAd['created_at']); ?>
+                  <small class="has-tooltip text-xs"> Paid at : <?php echo $paid_at; ?>
+                    <small class="tooltip"><?php echo "Paid at : " . date('d-m-y h:i a', strtotime($recentpaidAd['created_at'])); ?></small>
+                  </small>
+                </p>
+              </div>
+            </div>
+        <?php }
+        } ?>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+<!-- Chart code -->
+<style>
+  canvas#totalsalesChart {
+    width: 100%;
+  }
+
+  .tooltip {
+    visibility: hidden;
+    position: absolute;
+  }
+
+  .has-tooltip:hover {
+    cursor: pointer;
+  }
+
+  .has-tooltip:hover .tooltip {
+    visibility: visible;
+    z-index: 100;
+  }
+
+  small.tooltip::before {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    position: absolute;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-right: 8px solid black;
+    left: -7px;
+    top: 4px;
+  }
+
+  small.tooltip {
+    background: black;
+    color: #fff;
+    margin-top: 2px;
+    margin-left: 11px;
+    padding: 5px;
+    font-weight: 500;
+    border-radius: 5px;
+  }
+</style>
+
+<script>
+  var dataObjects = [{
+      label: "Current Week",
+      labelData: [<?php echo $this->weekdatas['dates_set1']; ?>],
+      data: [<?php echo $this->weekdatas['counts_set1']; ?>]
+    },
+    {
+      label: "Last Week",
+      labelData: [<?php echo $this->weekdatas['dates_set2']; ?>],
+      data: [<?php echo $this->weekdatas['counts_set2']; ?>]
+    },
+    {
+      label: "Last Two Week",
+      labelData: [<?php echo $this->weekdatas['dates_set3']; ?>],
+      data: [<?php echo $this->weekdatas['counts_set3']; ?>]
+    }
+  ]
+
+  /* data */
+  var data = {
+    labels: dataObjects[0].labelData,
+    borderColor: "#e1e1e1",
+    datasets: [{
+      label: dataObjects[0].label,
+      data: dataObjects[0].data,
+    }]
+  };
+
+  var options = {
+    plugins: {
+      legend: false,
+      tooltip: true,
+	  datalabels: {
+        color: 'white',
+      }
+    },
+    elements: {
+      line: {
+        fill: false,
+        backgroundColor: "red",
+        borderColor: "#3f83f8",
+      },
+      point: {
+        backgroundColor: "#ff5a1f",
+        hoverBackgroundColor: "#f05252",
+        radius: 8,
+        textcolor: "#fff",
+        pointStyle: "circle",
+        hoverRadius: 10,
+      }
+    },
+    responsive: true,
+  };
+
+  var chart = new Chart('myChart', {
+    type: 'line',
+    data: data,
+    options: options
+  });
+
+  function changeData(index) {
+    chart.data.datasets.forEach(function(dataset) {
+      dataset.label = dataObjects[index].label;
+      dataset.labels = dataObjects[index].labelData;
+      dataset.data = dataObjects[index].data;
+    });
+    chart.data.labels = dataObjects[index].labelData;
+    chart.update();
+  }
+</script>
+
+<script>
+  var ctx = document.getElementById("totalsalesChart");
+  var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [<?php echo $this->allPackInfos['pack_names']; ?>],
+      datasets: [{
+        data: [<?php echo $this->allPackInfos['pack_count']; ?>],
+        backgroundColor: '#3f83f8',
+        borderColor: '#fff',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: {
+        legend: false,
+        tooltip: true,
+		datalabels: {
+        color: 'white',
+      }
+      },
+      responsive: true,
+    }
+  });
+</script><?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/livewire/admin/dashboard/chart.blade.php ENDPATH**/ ?>

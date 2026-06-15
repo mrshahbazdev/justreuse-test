@@ -1,0 +1,20 @@
+<?php
+return array (
+  'reset' => 'La tua password è stata reimpostata!',
+  'sent' => 'Abbiamo inviato il link per il ripristino della password via email!',
+  'throttled' => 'Attendere prima di riprovare.',
+  'token' => 'Questo token per il ripristino della password non è valido.',
+  'user' => 'Impossibile trovare un utente con questo indirizzo email.',
+  'choose' => 'Scegli le tue categorie',
+  'done' => 'Fatto',
+  'sell' => 'Vendere',
+  'feature ad' => 'Annunci in evidenza',
+  'top ad' => 'Migliori annunci',
+  'Star' => 'Stella',
+  'UPHOLSTERY MATERIAL' => 'Materiale di Rivestimento',
+  'Computer Table' => 'Tavolo per computer',
+  'Dial Shape' => 'Forma del Quadrante ',
+  'color' => 'Colore ',
+  'online' => 'Online ',
+  'Online' => 'in linea',
+);

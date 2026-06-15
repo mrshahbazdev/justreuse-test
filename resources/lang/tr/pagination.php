@@ -1,0 +1,22 @@
+<?php
+return array (
+  'previous' => '&laquo; Önceki',
+  'next' => 'Sonraki &raquo;',
+  'choose' => 'Kategorinizi Seçin',
+  'done' => 'Tamam',
+  'sell' => 'Satış',
+  'my_acc' => NULL,
+  'feature ad' => 'Özellikli Reklamlar',
+  'top ad' => 'En İyi Reklamlar',
+  'Star' => 'Yıldız',
+  'UPHOLSTERY MATERIAL' => 'Döşeme Malzemesi',
+  'Brand & Model' => 'Marka ve Model',
+  'No Of Doors' => 'Kapı Sayısı',
+  'Key features' => 'Ana Özellikler',
+  'Body' => 'Gövde',
+  'Engine Size' => 'Motor Hacmi',
+  'Computer Table' => 'Bilgisayar masası',
+  'Offers' => 'Teklifler',
+  'color' => 'Renk',
+  'offline' => 'Çevrimdışı',
+);

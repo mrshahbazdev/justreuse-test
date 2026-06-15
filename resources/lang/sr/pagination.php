@@ -1,0 +1,21 @@
+<?php
+return array (
+  'previous' => '&laquo; Prethodno',
+  'next' => 'Sledeće &raquo;',
+  'choose' => 'Izaberite svoje kategorije',
+  'done' => 'Završeno',
+  'sell' => 'Prodaja',
+  'feature ad' => 'Феатуре Адс',
+  'top ad' => 'Топ Адс',
+  'Star' => 'Звезда',
+  'UPHOLSTERY MATERIAL' => 'Материјал за Тапацирање',
+  'Brand & Model' => 'Марка и Модел',
+  'No Of Doors' => 'Број Врата ',
+  'Key features' => 'Кључне Карактеристике ',
+  'Body' => 'Каросерија',
+  'Engine Size' => 'Обем на Мотор',
+  'Computer Table' => 'Цомпутер Табле',
+  'Offers' => 'Понуде',
+  'color' => 'Боја',
+  'offline' => 'Офлајн',
+);

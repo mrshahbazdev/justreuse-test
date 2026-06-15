@@ -1,0 +1,19 @@
+{
+    "name": "chatplugins/ajaxtype",
+    "description": "Chat app based on ajax",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Classified",
+            "email": "myclassified@cls.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Chatplugins\\Ajaxtype\\": "src/"
+        }
+    },
+    "require": {}
+}

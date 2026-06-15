@@ -1,0 +1,21 @@
+<?php
+return array (
+  'reset' => '您的密码已重置',
+  'sent' => '我们已通过电子邮件发送您的密码重置链接',
+  'throttled' => '请稍候再试.',
+  'token' => '此密码重置令牌无效.',
+  'user' => '我们找不到使用该电子邮件地址的用户。.',
+  'setting' => '设置',
+  'Star' => '星',
+  'UPHOLSTERY MATERIAL' => '装饰材料',
+  'Brand & Model' => '品牌和型号',
+  'No Of Doors' => '门的数量',
+  'Key features' => '主要特点 ',
+  'Body' => '车身 ',
+  'Engine Size' => '发动机尺寸',
+  'Computer Table' => '电脑桌',
+  'Dial Shape' => '表盘形状',
+  'color' => '颜色',
+  'offline' => '离线 ',
+  'choose' => '选择您的类别',
+);

@@ -1,0 +1,12 @@
+.bg-orange-500{
+    background-color: #f8991b
+}
+.tablelast tr:last-child td{
+    border-bottom: unset !important;
+}
+@media only screen and (max-width:480px){
+    #example-collapse-sidebar{
+        position: fixed;
+        height: 100%;
+    }
+}

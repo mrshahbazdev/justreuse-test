@@ -1,0 +1,22 @@
+<?php
+return array (
+  'failed' => 'Aquestes credencials no coincideixen amb els nostres registres.',
+  'password' => 'La contrasenya proporcionada és incorrecta.',
+  'throttle' => 'Massa intents d\'accés. Si us plau, torneu-ho a provar en :seconds segons.',
+  'choose' => 'Seleccioneu les vostres categories',
+  'done' => 'Fet',
+  'sell' => 'Vendre',
+  'my_acc' => 'El meu compte',
+  'posted_ad' => '',
+  'banners' => 'Pancartes',
+  'feature ad' => 'Anuncis destacats',
+  'top ad' => 'Anuncis principals',
+  'Star' => 'Estrella',
+  'No Of Doors' => 'Nombre de Portes',
+  'Key features' => 'Característiques Clau',
+  'Body' => 'Cos',
+  'Engine Size' => 'Cilindrada',
+  'Offers' => 'Ofertes',
+  'color' => 'Color',
+  'offline' => 'Fora de línia ',
+);

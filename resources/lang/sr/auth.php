@@ -1,0 +1,22 @@
+<?php
+return array (
+  'failed' => 'Ovi podaci se ne podudaraju sa našim zapisima.',
+  'password' => 'Uneta lozinka nije tačna.',
+  'throttle' => 'Previše pokušaja prijave. Molimo vas da pokušate ponovo za :seconds sekundi.',
+  'choose' => 'Izaberite svoje kategorije',
+  'done' => 'Završeno',
+  'sell' => 'Prodaja',
+  'feature ad' => 'Феатуре Адс',
+  'top ad' => 'Топ Адс',
+  'Star' => 'Звезда',
+  'UPHOLSTERY MATERIAL' => 'Материјал за Тапацирање',
+  'Brand & Model' => 'Марка и Модел',
+  'No Of Doors' => 'Број Врата ',
+  'Key features' => 'Кључне Карактеристике ',
+  'Body' => 'Каросерија',
+  'Engine Size' => 'Обем на Мотор',
+  'Computer Table' => 'Цомпутер Табле',
+  'Offers' => 'Понуде',
+  'color' => 'Боја',
+  'offline' => 'Офлајн',
+);

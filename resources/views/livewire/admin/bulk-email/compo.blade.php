@@ -1,0 +1,9 @@
+@if($updateMode)
+	@include('livewire.admin.bulk-email.edit')
+@elseif($insertMode)
+	@include('livewire.admin.bulk-email.create')
+@elseif($previewMode)
+	@include('livewire.admin.bulk-email.preview')
+@else
+	@include('livewire.admin.bulk-email.show')
+@endif

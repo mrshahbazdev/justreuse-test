@@ -1,0 +1,311 @@
+<!-- component -->
+<script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+
+<?php
+
+$seg2 = request()->segment(2);
+$post_methods = App\Models\TblPostMethod::get_active_post_methods();
+$settings = App\Models\Setting::get_logos();
+$check_post_methods = "";
+if (!empty($post_methods)) {
+  $check_post_methods = $post_methods->pluck('name')->toArray();
+}
+
+$open_dashboard = ($seg2 == "dashboard") ? 'true' : 'false';
+
+$open_posts = ($seg2 == "posts") ? 'true' : 'false';
+$open_category = ($seg2 == "category") ? 'true' : 'false';
+$open_report_ad = ($seg2 == "report-ad") ? 'true' : 'false';
+$open_blocked_post = ($seg2 == "blocked-posts") ? 'true' : 'false';
+
+$open_user = ($seg2 == "user") ? 'true' : 'false';
+$open_role = ($seg2 == "role") ? 'true' : 'false';
+$open_permission = ($seg2 == "permissions") ? 'true' : 'false';
+
+$open_settings = ($seg2 == "settings") ? 'true' : 'false';
+$open_packages = ($seg2 == "packages") ? 'true' : 'false';
+$open_report_type = ($seg2 == "report-type") ? 'true' : 'false';
+$open_payment_methods = ($seg2 == "payment-methods") ? 'true' : 'false';
+$open_payments = ($seg2 == "payments") ? 'true' : 'false';
+
+$open_reviews = ($seg2 == "reviews") ? 'true' : 'false';
+$open_staticpage = ($seg2 == "staticpage") ? 'true' : 'false';
+$open_coupon = ($seg2 == "coupon") ? 'true' : 'false';
+$open_language = ($seg2 == "languages") ? 'true' : 'false';
+$open_country = ($seg2 == "country") ? 'true' : 'false';
+
+$open_advertising = ($seg2 == "advertising") ? 'true' : 'false';
+$open_blacklist = ($seg2 == "blacklist") ? 'true' : 'false';
+$open_contact_us = ($seg2 == "contact-us") ? 'true' : 'false';
+$open_report_user = ($seg2 == "report-user") ? 'true' : 'false';
+$open_home_banner = ($seg2 == "home-banner") ? 'true' : 'false';
+$open_banner_ads = ($seg2 == "banner-advertisements") ? 'true' : 'false';
+$open_currency_mgnt = ($seg2 == "currency") ? 'true' : 'false';
+$open_email_template = ($seg2 == "email-template") ? 'true' : 'false';
+$open_buynow_orders = ($seg2 == "buynow-orders") ? 'true' : 'false';
+$open_bluk_payments = ($seg2 == "bulk-payments") ? 'true' : 'false';
+$open_post_methods = ($seg2 == 'post-methods') ? 'true' : 'false';
+$open_chat_methods = ($seg2 == 'chat-methods') ? 'true' : 'false';
+
+$open_otherpage = ($seg2 == "otherpage") ? 'true' : 'false';
+
+$open_bulk_email = ($seg2 == "bulk-email") ? 'true' : 'false';
+
+?>
+
+<nav class="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-no-wrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
+  <div class="md:flex-col md:items-stretch md:min-h-full md:flex-no-wrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
+    <button class="cursor-pointer text-black opacity-50 md:hidden px-3 py-1 text-xl leading-none bg-transparent rounded border border-solid border-transparent" type="button" onclick="toggleNavbar('example-collapse-sidebar')">
+      <i class="fas fa-bars"></i>
+    </button>
+    <a class="md:block text-center text-gray-700 mr-0 inline-block whitespace-no-wrap text-sm uppercase font-bold" href="{{ URL::to('/admin/dashboard') }}">
+      <?php
+      // echo !empty($settings) ? $settings['name'] : "Admin Panel";
+      ?>
+      <img class="max-w-full mx-auto h-20" src="{{URL::to('storage/'.$settings['admin_logo'])}}">
+    </a>
+
+    <div class="md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 md:shadow-none shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded hidden" id="example-collapse-sidebar">
+      <div class="md:min-w-full md:hidden block pb-4 mb-4 border-b border-solid border-gray-300">
+        <div class="flex flex-wrap">
+          <div class="w-6/12">
+            <a class="md:block text-center md:pb-2 text-gray-700 mr-0 inline-block whitespace-no-wrap text-sm uppercase font-bold p-4 px-0" href="{{ URL::to('/admin/dashboard') }}">
+              <?php
+              // echo !empty($settings) ? $settings['name'] : "Admin Panel";
+              ?>
+              <img class="max-w-full mx-auto h-20" src="{{URL::to('storage/'.$settings['admin_logo'])}}">
+            </a>
+          </div>
+          <div class="w-6/12 flex justify-end">
+            <button type="button" class="cursor-pointer text-black opacity-50 md:hidden px-3 py-1 text-xl leading-none bg-transparent rounded border border-solid border-transparent" onclick="toggleNavbar('example-collapse-sidebar')">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Divider -->
+      <hr class="my-4 md:min-w-full">
+      <!-- Heading -->
+
+      <!-- Navigation -->
+
+      <ul class="md:flex-col md:min-w-full flex flex-col list-none">
+
+        <div class="font-medium">
+          @if(auth()->user()->can('dashboard-list'))
+          <a class=" rounded w-full flex items-center py-3 px-2 <?php echo ($open_dashboard == "true") ? "bg-indigo-500 text-white" : "text-gray-600"; ?> cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('dashboard') }}"><i class="fas fa-newspaper text-sm <?php echo ($open_dashboard == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Dashboard</a>
+          @endif
+        </div>
+
+
+        <!-- ads -->
+
+        <?php
+
+        $selected_ads = ($open_posts == 'true' || $open_category == 'true' || $open_report_ad == 'true' || $open_blocked_post == 'true') ? 'true' : 'false';
+
+        ?>
+
+        <div x-data="{ open:{{$selected_ads}} }">
+          <button @click="open = !open" class="w-full flex justify-between items-center py-3 px-2 text-gray-600 cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+            <span class="flex items-center">
+
+
+              <span class="font-medium"><i class="fas fa-ad text-sm text-gray-400"></i>&nbsp;Ads</span>
+            </span>
+
+            <span>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path x-show="! open" d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"></path>
+                <path x-show="open" d="M19 9L12 16L5 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </button>
+
+
+          <div x-show="open" class="bg-gray-100">
+            @if(auth()->user()->can('postlist-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_posts == "true") ? "bg-indigo-500 text-white" : ""; ?>  rounded  hover:bg-indigo-500 hover:text-white" href="{{ route('admin/post') }}">Post lists</a>
+            @endif
+            @if(auth()->user()->can('category-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_category == "true") ? "bg-indigo-500 text-white" : ""; ?> rounded  hover:bg-indigo-500 hover:text-white" href="{{ route('admin/category') }}">Category</a>
+            @endif
+            @if(auth()->user()->can('reportad-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_report_ad == "true") ? "bg-indigo-500 text-white" : ""; ?> rounded  hover:bg-indigo-500 hover:text-white" href="{{ route('admin/report-ad') }}">Report Ads</a>
+            @endif
+            @if(auth()->user()->can('blocked-post-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_blocked_post == "true") ? "bg-indigo-500 text-white" : ""; ?> rounded  hover:bg-indigo-500 hover:text-white" href="{{ route('admin/blocked-post') }}">Blocked Posts</a>
+            @endif
+          </div>
+        </div>
+
+
+        <!-- users -->
+
+        <?php
+
+        $selected_users = ($open_user == 'true' || $open_role == 'true' || $open_permission == 'true') ? 'true' : 'false';
+
+        ?>
+
+        <div x-data="{ open: {{$selected_users}} }">
+          <button @click="open = !open" class="w-full flex justify-between items-center py-3 px-2 text-gray-600 cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+            <span class="flex items-center">
+
+
+              <span class="font-medium"><i class="fas fa-users text-sm text-gray-400"></i>&nbsp;Users</span>
+            </span>
+
+            <span>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path x-show="! open" d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"></path>
+                <path x-show="open" d="M19 9L12 16L5 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </button>
+
+          <div x-show="open" class="bg-gray-100">
+            @if(auth()->user()->can('user-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_user == "true") ? "bg-indigo-500 text-white" : ""; ?>  rounded  hover:bg-indigo-500 hover:text-white" href="{{ route('admin/user') }}">Users</a>
+            @endif
+            @if(auth()->user()->can('role-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_role == "true") ? "bg-indigo-500 text-white" : ""; ?>  rounded hover:bg-indigo-500 hover:text-white" href="{{ route('admin/role') }}">Roles</a>
+            @endif
+            @if(auth()->user()->can('permission-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_permission == "true") ? "bg-indigo-500 text-white" : ""; ?>  rounded hover:bg-indigo-500 hover:text-white" href="{{ route('admin/permissions') }}">Permissions</a>
+            @endif
+            @if(auth()->user()->can('verificationrequest'))
+          <a class="py-2 px-6 block text-sm <?php echo ($open_bulk_email == "true") ? "bg-indigo-500 text-white" : ""; ?> rounded hover:bg-indigo-500 hover:text-white" href="{{ route('admin/verification-request') }}">Verification Request</a>
+          @endif
+          </div>
+        </div>
+
+        <!-- setup -->
+
+
+        <?php
+        $selected_setup = ($open_coupon == 'true' || $open_post_methods == 'true' || $open_email_template == 'true' || $open_language == 'true' || $open_currency_mgnt == 'true' || $open_country == 'true' || $open_advertising == 'true' || $open_blacklist == 'true' || $open_settings == 'true' || $open_packages == 'true' || $open_report_type == 'true' || $open_home_banner == 'true' || $open_payment_methods == 'true' || $open_chat_methods=='true') ? 'true' : 'false';
+        ?>
+        <div x-data="{ open: {{$selected_setup}} }">
+          <button @click="open = !open" class="w-full flex justify-between items-center py-3 px-2 text-gray-600 cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none">
+            <span class="flex items-center">
+              <span class="font-medium"><i class="fas fa-cog text-sm text-gray-400"></i>&nbsp;Setup</span>
+            </span>
+            <span>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path x-show="! open" d="M9 5L16 12L9 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"></path>
+                <path x-show="open" d="M19 9L12 16L5 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </span>
+          </button>
+
+
+          <div x-show="open" class="bg-gray-100">
+            @if(auth()->user()->can('settings-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_settings == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/settings') }}">Settings</a>
+            @endif
+
+            @if(auth()->user()->can('post-method-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_post_methods == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/post-methods') }}">Post Methods</a>
+            @endif
+
+            @if(auth()->user()->can('currency-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_currency_mgnt == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/currency') }}">Currency</a>
+            @endif
+
+            @if(auth()->user()->can('package-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_packages == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/package') }}">Package</a>
+            @endif
+            @if(auth()->user()->can('reporttype-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_report_type == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/report-type') }}">Report Types</a>
+            @endif
+            @if(auth()->user()->can('payment-methods-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_payment_methods == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/payment-methods') }}">Payment Methods</a>
+            @endif
+            @if(auth()->user()->can('chat-method-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_chat_methods == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/chat-methods') }}">Chat Methods</a>
+            @endif
+
+            @if(auth()->user()->can('coupon-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_coupon == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/coupon') }}">Coupons</a>
+            @endif
+
+            @if(auth()->user()->can('language-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_language == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/language') }}">Languages</a>
+            @endif
+
+            @if(auth()->user()->can('country-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_country == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white rounded " href="{{ route('admin/country') }}">Country</a>
+            @endif
+
+            @if(auth()->user()->can('advertising-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_advertising == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white rounded " href="{{ route('admin/advertising') }}">Advertising</a>
+            @endif
+
+            @if(auth()->user()->can('blacklist-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_blacklist == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/blacklist') }}">Blacklist</a>
+            @endif
+
+            @if(auth()->user()->can('home-banner-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_home_banner == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/home-banner') }}">Home Banner</a>
+            @endif
+
+            @if(auth()->user()->can('email-template-list'))
+            <a class="py-2 px-6 block text-sm <?php echo ($open_email_template == "true") ? "bg-indigo-500 text-white" : ""; ?> hover:bg-indigo-500 hover:text-white  rounded " href="{{ route('admin/email-template') }}">Email Template</a>
+            @endif
+
+          </div>
+        </div>
+
+        <div class="font-medium">
+          @if(auth()->user()->can('payment-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_payments == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/payment') }}"><i class="fas fa-dollar-sign text-sm <?php echo ($open_payments == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Orders</a>
+          @endif
+          @if(auth()->user()->can('bulk-payment-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_bluk_payments == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/bulk-payments') }}"><i class="fas fa-dollar-sign text-sm <?php echo ($open_bluk_payments == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Bulk Orders</a>
+          @endif
+
+          @if(auth()->user()->can('banner-ads-list'))
+          @if(!empty($check_post_methods))
+          @if(in_array("bannerads", $check_post_methods))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_banner_ads == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/banner-advertisements') }}"><i class="fas fa-dollar-sign text-sm <?php echo ($open_banner_ads == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Banner Ads</a>
+          @endif
+          @endif
+          @endif
+          @if(auth()->user()->can('buynow-orders-list'))
+          @if(!empty($check_post_methods))
+          @if(in_array("buynow", $check_post_methods))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_buynow_orders == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/buynow-orders') }}"><i class="fas fa-dollar-sign text-sm <?php echo ($open_buynow_orders == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Buynow Orders</a>
+          @endif
+          @endif
+          @endif
+
+
+          @if(auth()->user()->can('review-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_reviews == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/review') }}"><i class="fas fa-newspaper text-sm <?php echo ($open_reviews == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Reviews</a>
+          @endif
+
+          @if(auth()->user()->can('pages-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_staticpage == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/staticpage') }}"><i class="fa fa-file text-sm <?php echo ($open_staticpage == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Pages</a>
+          @endif
+          @if(auth()->user()->can('otherpages-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_otherpage == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded  cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/otherpages') }}"><i class="fa fa-file text-sm <?php echo ($open_otherpage == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Other Pages</a>
+          @endif
+          @if(auth()->user()->can('contact-us-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_contact_us == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin-contact-us') }}"><i class="fa fa-file text-sm <?php echo ($open_contact_us == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Contact-us</a>
+          @endif
+          @if(auth()->user()->can('reportuser-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_report_user == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/report-user') }}"><i class="fas fa-users text-sm <?php echo ($open_report_user == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Report User</a>
+          @endif
+          @if(auth()->user()->can('bulk-email-list'))
+          <a class="w-full flex items-center py-3 px-2 <?php echo ($open_bulk_email == "true") ? "bg-indigo-500 text-white" : "text-gray-600 "; ?> rounded cursor-pointer hover:bg-gray-100 hover:text-gray-700 focus:outline-none" href="{{ route('admin/bulk-email') }}"><i class="fas fa-envelope text-sm <?php echo ($open_bulk_email == "true") ? "text-white" : "text-gray-400"; ?>"></i>&nbsp;Bulk Email</a>
+          @endif
+        </div>
+
+        
+
+
+
+    </div>
+  </div>
+</nav>

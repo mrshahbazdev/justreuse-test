@@ -1,0 +1,23 @@
+<?php
+return array (
+  'my exchange' => 'Mina byten',
+  'incoming requests' => 'Inkommande förfrågningar',
+  'outgoing requests' => 'Utgående förfrågningar',
+  'successful exchanges' => 'Lyckade byten',
+  'failed exchanges' => 'Misslyckade byten',
+  'current status' => 'Aktuell status',
+  'exchange initiated on' => 'Byte initierat den',
+  'accept' => 'ACCEPTERA',
+  'decline' => 'AVSLÅ',
+  'success' => 'LYCKADE',
+  'failed' => 'MISSLYCKADE',
+  'no data found' => 'Inga data hittades',
+  'cancel' => 'AVBRYT',
+  'block exchange' => 'BLOCKERA BYTE',
+  'unblock exchange' => 'AVBLOCKERA BYTE',
+  'owner' => 'Ägare',
+  'choose' => 'Välj dina kategorier',
+  'done' => 'Klar',
+  'sell' => 'Sälj',
+  'Star' => 'Stjärna',
+);

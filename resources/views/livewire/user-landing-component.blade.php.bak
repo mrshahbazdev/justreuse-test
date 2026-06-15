@@ -1,0 +1,248 @@
+<div class="root-element-div">
+    <?php $dir_rtl =  App\Models\Setting::is_dir_rtl();
+    $class_dir = ($dir_rtl=="true")?'dir=rtl':""; 
+    $class_dir_slider = ($dir_rtl=="true")?'ar':"";
+    ?>
+    <?php 
+    $grid_setup = App\Models\Setting::grid_setup_landing();
+    ?>
+    <!-- search bar with banners start --->
+    <div class="w-full bg-right bg-no-repeat z-10 bg-cover relative z-auto top-0 rounded-md float-left" wire:ignore>
+        <div class="w-full relative">
+            <div class="banner_image float-left w-full relative">
+
+                <?php
+                if ($banner_type == "2") {
+                    if (!empty($banner_ads)) { // banner type "2" is enable images option
+                        foreach ($banner_ads as $banner_ad) { ?>
+							<div class="float-left w-full banner_wrapper relative">
+								<div class="banner_slider_imag">
+								<a class="relative block float-left w-full" href="{!! $banner_ad['url'] !!}" target="_blank">
+									<img class="w-full object-center object-cover" src="<?php echo $banner_ad['image']; ?>" alt="banner.jpg" />
+									
+								</a>
+								</div>
+								<div class="banner_content">
+									<div class="banner_inner_content">
+										<h2>Sell Your Old Car</h2>
+										<ul>
+										<li><a href="#">Mahindra TUV 300</a></li>
+										<li><a href="#"> Tata Nan</a></li>
+										<li><a href="#"> Maruti Suzuki Desire</a></li>
+										<li><a href="#"> Renault Kwid </a></li>
+										<li><a href="#"> Tamo Racemo </a></li>
+										<li><a href="#"> Chevrolet Beat </a></li>
+										</ul>
+										<div class="shop_now">
+											<a href="#">Shop Now</a>
+										</div>
+									</div>	
+								</div>
+						</div>
+                <?php }
+                    }
+                }
+                ?>
+			
+							
+            </div>
+        </div>
+        
+    </div>
+    <?php
+    if ($banner_type == "1") {       // banner type "1" is enable map option
+        if ($this->enable_banner_map == "1") {
+            $filepath = base_path() . '/extra/bannerplugins/bannermap/src/view.php';
+            if (file_exists($filepath)) {
+                include($filepath);
+            }
+        }
+    }
+    ?>
+    <!-- search bar with banners end -->
+    <!--<div class="all_categories w-full bg-no-repeat bg-cover bg-bottom xl:bg-center float-left pb-4 md:pb-7 lg:pb-10 mb-6 md:mb-8 lg:mb-12 relative" style="background-color: #f5f5f5;" wire:ignore>-->
+
+	<div class="category_menu_wrap float-left w-full my-4 md:my-0 md:relative -top-12 z-9">
+		<div class="container mx-auto">
+			<div class="all_categories rounded-xl float-left w-full p-2 pb-3 border border-2 border-gray-100">
+				<h2 class="text-white text-2xl poppins-600 py-4 pt-2 pl-3 ">{{__('landing.categories')}}</h2>
+				<div class="category_types rounded-md bg-white float-left w-full">
+					<ul class="cat_slider flex items-center jusitfy-between">
+						<?php 
+						//Note: while load first time, unable to get session *Searchedurl* url
+						//so the below condition has been updated
+						$searchUrl = "";
+						if(Session::has('Searchedurl'))
+						{
+							$searchUrl = Session::get('Searchedurl');
+						}
+						else{
+							$country_name = App\Models\Setting::get_admin_default_country();
+							$searchUrl = URL::to('/' . str_replace(' ', '_', strtolower($country_name)) . "?loc=" . $country_name . "&country=" . $country_name);
+						}
+						?>
+						@foreach($main_categories as $main_category)
+						<?php
+						
+						$cat_img = !empty($main_category->image) ? URL::to('storage') . '/' . $main_category->image : URL::to('storage/noimage150.png');
+						
+						//dd($cat_img);
+						?>
+						<?php $title = __($main_category->title); ?>
+						<li class="text-center my-4 inline-block poppins-600 text-gray-600 px-2"><a href="<?php echo $searchUrl;?>"><span class="category_icon block text-center h-12 flex items-center justify-center "><img class="w-6 h-6 object-cover inline-block" src="{{$cat_img}}" alt="{{$main_category->title}}"></span>{{__('catagories.' .$title)}}</a></li>
+						@endforeach
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+    <!-- Feature Ads start -->
+    <div class="w-full pb-0 mb-4 float-left pt-6" {{$class_dir}} wire:ignore>
+        <div class="container px-4 mx-auto relative">
+            <p class="text-2xl md:text-4xl poppins-700 text-black mb-3">{{__('landing.feature ads')}} </p>
+            
+			<?php if (session::has('FeatureAdsBasedOn')) { ?>
+                <p class="text-sm"><?php echo Session::get("FeatureAdsBasedOn"); ?></p>
+            <?php } ?>
+			<?php 
+            //$tot = count($featurs_ad_list);
+			//if($tot==4){$class = "4";} else if($tot==1 ||$tot==2 ||$tot==3 || $tot==5){ $class = "5"; } else {$class = "6";}
+			$class = $grid_setup;;
+			?>
+			<div>	
+				<div class="{{$class_dir_slider}} recent_ads_{{$class}} w-full mt-8">
+					<div class="grid md:grid-cols-3 grid-cols-2">
+					@foreach($featurs_ad_list as $featurs_ad)
+					<div class="w-full pb-3 lg:pb-6 float-left">
+						<?php echo $k= App\Models\Setting::htmlAdBlock($featurs_ad['id']); ?>					
+					</div>					
+					@endforeach
+					</div>
+				</div>
+			</div>
+			
+			
+            <?php $cat_class = ($dir_rtl=="true")?"pl-6 left-0 flex flex-row-reverse":"pr-6 right-0 flex";?>
+			
+			<!--<div class="slick_arrow_button absolute top-0 {{$cat_class}}">
+                <span class="mr-4 bg-green-500 rounded-full text-center text-white recent_left_arrow w-8 h-8 sm:w-9 sm:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+                <span class="bg-green-500 rounded-full text-center text-white recent_right_arrow w-8 h-8 sm:w-9 sm:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+            </div>-->
+        </div>
+    </div>
+    <!-- Feature Ads end -->
+	
+
+	
+
+    <!-- Top Ads start --->
+    <div class="w-full float-left mb-4">
+        <div class="container px-4 mx-auto relative" {{$class_dir}} wire:ignore>
+			<div class="w-full float-left ">
+				<p class="text-2xl md:text-4xl poppins-700 text-black mb-3">{{__('landing.top ads')}}</p>
+				<?php if (session::has('TopAdsBasedOn')) { ?>
+					<p class="text-sm"><?php echo Session::get("TopAdsBasedOn"); ?></p>
+				<?php } ?>
+				<?php 
+                //$tot = count($top_ads_list);
+				//if($tot==4){$class = "4";} else if($tot==1 ||$tot==2 ||$tot==3 || $tot==5){ $class = "5"; } else {$class = "6";}
+				$class=$grid_setup;
+				?>
+				<div class="w-full float-left">
+					<div class="{{$class_dir_slider}} Top_ads_{{$class}} w-full float-left mt-4 lg:mt-8">
+						<div class="grid md:grid-cols-3 grid-cols-2">
+						@foreach($top_ads_list as $top_ad_list)
+						<!--<div class="w-1/2 md:w-1/3 sm:w-1/3 lg:w-1/3 xl:w-1/4 pb-3 lg:pb-6 float-left">-->
+						<div class="w-full pb-3 lg:pb-6 float-left">
+							<?php echo $k= App\Models\Setting::htmlAdBlock($top_ad_list['id']); ?>
+						</div>
+						@endforeach
+						</div>
+					</div>
+				</div>
+				<?php $cat_class = ($dir_rtl=="true")?"pl-6 left-0 flex flex-row-reverse":"pr-6 right-0 flex";?>
+				
+				<!--<div class="slick_arrow_button absolute top-0 {{$cat_class}}">
+					<span class="mr-4 inline-block bg-green-500 rounded-full text-center text-white topad_left_arrow w-8 h-8 sm:w-9 sm:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+					<span class="inline-block bg-green-500 rounded-full text-center text-white topad_right_arrow w-8 h-8 sm:w-9 sm:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+				</div>-->
+				
+			</div>
+        </div>
+    </div>
+    <!-- Top Ads End -->
+	
+
+	
+	
+	<!-- Banner start --->
+    <div class="w-full float-left  full_width_bannner" {{$class_dir}}>
+		<div class="container mx-auto px-4">
+			<div class="static_banner_bg">
+				<div class="static_banner_content">
+					<h3>Looking for the Best Products or Services? Browse Our Classifieds on the <a href="#">Justreused</a> Door.</h3>
+				</div>
+				<div class="static_banner_image">
+					<img src="../images/home/circle_bg.jpg" alt="justreused">
+				</div>
+			</div>
+		</div>
+    </div>
+    <!-- Banner end -->
+	
+	
+	
+	<!-- latest ads start -->
+    <div class="w-full float-left mb-6" {{$class_dir}}>
+	<?php 
+	
+	$grid_control = "";
+	
+	if($grid_setup=="4")
+	{
+		$grid_control = "w-1/2 sm:w-1/3 md:w-1/3 lg:w-1/4 pb-3 lg:pb-6 float-left";
+	}
+	if($grid_setup=="5")
+	{
+		$grid_control = "w-1/2 sm:w-1/3 md:w-1/3 lg:w-1/4 xl:w-1/5 pb-3 lg:pb-6 float-left";
+	}
+	if($grid_setup=="6")
+	{
+		$grid_control = "w-1/2 sm:w-1/3 md:w-1/3 lg:w-1/5 xl:w-1/6 pb-3 lg:pb-6 float-left";
+	}
+	
+	?>
+	
+        <div class="container px-4 mx-auto">
+            <p class="text-2xl md:text-4xl poppins-700 text-black mb-3">{{__('landing.latest ads')}}</p>
+            <?php if (session::has('LatestAdsBasedOn')) { ?>
+                <p class="text-sm mb-4"><?php echo Session::get("LatestAdsBasedOn"); ?></p>
+            <?php } ?>
+            <div class="w-full mb-4 lg:mb-0 md:flex md:flex-wrap mt-4 lg:mt-8">
+			<div class="grid md:grid-cols-3 grid-cols-2">
+			@if(!empty($posts))
+                @foreach($posts as $latestpost)
+            <!--<div class="w-1/2 md:w-1/3 sm:w-1/3 lg:w-1/3 xl:w-1/4 pb-3 lg:pb-6 float-left">-->
+			<div class="w-full pb-3 lg:pb-6 float-left">
+                <?php echo $k= App\Models\Setting::htmlAdBlock($latestpost->id); ?>
+            </div>
+                @endforeach
+			@endif
+			</div>
+            </div>
+			@if(!empty($posts))
+            @if($posts->hasMorePages())
+            <div class="w-full float-left text-center mb-4 mt-4">
+                <button class="text-white px-4 border-2 rounded-md py-2 pb-3 bg-green-500 border-green-500 outline-none hover:bg-white hover:text-green-500 focus:outline-none ease-linear transition-all duration-700" wire:click="loadMore()">{{__('messages.Load More')}}</button>
+            </div>
+            @endif
+			@endif
+        </div>
+    </div>
+    <!-- latest ads end -->
+	
+
+</div>

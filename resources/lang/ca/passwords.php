@@ -1,0 +1,22 @@
+<?php
+return array (
+  'reset' => 'La vostra contrasenya ha estat restablerta!',
+  'sent' => 'Hem enviat el correu electrònic per restablir la vostra contrasenya!',
+  'throttled' => 'Si us plau, espereu abans de tornar-ho a provar.',
+  'token' => 'Aquest símbol per a la restabliment de contrasenya és invàlid.',
+  'user' => 'No podem trobar un usuari amb aquesta adreça de correu electrònic.',
+  'choose' => 'Escolliu les vostres categories',
+  'done' => 'Fet',
+  'sell' => 'Venda',
+  'my_acc' => 'El meu compte',
+  'feature ad' => 'Anuncis destacats',
+  'top ad' => 'Anuncis principals',
+  'Star' => 'Estrella',
+  'No Of Doors' => 'Nombre de Portes',
+  'Key features' => 'Característiques Clau',
+  'Body' => 'Cos',
+  'Engine Size' => 'Cilindrada',
+  'Offers' => 'Ofertes',
+  'color' => 'Color',
+  'offline' => 'Fora de línia ',
+);

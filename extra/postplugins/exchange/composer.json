@@ -1,0 +1,19 @@
+{
+    "name": "postplugins/exchange",
+    "description": "Simple Exchange Psot package",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Classified",
+            "email": "myclassified@simplexi.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Postplugins\\Exchange\\": "src/"
+        }
+    },
+    "require": {}
+}

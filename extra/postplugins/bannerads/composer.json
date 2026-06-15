@@ -1,0 +1,19 @@
+{
+    "name": "postplugins/bannerads",
+    "description": "Simple Banner Advertisement package",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Classified",
+            "email": "myclassified@simplexi.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Postplugins\\Bannerads\\": "src/"
+        }
+    },
+    "require": {}
+}

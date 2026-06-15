@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Imports;
+
+use App\Models\Feature;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+
+class FeaturesImport implements ToModel, WithHeadingRow
+{
+
+    protected $cat_id;
+    protected $brand_id;
+
+    public function __construct($cat_id, $brand_id)
+    {
+        $this->cat_id = $cat_id;
+        $this->brand_id = $brand_id;
+    }
+
+    /**
+     * @param array $row
+     *
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    public function model(array $row)
+    {
+
+        $other_features = [
+            "trim" => $row["trim"],
+            "body_type" => $row["body_type"],
+            "load_height_mm" => $row["load_height_mm"],
+            "number_of_seats" => $row["number_of_seats"],
+            "length_mm" => $row["length_mm"],
+            "width_mm" => $row["width_mm"],
+            "height_mm" => $row["height_mm"],
+            "wheelbase_mm" => $row["wheelbase_mm"],
+            "front_track_mm" => $row["front_track_mm"],
+            "rear_track_mm" => $row["rear_track_mm"],
+            "curb_weight_kg" => $row["curb_weight_kg"],
+            "wheel_size_r14" => $row["wheel_size_r14"],
+            "ground_clearance_mm" => $row["ground_clearance_mm"],
+            "trailer_load_with_brakes_kg" => $row["trailer_load_with_brakes_kg"],
+            "payload_kg" => $row["payload_kg"],
+            "back_track_width_mm" => $row["back_track_width_mm"],
+            "front_track_width_mm" => $row["front_track_width_mm"],
+            "clearance_mm" => $row["clearance_mm"],
+            "full_weight_kg" => $row["full_weight_kg"],
+            "front_rear_axle_load_kg" => $row["front_rear_axle_load_kg"],
+            "max_trunk_capacity_l" => $row["max_trunk_capacity_l"],
+            "cargo_compartment_length_width_height_mm" => $row["cargo_compartment_length_width_height_mm"],
+            "cargo_volume_m3" => $row["cargo_volume_m3"],
+            "minimum_trunk_capacity_l" => $row["minimum_trunk_capacity_l"],
+            "maximum_torque_n_m" => $row["maximum_torque_n_m"],
+            "injection_type" => $row["injection_type"],
+            "overhead_camshaft" => $row["overhead_camshaft"],
+            "cylinder_layout" => $row["cylinder_layout"],
+            "number_of_cylinders" => $row["number_of_cylinders"],
+            "compression_ratio" => $row["compression_ratio"],
+            "engine_type" => $row["engine_type"],
+            "valves_per_cylinder" => $row["valves_per_cylinder"],
+            "boost_type" => $row["boost_type"],
+            "cylinder_bore_mm" => $row["cylinder_bore_mm"],
+            "stroke_cycle_mm" => $row["stroke_cycle_mm"],
+            "engine_placement" => $row["engine_placement"],
+            "cylinder_bore_and_stroke_cycle_mm" => $row["cylinder_bore_and_stroke_cycle_mm"],
+            "turnover_of_maximum_torque_rpm" => $row["turnover_of_maximum_torque_rpm"],
+            "max_power_kw" => $row["max_power_kw"],
+            "presence_of_intercooler" => $row["presence_of_intercooler"],
+            "70 to 350HP" => $row["70_to_350hp"],
+            "engine_hp" => $row["engine_hp"],
+            "engine_hp_rpm" => $row["engine_hp_rpm"],
+            "drive_wheels" => $row["drive_wheels"],
+            "bore_stroke_ratio" => $row["bore_stroke_ratio"],
+            "number_of_gears" => $row["number_of_gears"],
+            "turning_circle_m" => $row["turning_circle_m"],
+            "transmission" => $row["transmission"],
+            "mixed_fuel_consumption_per_100_km_l" => $row["mixed_fuel_consumption_per_100_km_l"],
+            "range_km" => $row["range_km"],
+            "emission_standards" => $row["emission_standards"],
+            "fuel_tank_capacity_l" => $row["fuel_tank_capacity_l"],
+            "acceleration_0_100_km/h_s" => $row["acceleration_0_100_kmh_s"],
+            "max_speed_km_per_h" => $row["max_speed_km_per_h"],
+            "city_fuel_per_100km_l" => $row["city_fuel_per_100km_l"],
+            "CO2_emissions_g/km" => $row["co2_emissions_gkm"],
+            "fuel_grade" => $row["fuel_grade"],
+            "highway_fuel_per_100km_l" => $row["highway_fuel_per_100km_l"],
+            "back_suspension" => $row["back_suspension"],
+            "rear_brakes" => $row["rear_brakes"],
+            "front_brakes" => $row["front_brakes"],
+            "front_suspension" => $row["front_suspension"],
+            "steering_type" => $row["steering_type"],
+        ];
+
+        return new Feature([
+            'brand_id' => $this->brand_id,
+            'cat_id' => $this->cat_id,
+            'make' => $row['make'] ?? null,
+            'model' => $row['modle'] ?? null,
+            'generation' => $row['generation'] ?? null,
+            'year_from' => $row['year_from'] ?? null,
+            'year_to' => $row['year_to'] ?? null,
+            'series' => $row['series'] ?? null,
+            'other_features' => json_encode($other_features), // Store extra fields as JSON
+        ]);
+
+        // return new Feature([
+        //     'brand_id' => $this->brand_id,
+        //     "id_trim" => $row['id_trim'],
+        //     "Make" => $row['make'],
+        //     "Modle" => $row['modle'],
+        //     "Generation" => $row["generation"],
+        //     "Year_from" => $row["year_from"],
+        //     "Year_to" => $row["year_to"],
+        //     "Series" => $row["series"],
+        //     "Trim" => $row["trim"],
+        //     "Body_type" => $row["body_type"],
+        //     "load_height_mm" => $row["load_height_mm"],
+        //     "number_of_seats" => $row["number_of_seats"],
+        //     "length_mm" => $row["length_mm"],
+        //     "width_mm" => $row["width_mm"],
+        //     "height_mm" => $row["height_mm"],
+        //     "wheelbase_mm" => $row["wheelbase_mm"],
+        //     "front_track_mm" => $row["front_track_mm"],
+        //     "rear_track_mm" => $row["rear_track_mm"],
+        //     "curb_weight_kg" => $row["curb_weight_kg"],
+        //     "wheel_size_r14" => $row["wheel_size_r14"],
+        //     "ground_clearance_mm" => $row["ground_clearance_mm"],
+        //     "trailer_load_with_brakes_kg" => $row["trailer_load_with_brakes_kg"],
+        //     "payload_kg" => $row["payload_kg"],
+        //     "back_track_width_mm" => $row["back_track_width_mm"],
+        //     "front_track_width_mm" => $row["front_track_width_mm"],
+        //     "clearance_mm" => $row["clearance_mm"],
+        //     "full_weight_kg" => $row["full_weight_kg"],
+        //     "front_rear_axle_load_kg" => $row["front_rear_axle_load_kg"],
+        //     "max_trunk_capacity_l" => $row["max_trunk_capacity_l"],
+        //     "cargo_compartment_length_width_height_mm" => $row["cargo_compartment_length_width_height_mm"],
+        //     "cargo_volume_m3" => $row["cargo_volume_m3"],
+        //     "minimum_trunk_capacity_l" => $row["minimum_trunk_capacity_l"],
+        //     "maximum_torque_n_m" => $row["maximum_torque_n_m"],
+        //     "injection_type" => $row["injection_type"],
+        //     "overhead_camshaft" => $row["overhead_camshaft"],
+        //     "cylinder_layout" => $row["cylinder_layout"],
+        //     "number_of_cylinders" => $row["number_of_cylinders"],
+        //     "compression_ratio" => $row["compression_ratio"],
+        //     "engine_type" => $row["engine_type"],
+        //     "valves_per_cylinder" => $row["valves_per_cylinder"],
+        //     "boost_type" => $row["boost_type"],
+        //     "cylinder_bore_mm" => $row["cylinder_bore_mm"],
+        //     "stroke_cycle_mm" => $row["stroke_cycle_mm"],
+        //     "engine_placement" => $row["engine_placement"],
+        //     "cylinder_bore_and_stroke_cycle_mm" => $row["cylinder_bore_and_stroke_cycle_mm"],
+        //     "turnover_of_maximum_torque_rpm" => $row["turnover_of_maximum_torque_rpm"],
+        //     "max_power_kw" => $row["max_power_kw"],
+        //     "presence_of_intercooler" => $row["presence_of_intercooler"],
+        //     "70 to 350HP" => $row["70_to_350hp"],
+        //     "engine_hp" => $row["engine_hp"],
+        //     "engine_hp_rpm" => $row["engine_hp_rpm"],
+        //     "drive_wheels" => $row["drive_wheels"],
+        //     "bore_stroke_ratio" => $row["bore_stroke_ratio"],
+        //     "number_of_gears" => $row["number_of_gears"],
+        //     "turning_circle_m" => $row["turning_circle_m"],
+        //     "transmission" => $row["transmission"],
+        //     "mixed_fuel_consumption_per_100_km_l" => $row["mixed_fuel_consumption_per_100_km_l"],
+        //     "range_km" => $row["range_km"],
+        //     "emission_standards" => $row["emission_standards"],
+        //     "fuel_tank_capacity_l" => $row["fuel_tank_capacity_l"],
+        //     "acceleration_0_100_km/h_s" => $row["acceleration_0_100_kmh_s"],
+        //     "max_speed_km_per_h" => $row["max_speed_km_per_h"],
+        //     "city_fuel_per_100km_l" => $row["city_fuel_per_100km_l"],
+        //     "CO2_emissions_g/km" => $row["co2_emissions_gkm"],
+        //     "fuel_grade" => $row["fuel_grade"],
+        //     "highway_fuel_per_100km_l" => $row["highway_fuel_per_100km_l"],
+        //     "back_suspension" => $row["back_suspension"],
+        //     "rear_brakes" => $row["rear_brakes"],
+        //     "front_brakes" => $row["front_brakes"],
+        //     "front_suspension" => $row["front_suspension"],
+        //     "steering_type" => $row["steering_type"],
+        // ]);
+
+        return null;
+    }
+}

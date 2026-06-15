@@ -1,0 +1,22 @@
+<?php
+return array (
+  'reset' => 'Tá do phasfhocal athshocraithe!',
+  'sent' => 'Rinneamar an nasc athshocraithe pasfhocail a sheoladh chuig do sheoladh r-phoist!',
+  'throttled' => 'Fan go dtí go bhfuil tú i do chuid iarrachtaí eile.',
+  'token' => 'Tá an brathnú athshocraithe pasfhocail seo neamhbhailí.',
+  'user' => 'Ní féidir linn úsáideoir a fháil leis an seoladh r-phoist sin.',
+  'choose' => 'Roghnaigh do chuid catagóirí',
+  'done' => 'Críochnaithe',
+  'sell' => 'Díol',
+  'top ad' => 'Fógraí Barr',
+  'feature ad' => 'Fógraí Gné',
+  'Star' => 'Réalta',
+  'UPHOLSTERY MATERIAL' => 'Ábhar Cumhdaigh',
+  'Computer Table' => 'Tábla ríomhaire',
+  'Dial Shape' => 'Foirme na Dial',
+  'Offers' => 'Cuireadh',
+  'color' => 'Dath',
+  'online' => 'Ar líne ',
+  'offline' => 'As líne',
+  'Online' => 'Ar líne',
+);

@@ -1,0 +1,112 @@
+<!--begin bulk pack - stripe payment-->
+<?php
+$currency_symbol = App\Models\Setting::get_admin_default_currency();
+$settings = App\Models\Setting::get_logos();
+?>
+<script src="https://checkout.stripe.com/checkout.js"> </script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    });
+
+    $("#pay_proceed").click(function() {
+        var payment_type = $('input[name="payment_type"]:checked').val();
+        var fa = $("#final_total_amount").val();
+        var ids = [];
+        
+        // $("input:checkbox[class=checked_pack]:checked").each(function() {
+        //     //$("body").delegate("input:checkbox[class=checked_pack]:checked").each(function() {
+        //     ids.push($(this).val());
+        // });
+
+        // working
+        var getVal = $('.checked_pack:checkbox:checked').each(function () {
+            // console.log($(this).val());
+            ids.push($(this).val());
+        });
+
+        // working
+        var cid = "<?php echo !empty($currency_symbol) ? $currency_symbol['id'] : ""; ?>";
+
+        if (fa != "0" && ids.length != "0" && cid != "") {
+            if (payment_type == "stripe") {
+                card_pay_function(ids);
+            }
+        } else {
+            toastr.warning('something wrong');
+        }
+    });
+    <?php
+    $get_keys = App\Models\TblPaymentsMethod::where('name', "stripe")->pluck('keys_value');
+    $keys = json_decode($get_keys[0], true);
+    ?>
+
+    //begin card payment
+    function card_pay_function(ids) {
+        var post_to = "<?php echo URL::to('/stripe_bulk_pack'); ?>";
+        var api_publ_key = "<?php echo $keys[0]['STRIPE_PUBLISH_KEY']; ?>";
+        var app_name = "<?php echo !empty($settings) ? $settings['name'] : "classified"; ?>";
+        var package_id = ids;
+        var pack_amt = $("#final_total_amount").val();
+        var payment_type = $('input[name="payment_type"]:checked').val();
+        var cid = "<?php echo !empty($currency_symbol) ? $currency_symbol['id'] : ""; ?>";
+
+        if (package_id != 0 && pack_amt != 0 && cid != "") {
+            $("#overlay").css('display', 'block');
+            //stripe begin
+            var handler = StripeCheckout.configure({
+                key: api_publ_key, // your publisher key id
+                locale: 'auto',
+                token: function(token) {
+                    // You can access the token ID with `token.id`.
+                    // Get the token ID to your server-side code for use.
+                    $('#res_token').html(JSON.stringify(token));
+                    $.ajax({
+                        url: post_to,
+                        method: 'post',
+                        data: {
+                            tokenId: token.id,
+                            pack_amt: pack_amt,
+                            package_id: package_id,
+                            payment_type: payment_type,
+                            cid: cid
+                        },
+                        success: (response) => {
+                            if (response == "success") {
+                                console.log(response);
+                                location.href = "<?php echo URL::to('/'); ?>";
+                            } else {
+                                console.log(response);
+                                location.href = "<?php echo URL::to('/'); ?>";
+                            }
+
+                        },
+                        error: (error) => {
+                            console.log(error);
+                            toastr.warning('Oops! Something went wrong');
+                            window.location.reload();
+                        }
+                    })
+                }
+            });
+            handler.open({
+                name: app_name,
+                description: 'Payment Bulk Pack',
+                amount: pack_amt * 100,
+                currency: '<?php echo $currency_symbol['short_code']; ?>',
+                closed: function () {
+                    $("#overlay").css('display', 'none');
+                }
+            });
+            //stripe end
+        } else {
+            toastr.warning('choose any package');
+            window.location.reload();
+        }
+    }
+</script>
+<!--end - stripe payment-->

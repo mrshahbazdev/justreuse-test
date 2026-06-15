@@ -1,0 +1,21 @@
+<?php
+return array (
+  'failed' => 'Theip',
+  0 => 'Dhein na sonraí seo mícheartú leis na cáipéisí atá sa chúlra againn.',
+  'password' => 'Ní ceart an focal faire atá ionaithe.',
+  'throttle' => 'Iarrachtaí logála ró-mhóra. Déan iarracht arís i :seconds soicind.',
+  'choose' => 'Roghnaigh do chatagóirí',
+  'done' => 'Críochnaithe',
+  'sell' => 'Díol',
+  'top ad' => 'Fógraí Barr',
+  'feature ad' => 'Fógraí Gné',
+  'Star' => 'Réalta',
+  'UPHOLSTERY MATERIAL' => 'Ábhar Cumhdaigh',
+  'Computer Table' => 'Tábla ríomhaire',
+  'Dial Shape' => 'Foirme na Dial',
+  'Offers' => 'Cuireadh',
+  'color' => 'Dath',
+  'online' => 'Ar líne ',
+  'offline' => 'As líne',
+  'Online' => 'Ar líne',
+);

@@ -1,0 +1,22 @@
+<?php
+return array (
+  'failed' => 'Nämä tunnistetiedot eivät täsmää tietoihimme.',
+  'password' => 'Annettu salasana on virheellinen.',
+  'throttle' => 'Liian monta kirjautumisyritystä. Yritä uudelleen :seconds sekunnin kuluttua.',
+  'choose' => 'Valitse kategoriat',
+  'done' => 'Valmis',
+  'sell' => 'Myy',
+  'top ad' => 'Suosituimmat mainokset',
+  'feature ad' => 'Ominaisuusmainokset',
+  'Star' => 'Tähti',
+  'No Of Doors' => 'Ovien Määrä',
+  'Key features' => 'Tärkeimmät Ominaisuudet ',
+  'Body' => 'Kori',
+  'Engine Size' => 'Moottorin Tilavuus',
+  'Brand & Model' => 'Merkki & Malli',
+  'Computer Table' => 'Tietokoneen pöytä',
+  'Offers' => 'Tarjoukset ',
+  'color' => 'Väri ',
+  'online' => 'Verkossa ',
+  'offline' => 'Offline',
+);

@@ -1,0 +1,22 @@
+<?php
+return array (
+  'previous' => '&laquo; Fyrri',
+  'next' => 'Næsti &raquo;',
+  'choose' => 'Veldu flokkana þína',
+  'done' => 'Lokið',
+  'sell' => 'Selja',
+  'feature ad' => 'Eiginleikaauglýsingar',
+  'top ad' => 'Topp auglýsingar',
+  'Star' => 'Stjarna',
+  'UPHOLSTERY MATERIAL' => 'Áklæðnaður Efni',
+  'No Of Doors' => 'Fjöldi Hurða',
+  'Key features' => 'Helstu Eiginleikar',
+  'Body' => 'Líkami',
+  'Engine Size' => 'Stærð Vélbúnaðar',
+  'Computer Table' => 'Tölvuborð',
+  'Offers' => 'Tilboð',
+  'color' => 'Litur',
+  'online' => 'Á netinu',
+  'offline' => 'Ótengdur',
+  'Online' => 'Á netinu',
+);

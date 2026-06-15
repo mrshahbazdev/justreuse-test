@@ -1,0 +1,20 @@
+<?php
+return array (
+  'previous' => 'προηγούμενος',
+  'next' => 'Επόμενο',
+  'feature ad' => 'Χαρακτηριστικές διαφημίσεις ',
+  'top ad' => 'Κορυφαίες διαφημίσεις',
+  'Star' => 'Αστέρι',
+  'UPHOLSTERY MATERIAL' => 'Υλικό Ταπετσαρίας',
+  'Brand & Model' => 'Μάρκα & Μοντέλο',
+  'No Of Doors' => 'Αριθμός Πορτών',
+  'Key features' => 'Βασικά Χαρακτηριστικά',
+  'Body' => 'Καρόσερι',
+  'Engine Size' => 'Μέγεθος Κινητήρα',
+  'Computer Table' => 'Τραπέζι υπολογιστή',
+  'Offers' => 'Προσφορές',
+  'color' => 'Χρώμα',
+  'online' => 'Σε απευθείας σύνδεση ',
+  'my_business_packs' => 'My Business Packs',
+  'my_exchange' => 'Η ανταλλαγή μου',
+);

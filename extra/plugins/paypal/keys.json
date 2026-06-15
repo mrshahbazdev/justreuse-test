@@ -1,0 +1,19 @@
+{
+  "key_1":[{
+    "label":"User name",
+    "name" : "PAYPAL_USERNAME"
+  }],
+  "key_2":[{
+    "label":"Password",
+    "name" : "PAYPAL_PASSWORD"
+  }],
+  "key_3":[{
+    "label":"Secret Key",
+    "name" : "PAYPAL_SECRET_KEY"
+  }],
+  "key_4":[{
+    "label":"Mode",
+    "notes":"All the letters should be small. Like this ('sandbox or live')",
+    "name" : "PAYPAL_MODE"
+  }]
+}

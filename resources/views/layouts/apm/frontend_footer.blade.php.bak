@@ -1,0 +1,293 @@
+<?php
+$dir_rtl =  App\Models\Setting::is_dir_rtl();
+$class_dir = ($dir_rtl=="true")?'dir=rtl':""; 
+$settings = App\Models\Setting::get_logos();
+$post_methods = App\Models\TblPostMethod::get_active_post_methods();
+
+		$pop_locations = App\Models\TblPost::get_populor_loc();
+		$trending_locations = App\Models\TblPost::get_trending_loc();
+		?>
+		<div class="w-full forest-bg-green flex flex-col" {{$class_dir}}>
+			<div class="container px-4 mx-auto md:flex md:flex-row">
+
+			
+	<?php if($dir_rtl=="false"){ ?>
+			<!--Begin EN Alignment-->
+			<div class="py-2 pt-6 md:pt-10 md:w-4/12">
+				<div class="footer_logo_section w-full lg:w-3/4">
+					<div class="footer_logo text-center md:text-left">
+						<img class="inline-block w-48 lg:w-min" src="{{URL::to('storage/'.$settings['logo'])}}">
+					</div>
+
+					<?php
+					if (!empty($post_methods)) {
+						$check_banner_ads = $post_methods->pluck('name')->toArray();
+						if (in_array("bannerads", $check_banner_ads)) { ?>
+							<button class="text-white px-2  focus:outline-none rounded py-2 btn-gradiant  rounded-sm mt-8 w-full  ease-linear transition-all duration-500">
+								<a href="{{ URL::to('/pages/banner-ads') }}">
+									{{__('messages.banner advertise')}}
+								</a>
+							</button>
+					<?php }
+					} ?>
+
+					<ul class="w-full mt-8 text-center md:text-left">
+						<li class="inline-block px-3 lg:pr-10 lg:pl-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.facebook.com/" target="_blank"><img src="{{ URL::to('images/frontend/fb.png') }}"></a></li>
+						<li class="inline-block px-3 lg:pr-10 lg:pl-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.instagram.com/" target="_blank"><img src="{{ URL::to('images/frontend/insta.png') }}"></a></li>
+						<li class="inline-block px-3 lg:pr-10 lg:pl-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.twitter.com/" target="_blank"><img src="{{ URL::to('images/frontend/twitter.png') }}"></a></li>
+					</ul>
+					</div>
+				</div>
+			<!--End EN Alignment-->
+	<?php } else { ?>
+			<!--Begin AR Alignment-->
+			<div class="py-2 pt-6 md:pt-10 md:w-4/12">
+					<div class="footer_logo_section w-full lg:w-3/4">
+					<div class="footer_logo text-center md:text-right">
+						<img class="inline-block w-48 lg:w-min" src="{{URL::to('storage/'.$settings['logo'])}}">
+					</div>
+
+					<?php
+					if (!empty($post_methods)) {
+						$check_banner_ads = $post_methods->pluck('name')->toArray();
+						if (in_array("bannerads", $check_banner_ads)) { ?>
+							<button class="text-white px-2  focus:outline-none rounded py-2 btn-gradiant  rounded-sm mt-8 w-full  ease-linear transition-all duration-500">
+								<a href="{{ URL::to('/pages/banner-ads') }}">
+									{{__('messages.banner advertise')}}
+								</a>
+							</button>
+					<?php }
+					} ?>
+
+					<ul class="w-full mt-8 text-center md:text-right">
+						<li class="inline-block px-3 lg:pl-10 lg:pr-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.facebook.com/" target="_blank"><img src="{{ URL::to('images/frontend/fb.png') }}"></a></li>
+						<li class="inline-block px-3 lg:pl-10 lg:pr-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.instagram.com/" target="_blank"><img src="{{ URL::to('images/frontend/insta.png') }}"></a></li>
+						<li class="inline-block px-3 lg:pl-10 lg:pr-0"><a href="#" class="text-base font-semibold text-white"></a><a href="https://www.twitter.com/" target="_blank"><img src="{{ URL::to('images/frontend/twitter.png') }}"></a></li>
+					</ul>
+				</div>
+				</div>
+			<!--END AR Alignment-->
+	<?php } ?>
+
+
+
+				<div class="py-2 pt-6 md:pt-10 md:w-3/12">
+					<p class="text-xl poppins-600 text-white pb-1 uppercase inline-block border mb-6 border-b-2 border-t-0 border-r-0 border-l-0 ">{{__('messages.popular locations')}}</p>
+					@if(!empty($pop_locations))
+					<ul>
+						@foreach($pop_locations as $pop_location)
+						<?php
+						$popular_loc = URL::to('/' . str_replace(' ', '_', strtolower($pop_location)) . "?loc=" . $pop_location . "&country=&state=" . $pop_location . "&city=");
+						?>
+						<li class="pb-1.5"><a href="{{$popular_loc}}" class="text-base font-semibold text-white">{{$pop_location}}</a></li>
+						@endforeach
+					</ul>
+					@endif
+				</div>
+				<div class="py-2 pt-6 md:pt-10 md:w-3/12">
+					<p class="text-xl poppins-600 text-white pb-1 uppercase inline-block border mb-6 border-b-2 border-t-0 border-r-0 border-l-0 ">{{__('messages.trending locations')}}</p>
+					@if(!empty($trending_locations))
+					<ul>
+						@foreach($trending_locations as $trending_location)
+						<?php
+						$trending_loc = URL::to('/' . str_replace(' ', '_', strtolower($trending_location)) . "?loc=" . $trending_location . "&country=&state=" . $trending_location . "&city=");
+						?>
+						<li class="pb-1.5"><a href="{{$trending_loc}}" class="text-base font-semibold text-white">{{$trending_location}}</a></li>
+						@endforeach
+					</ul>
+					@endif
+				</div>
+				<div class="py-2 pt-6 md:pt-10 md:w-3/12">
+					<p class="text-xl poppins-600 text-white pb-1 uppercase inline-block border mb-6 border-b-2 border-t-0 border-r-0 border-l-0 ">{{__('messages.about us')}}</p>
+					<ul>
+						<li class="pb-1.5"><a href="{{ URL::to('/contact-us') }}" class="text-base font-semibold text-white">{{__('messages.contact us')}}</a></li>
+						<li class="pb-1.5"><a href="{{ URL::to('/pages/help') }}" class="text-base font-semibold text-white">{{__('messages.help')}}</a></li>
+						<li class="pb-1.5"><a href="{{ URL::to('/packages') }}" class="text-base font-semibold text-white">{{__('messages.packages')}}</a></li>
+						<li class="pb-1.5"><a href="{{ URL::to('/pages/terms-conditions') }}" class="text-base font-semibold text-white">{{__('messages.terms & conditions')}}</a></li>
+						<li class="pb-1.5"><a href="{{ URL::to('/pages/privacy-policy') }}" class="text-base font-semibold text-white">{{__('messages.privacy policy')}}</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="text-center">
+				<div class="container mx-auto border border-t-2 border-b-0 border-l-0 border-r-0 mt-4 lg:mt-8">
+				<p class="text-base py-6 text-white capitalize"> {{__('messages.copywrite')}} © <span id="get-current-year"></span> <a href="https://www.appcodemonster.com/">© Copyright 2024  Justreuesd</a></p>
+				</div>
+			</div>
+		</div>
+		<?php
+		// Bottom position tracking code
+		$advertising = App\Models\TblAdvertising::where('position', 'bottom')->where('active', '1')->first();
+		if (!empty($advertising)) {
+			echo $advertising->tracking_code;
+		}
+		?>
+		<!-- Footer end -->
+		<!-- fixed header -->
+		<script>
+			$(window).scroll(function() {
+				var bodyheight = $(document).scrollTop() + 100;
+				if (bodyheight >= 250) {
+					$(".navbar-expand-lg").addClass("fixed");
+				} else {
+					$(".navbar-expand-lg").removeClass("fixed");
+				}
+			});
+		</script>
+		
+			<?php 
+			if (!empty(auth()->user())) {
+				$auth_id = auth()->user()->id;
+			}else{
+				$auth_id = "";
+			}
+		?>
+		
+		<script type="text/javascript">
+		
+		// notification count update area
+			setInterval(function(){ 
+				
+				var authId = "{{$auth_id}}";
+				if(authId != "" || authId != false)
+				{
+					// console.log("no id");
+					$.ajax({
+						type: 'get',
+						dataType: 'json',
+						url: "{{ URL::to('get-notification-count') }}",
+						success: function(data) {
+							$(".notification_count").html(data.count);
+							$(".mbl_notification_count").html("("+data.count+")");
+							console.log("count: "+data.count);
+						},
+						error:function(data,error){
+							$(".notification_count").html(0);
+							$(".mbl_notification_count").html("(0)");
+						}
+					});
+
+
+					$.ajax({
+						type: 'get',
+						dataType: 'json',
+						url: "{{ URL::to('get-unread-chat-count') }}",
+						success: function(data) {
+							$(".chat_count").html(data.count);
+							$(".mbl_chat_count").html("("+data.count+")");
+							// console.log("chat-count: "+data.count);
+						},
+						error:function(data,error){
+							$(".chat_count").html(0);
+							$(".mbl_chat_count").html("(0)");
+						}
+					});
+
+				}
+
+			}, 15000);
+	// notification count update area
+			// Favourate product process begin
+		
+			$.ajaxSetup({
+				headers: {
+					'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+				}
+			});
+			$("body").on("click", ".save_favourate", function(e) {
+				var val = $(this).attr("data-fav-post-id");
+				$.ajax({
+					type: 'POST',
+					dataType: 'json',
+					url: "{{ route('savepost') }}",
+					data: {
+						post_id: val
+					},
+					success: function(data) {
+						if (data.result == "failed" && data.flag == "0") {
+							toastr.warning(data.message);
+						} else if (data.result == "success" && data.flag == "1") {
+							$("#favourate_post_id_" + val + " i").removeClass("fa fa-heart-o");
+							$("#favourate_post_id_" + val + " i").addClass("fa fa-heart");
+							toastr.success(data.message);
+						} else {
+							$("#favourate_post_id_" + val + " i").removeClass("fa fa-heart");
+							$("#favourate_post_id_" + val + " i").addClass("fa fa-heart-o");
+							toastr.success(data.message);
+						}
+
+					}
+				});
+			});
+		</script>
+		<!-- Favourate product process end -->
+		<script>
+			// for taba modal alert slidover
+			const application = Stimulus.Application.start();
+			application.register('dropdown', TailwindcssStimulusComponents.Dropdown);
+			application.register('modal', TailwindcssStimulusComponents.Modal);
+			application.register('tabs', TailwindcssStimulusComponents.Tabs);
+			application.register('popover', TailwindcssStimulusComponents.Popover);
+			application.register('alert', TailwindcssStimulusComponents.Alert);
+			application.register('slideover', TailwindcssStimulusComponents.Slideover);
+		</script>
+		@stack('modals')
+		<script>
+			/* Make dynamic date appear */
+			(function() {
+				if (document.getElementById("get-current-year")) {
+					document.getElementById(
+						"get-current-year"
+					).innerHTML = new Date().getFullYear();
+				}
+			})();
+			/* Function for opning navbar on mobile */
+			function toggleNavbar(collapseID) {
+				document.getElementById(collapseID).classList.toggle("hidden");
+				document.getElementById(collapseID).classList.toggle("block");
+			}
+			/* Function for dropdowns */
+			function openDropdown(event, dropdownID) {
+				let element = event.target;
+				while (element.nodeName !== "A") {
+					element = element.parentNode;
+				}
+				Popper.createPopper(element, document.getElementById(dropdownID), {
+					placement: "bottom-start",
+				});
+				document.getElementById(dropdownID).classList.toggle("hidden");
+				document.getElementById(dropdownID).classList.toggle("block");
+			}
+		</script>
+		<!--for tab design, dropdown, tabs, popover-->
+		<!-- begin - force logout if user if user blocked -->
+		<?php
+		$isBlocked = "0";
+		if (!empty(auth()->user())) {
+			$isBlocked = auth()->user()->is_blocked;
+		}
+		?>
+		<script>
+			(function() {
+				var blocked = '{{$isBlocked}}';
+				if (blocked == "1") {
+					document.getElementById('logout_trig').click();
+				}
+			})();
+		</script>
+		<!-- end - force logout if user if user blocked -->
+		<?php
+		//from paypal success(/)failure
+		$payment_nofy = Session('payment_nofy');
+		Session::forget('payment_nofy');
+		?>
+		<script type="text/javascript">
+			var payment_nofy = "{{$payment_nofy}}";
+			if (payment_nofy != "") {
+				toastr.info(payment_nofy);
+			}
+		</script>
+		<style>
+			.pac-logo:after {
+				display: none;
+			}
+		</style>

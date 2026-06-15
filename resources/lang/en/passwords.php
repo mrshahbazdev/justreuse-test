@@ -1,0 +1,23 @@
+<?php
+return array (
+  'reset' => 'Your password has been reset!',
+  'sent' => 'We have emailed your password reset link!',
+  'throttled' => 'Please wait before retrying.',
+  'token' => 'This password reset token is invalid.',
+  'user' => 'We can\'t find a user with that email address.',
+  'choose' => 'Choose your Categories',
+  'done' => 'Done',
+  'sell' => 'Sell',
+  'setting' => 'Settings',
+  'Star' => 'Star',
+  'UPHOLSTERY MATERIAL' => 'Upholstery Material',
+  'Brand & Model' => 'Brand & Model',
+  'No Of Doors' => 'No Of Doors',
+  'Body' => 'Body ',
+  'Engine Size' => 'Engine Size',
+  'Computer Table' => 'Computer Table',
+  'Dial Shape' => 'Dial Shape',
+  'Offers' => 'Offers',
+  'online' => 'Online',
+  'offline' => 'Offline',
+);

@@ -1,0 +1,23 @@
+<?php
+return array (
+  'all categories' => '所有类别',
+  'location' => '地点',
+  'sort_by_colon' => '排序方式: ',
+  'recently_posted' => '最近发布',
+  'price_low_to_high' => '价格：从低到高',
+  'price_high_to_low' => '价格：从高到低',
+  'popular' => '受欢迎的',
+  'setting' => '设置',
+  'Star' => '星',
+  'UPHOLSTERY MATERIAL' => '装饰材料',
+  'Brand & Model' => '品牌和型号',
+  'No Of Doors' => '门的数量',
+  'Key features' => '主要特点 ',
+  'Body' => '车身 ',
+  'Engine Size' => '发动机尺寸',
+  'Computer Table' => '电脑桌',
+  'Dial Shape' => '表盘形状',
+  'color' => '颜色',
+  'offline' => '离线 ',
+  'choose' => '选择您的类别',
+);

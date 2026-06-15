@@ -1,0 +1,23 @@
+<?php
+return array (
+  'failed' => 'Bu kimlik bilgileri kayıtlarımızla eşleşmiyor.',
+  'password' => 'Sağlanan şifre yanlış.',
+  'throttle' => 'Çok fazla giriş denemesi yapıldı. Lütfen :seconds saniye sonra tekrar deneyin.',
+  'choose' => 'Kategorilerinizi Seçin',
+  'done' => 'Tamam',
+  'sell' => 'Satış',
+  'my_acc' => NULL,
+  'feature ad' => 'Özellikli Reklamlar',
+  'top ad' => 'En İyi Reklamlar',
+  'Star' => 'Yıldız',
+  'UPHOLSTERY MATERIAL' => 'Döşeme Malzemesi',
+  'Brand & Model' => 'Marka ve Model',
+  'No Of Doors' => 'Kapı Sayısı',
+  'Key features' => 'Ana Özellikler',
+  'Body' => 'Gövde',
+  'Engine Size' => 'Motor Hacmi',
+  'Computer Table' => 'Bilgisayar masası',
+  'Offers' => 'Teklifler',
+  'color' => 'Renk',
+  'offline' => 'Çevrimdışı',
+);

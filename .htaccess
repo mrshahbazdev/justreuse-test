@@ -1,0 +1,77 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ===========================
+    # ✅ Force HTTPS (optional)
+    # ===========================
+    #RewriteCond %{HTTPS} off
+    #RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # ===========================
+    # ✅ Direct access to storage/app/public and storage (no symlink needed)
+    # ===========================
+    RewriteCond %{REQUEST_URI} ^/storage/(.*)$ [NC]
+    RewriteCond %{DOCUMENT_ROOT}/storage/app/public/%1 -f
+    RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
+
+    # fallback for root/storage (in case uploads save there)
+    RewriteCond %{REQUEST_URI} ^/storage/(.*)$ [NC]
+    RewriteCond %{DOCUMENT_ROOT}/storage/%1 -f
+    RewriteRule ^storage/(.*)$ storage/$1 [L]
+
+    # ===========================
+    # ✅ ALLOW serviceAccountKey.json access (Firebase needs this)
+    # ===========================
+    # Allow public access to serviceAccountKey.json for Firebase SDK
+    RewriteRule ^serviceAccountKey\.json$ - [L]
+
+    # ===========================
+    # Normal Laravel routing rules
+    # ===========================
+    RewriteCond %{REQUEST_FILENAME} -d [OR]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# ===========================
+# Protect .env and other sensitive files
+# BUT ALLOW serviceAccountKey.json for Firebase
+# ===========================
+<Files .env>
+    Order allow,deny
+    Deny from all
+</Files>
+
+<FilesMatch "^\.env">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ✅ ALLOW serviceAccountKey.json (Firebase needs public access to this)
+<Files "serviceAccountKey.json">
+    Order allow,deny
+    Allow from all
+</Files>
+
+# ===========================
+# Enable compression
+# ===========================
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain text/css application/javascript text/html
+</IfModule>
+
+# ===========================
+# Enable caching
+# ===========================
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 10 days"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>

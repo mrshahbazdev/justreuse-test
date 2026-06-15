@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <?php
+        $settings = App\Models\Setting::get_logos();
+        App\Models\Setting::set_last_visited_url();
+    ?>
+
+    <title><?php echo $__env->yieldContent('meta_title', $settings['meta_title']); ?></title>
+    <?php echo $__env->yieldContent('whatsapp_meta'); ?>
+    <meta property="og:title" content="<?php echo $__env->yieldContent('meta_title', $settings['meta_title']); ?>">
+    <meta name="keywords" content="<?php echo $__env->yieldContent('meta_keywords', $settings['meta_keywords']); ?>">
+    <meta name="description" content="<?php echo $__env->yieldContent('meta_description', $settings['meta_desc']); ?>">
+
+    
+    
+    <link rel="stylesheet" href="<?php echo e(asset('css/app.css')); ?>">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <style>
+        :root {
+            --primary: #f8991b;       /* Main Theme Color (Orange) */
+            --primary-dark: #e68a07;  /* Darker shade for hover */
+            --secondary: #39763a;     /* Accent Color (Green) */
+            --secondary-dark: #2c5f2d;/* Darker Green for hover */
+        }
+        html, body {
+            font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+            background-color: #fffbfa !important;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+        [x-cloak] { display: none !important; }
+        .bg-primary { background-color: var(--primary) !important; }
+        .text-primary { color: var(--primary) !important; }
+        .hover\:bg-primary-dark:hover { background-color: var(--primary-dark) !important; }
+        .header.scrolled { box-shadow:0 10px 30px -15px rgba(15,23,42,.25); }
+        .reveal { opacity:0; transform:translateY(22px); transition:opacity .6s ease,transform .6s ease; }
+        .reveal.active { opacity:1; transform:translateY(0); }
+        
+        /* Preloader Styles */
+        #preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999; transition: opacity 0.5s ease, visibility 0.5s ease; }
+        #preloader.hide { opacity: 0; visibility: hidden; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid var(--primary); border-radius: 50%; width: 70px; height: 70px; animation: spin 1s linear infinite; }
+        @keyframes  spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+
+    <?php echo \Livewire\Livewire::styles(); ?>
+
+</head>
+<body class="loading">
+
+    <div id="preloader">
+        <img src="<?php echo e(asset('storage/'.$settings['logo'])); ?>" alt="Site Logo" style="width: 120px; margin-bottom: 15px;">
+        <div class="loader"></div>
+        <p class="text-primary text-lg font-semibold">Loading...</p>
+    </div>
+	<div class="page-wrapper">
+    <?php echo $__env->make('cookie-consent::index', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php echo $__env->make('layouts.headernewhome', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+    <?php
+if (! isset($_instance)) {
+    $html = \Livewire\Livewire::mount('mini-chat')->html();
+} elseif ($_instance->childHasBeenRendered('8sWU6Lb')) {
+    $componentId = $_instance->getRenderedChildComponentId('8sWU6Lb');
+    $componentTag = $_instance->getRenderedChildComponentTagName('8sWU6Lb');
+    $html = \Livewire\Livewire::dummyMount($componentId, $componentTag);
+    $_instance->preserveRenderedChild('8sWU6Lb');
+} else {
+    $response = \Livewire\Livewire::mount('mini-chat');
+    $html = $response->html();
+    $_instance->logRenderedChild('8sWU6Lb', $response->id(), \Livewire\Livewire::getRootElementTagName($html));
+}
+echo $html;
+?>
+    <?php echo e($slot); ?>
+
+    
+    <?php echo $__env->make('layouts.footernewhome', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
+	</div>
+    <?php echo config('app.google_map_script'); ?>
+
+
+    <button id="toTop" class="hidden fixed bottom-5 right-5 bg-primary text-white w-12 h-12 rounded-full items-center justify-center shadow-lg hover:bg-primary-dark">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    
+    
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <?php echo \Livewire\Livewire::scripts(['data-cf-async' => 'false']); ?>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" data-cf-async="false"></script>
+    <script>
+      	jQuery(function ($) {
+        // ... your existing search suggestion and geolocation JS ...
+        const q = document.getElementById('q');
+        const locationInput = document.getElementById('location'); // Get location input too
+
+        if (q && locationInput) {
+            
+            // ==========================================================
+            // === NEW CODE: Add this block to enable Enter key search ===
+            // ==========================================================
+            function handleEnterSearch(event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault(); // Stop the default 'Enter' action
+                    document.getElementById('search').click(); // Trigger a click on the search button
+                }
+            }
+            q.addEventListener('keydown', handleEnterSearch);
+            locationInput.addEventListener('keydown', handleEnterSearch);
+            // ==========================================================
+            // === End of new code ======================================
+            // ==========================================================
+
+
+            // Your full search suggestion, autocomplete, and geolocation logic
+            // from your original file fits here perfectly.
+        }
+    });
+        // Preloader
+        window.addEventListener('load', () => document.getElementById('preloader').classList.add('hide'));
+
+        // Back-to-top & header shadow
+        const header = document.getElementById('siteHeader');
+        const toTop  = document.getElementById('toTop');
+        if(header && toTop) {
+            window.addEventListener('scroll', () => {
+                const sc = window.scrollY > 8;
+                header.classList.toggle('scrolled', sc);
+                toTop.classList.toggle('hidden', !sc);
+                toTop.classList.toggle('flex', sc);
+            });
+            toTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+        }
+
+        // Mobile menu
+        
+        // Reveal on view
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('active');
+                    io.unobserve(e.target);
+                }
+            });
+        }, { threshold: .15 });
+        document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+        // Swiper (Categories)
+        const categorySwiper = new Swiper('.category-swiper', {
+            slidesPerView: 2.5, spaceBetween: 16, grabCursor: true,
+            navigation: { nextEl: '.category-next', prevEl: '.category-prev' },
+            breakpoints: { 640: { slidesPerView: 3 }, 1024: { slidesPerView: 5 }, 1280: { slidesPerView: 6 } }
+        });
+
+        // Your existing search and geolocation script
+        jQuery(function ($) {
+            // ... (Your entire search and geolocation JS code remains here)
+            const q = document.getElementById('q');
+            if (q) {
+                // Your full search suggestion, autocomplete, and geolocation logic
+                // from your original file fits here perfectly.
+            }
+        });
+    </script>
+  <script>
+    // This new function runs automatically when the page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        // Only run this logic if a location has not already been set
+        if (!"<?php echo e(Session::has('GetCountry')); ?>") {
+            detectLocation();
+        }
+    });
+
+    function detectLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                // SUCCESS: User allowed location
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Use Google Geocoder to get address details
+                    const geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ 'location': { lat, lng } }, function(results, status) {
+                        if (status === 'OK' && results[0]) {
+                            const address = results[0].formatted_address;
+                            let city = '', state = '', country = '';
+
+                            results[0].address_components.forEach(component => {
+                                if (component.types.includes("locality")) city = component.long_name;
+                                if (component.types.includes("administrative_area_level_1")) state = component.long_name;
+                                if (component.types.includes("country")) country = component.long_name;
+                            });
+                            
+                            // Send the accurate data to our Livewire component
+                            Livewire.emit('setLocation', lat, lng, city, state, country, address);
+                        } else {
+                            // If Google Geocoder fails, fall back to IP
+                            Livewire.emit('setLocationFromIp');
+                        }
+                    });
+                },
+                // ERROR: User denied location or an error occurred
+                function(error) {
+                    console.warn(`Geolocation error (${error.code}): ${error.message}`);
+                    // Tell Livewire to use the IP address as a fallback
+                    Livewire.emit('setLocationFromIp');
+                }
+            );
+        } else {
+            // Browser doesn't support geolocation, fall back to IP
+            console.log("Browser doesn't support geolocation.");
+            Livewire.emit('setLocationFromIp');
+        }
+    }
+</script>
+</body>
+</html><?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/layouts/packagebuy.blade.php ENDPATH**/ ?>

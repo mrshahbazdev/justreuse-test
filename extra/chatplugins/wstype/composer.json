@@ -1,0 +1,19 @@
+{
+    "name": "chatplugins/wstype",
+    "description": "Chat app based on ws",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Classified",
+            "email": "myclassified@cls.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Chatplugins\\Wstype\\": "src/"
+        }
+    },
+    "require": {}
+}

@@ -1,0 +1,23 @@
+ 
+
+<?php $__env->startSection('content'); ?>
+    
+    <?php
+if (! isset($_instance)) {
+    $html = \Livewire\Livewire::mount('post-detail-component', ['slug' => $slug])->html();
+} elseif ($_instance->childHasBeenRendered('RNhzyPi')) {
+    $componentId = $_instance->getRenderedChildComponentId('RNhzyPi');
+    $componentTag = $_instance->getRenderedChildComponentTagName('RNhzyPi');
+    $html = \Livewire\Livewire::dummyMount($componentId, $componentTag);
+    $_instance->preserveRenderedChild('RNhzyPi');
+} else {
+    $response = \Livewire\Livewire::mount('post-detail-component', ['slug' => $slug]);
+    $html = $response->html();
+    $_instance->logRenderedChild('RNhzyPi', $response->id(), \Livewire\Livewire::getRootElementTagName($html));
+}
+echo $html;
+?>
+<?php $__env->stopSection(); ?>
+
+
+<?php echo $__env->make('layouts.frontendother', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /home/justreused/htdocs/www.justreused.com/resources/views/post-detail-wrapper.blade.php ENDPATH**/ ?>

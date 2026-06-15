@@ -1,0 +1,23 @@
+<?php
+return array (
+  'sell and buy near you' => 'Vendi e acquista vicino a te',
+  'simple fast and efficient' => 'Semplice, veloce ed efficiente',
+  'top ads' => 'Annunci in evidenza',
+  'view more' => 'VEDI DI PIÙ',
+  'feature ads' => 'Annunci in primo piano',
+  'latest ads' => 'Ultimi annunci',
+  'browsecategory' => 'Sfoglia per categoria',
+  'categories' => 'Categorie',
+  'choose' => 'Scegli le tue categorie',
+  'done' => 'Fatto',
+  'sell' => 'Vendere',
+  'feature ad' => 'Annunci in evidenza',
+  'top ad' => 'Migliori annunci',
+  'Star' => 'Stella',
+  'UPHOLSTERY MATERIAL' => 'Materiale di Rivestimento',
+  'Computer Table' => 'Tavolo per computer',
+  'Dial Shape' => 'Forma del Quadrante ',
+  'color' => 'Colore ',
+  'online' => 'Online ',
+  'Online' => 'in linea',
+);

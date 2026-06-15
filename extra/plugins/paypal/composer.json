@@ -1,0 +1,19 @@
+{
+    "name": "plugins/paypal",
+    "description": "Simple Paypal package",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "classified",
+            "email": "myclassified@simplexi.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Plugins\\Paypal\\": "src/"
+        }
+    },
+    "require": {}
+}

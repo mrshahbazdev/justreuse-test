@@ -1,0 +1,194 @@
+<?php
+$myip = $_SERVER['REMOTE_ADDR'];
+$json_data = file_get_contents("http://ip-api.com/json/$myip");
+if(!is_null($json_data) && !empty($json_data))
+{
+	$data = json_decode($json_data, true);
+}
+else{
+	$data = array("countryCode"=>"AU", "country"=>"Australia");
+}
+
+$data['countryCode'] = "AU";
+$data["country"] = "Australia";
+
+$country_enable = App\Models\TblAdminCountry::where('code', $data['countryCode'])->first();
+if ($country_enable->active == 0) {
+    $restricturl = URL::to('/restricted/404');
+?>
+    <script type="text/javascript">
+        window.location = "<?php echo $restricturl; ?>"; //here double curly bracket
+    </script>
+<?php
+} else if (Session::has("GetSearched")) {
+    Session(["GetSearched" => Session::get("GetSearched")]);
+    if (Session::has("GetCity")) {
+        Session(["GetCity" => Session::get("GetCity")]);
+    }
+    if (Session::has("GetState")) {
+        Session::put(["GetState" => Session::get("GetState")]);
+    }
+    if (Session::has("GetCountry")) {
+        Session::put(["GetCountry" => Session::get("GetCountry")]);
+    }
+    if (Session::has("GetAddress")) {
+        Session::put(["GetAddress" => Session::get("GetAddress")]);
+    }
+    if (Session::has("Getlat")) {
+        Session::put(["Getlat" => Session::get("Getlat")]);
+    }
+    if (Session::has("Getlng")) {
+        Session::put(["Getlng" => Session::get("Getlng")]);
+    }
+    $searched_url = URL::to('/' . Session::get("GetSearched") . "?loc=" . Session::get("GetAddress") . "&country=" . Session::get("GetCountry") . "&state=" . Session::get("GetState") . "&city=" . Session::get("GetCity") . "&lat=" . Session::get("Getlat") . "&lng=" . Session::get("Getlng") . "&d=30");
+    Session::put("Searchedurl", $searched_url);
+} else {
+    Session::put(["GetCountry" => $data["country"]]);
+    $searched_url = URL::to('/' . str_replace(' ', '_', strtolower($data["country"])) . "?loc=" . $data["country"] . "&country=" . $data["country"] . "&state=&city=");
+    Session::put("Searchedurl", $searched_url);
+}
+?>
+<script>
+    window.onload = function() {
+        if ($("#is_search").val() == "") {
+            var startPos;
+            var geoSuccess = function(position) {
+                startPos = position;
+                jQuery('#latitude').val(startPos.coords.latitude);
+                jQuery('#longitude').val(startPos.coords.longitude);
+                jQuery('#is_location_allowed').val(1);
+                var geocoder = new google.maps.Geocoder();
+                var latLng = new google.maps.LatLng(startPos.coords.latitude, startPos.coords.longitude);
+                if (geocoder) {
+                    geocoder.geocode({
+                        'latLng': latLng
+                    }, function(results, status) {
+                        if (status == google.maps.GeocoderStatus.OK) {
+                            jQuery('#location').val(results[0].formatted_address);
+                            var add = results[0].formatted_address;
+                            var value = add.split(",");
+                            var count = value.length;
+                            var locality = value[count - 3];
+
+                            jQuery('#locality').val(locality.replace(/^[ ]+|[ ]+$/g, ''));
+                            for (var i = 0; i < results[0].address_components.length; i++) {
+                                for (var b = 0; b < results[0].address_components[i].types.length; b++) {
+                                    if (results[0].address_components[i].types[b] == "locality") {
+                                        //this is the object you are looking for
+                                        city = results[0].address_components[i];
+                                        break;
+                                    }
+                                    if (results[0].address_components[i].types[b] == "administrative_area_level_1") {
+                                        //this is the object you are looking for
+                                        state = results[0].address_components[i];
+                                        break;
+                                    }
+                                }
+                            }
+                            jQuery('#stateName').val(state.long_name);
+                            jQuery('#cityName').val(city.long_name);
+							
+							
+							if ($("#is_search").val() == "") {
+            
+								if ($("#is_location_allowed").val() == "1") {
+									var current_latitude = jQuery('#latitude').val();
+									var current_longitude = jQuery('#longitude').val();
+									var city = jQuery('#cityName').val();
+									var state = jQuery('#stateName').val();
+									var country = jQuery('#currentLocation').val();
+									var addss = jQuery("#location").val();
+									set_current_loc_session(current_latitude, current_longitude, city, state, country, addss);
+								}
+
+							}
+							
+                        }
+                    }); //geocoder.geocode()
+                }
+            };
+            var error = function(positionError) {
+                switch (positionError.code) {
+                    case positionError.TIMEOUT:
+                        //alert("The request to get user location has aborted as it has taken too long.");
+                        break;
+                    case positionError.POSITION_UNAVAILABLE:
+                        //alert("Location information is not available.");
+                        break;
+                    case positionError.PERMISSION_DENIED:
+                        //alert("Permission to share location information has been denied!");
+                        break;
+                    default:
+                }
+            };
+            var result = navigator.geolocation.getCurrentPosition(geoSuccess, error);
+
+        }
+    }
+    $(document).ready(function() {
+        if ($("#is_search").val() == "") {
+            setTimeout(function() {
+                if ($("#is_location_allowed").val() == "1") {
+                    var current_latitude = jQuery('#latitude').val();
+                    var current_longitude = jQuery('#longitude').val();
+                    var city = jQuery('#cityName').val();
+                    var state = jQuery('#stateName').val();
+                    var country = jQuery('#currentLocation').val();
+                    var addss = jQuery("#location").val();
+                    set_current_loc_session(current_latitude, current_longitude, city, state, country, addss);
+                }
+
+            }, 2000);
+        }
+    });
+	
+		
+    function set_current_loc_session(current_latitude, current_longitude, city, state, country, addss, event) {
+        $.ajax({
+            type: 'POST',
+            url: "{{ URL::to('set_current_loc_session') }}",
+            data: JSON.stringify({
+                latitude: current_latitude,
+                longitude: current_longitude,
+                city: city,
+                state: state,
+                country: country,
+                address: addss
+            }),
+            contentType: 'application/json', // Data JSON format me send hoga
+            dataType: 'json', // Response JSON me expect karenge
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            success: function (data) {
+                if (data.msg === "success") {
+                    location.reload();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error:", error);
+                alert("Something went wrong! Please try again.");
+            }
+        });
+    }
+
+</script>
+
+ <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            fetch('/set-timezone', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ timezone: userTimeZone })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Timezone set:', data))
+            .catch(error => console.error('Error:', error));
+        });
+    </script>

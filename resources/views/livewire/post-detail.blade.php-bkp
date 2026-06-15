@@ -1,0 +1,1309 @@
+
+
+<div class="root-element-div">
+
+		<?php
+
+		/* show the curreny symbol */
+		$settings = App\Models\Setting::get_logos();
+		$slected_currency = !empty($product[0]->currency_id) ? $product[0]->currency_id : $settings['default_currency'];
+		$currency_symbol = App\Models\TblPost::get_post_currency($slected_currency);
+
+		$final_city_name = !empty($product[0]->locality) ? $product[0]->locality : $info_location[0]->name; // get locality & city 
+
+		// get custome fields for meta key 
+
+		$finalcusVal = "";
+		if (!empty($additional)) {
+
+			foreach ($additional as $cus_field) {
+				$cus_label = $cus_field['label'];
+				$cus_val = $cus_field['value'];
+				//dd($cus_label, $cus_val);
+				$finalcusVal .= $cus_label . " " . $cus_val . ", ";
+			}
+		} else {
+			$finalcusVal = $product[0]->title . ", " . $product[0]->price;
+		}
+
+		$meta_key_values = rtrim($finalcusVal, ', ');
+		// get custome fields for meta key end
+
+		$meta_title = $product[0]->title . " | " . $category_name;
+		$meta_keywords = $meta_key_values;
+		$meta_description = $product[0]->description;
+
+		$dir_rtl =  App\Models\Setting::is_dir_rtl();
+		$class_dir = ($dir_rtl == "true") ? 'dir=rtl' : "";
+		$class_dir_float_lr = ($dir_rtl == "true") ? 'float-right' : 'float-left';
+		$class_dir_float_rl = ($dir_rtl == "true") ? 'float-left' : 'float-right';
+		$class_dir_text_lr = ($dir_rtl == "true") ? 'text-right' : 'text-left';
+		$class_dir_slider = ($dir_rtl == "true") ? 'ar' : "";
+		$class_dir_popup_btn = ($dir_rtl == "true") ? '' : 'sm:space-x-reverse';
+		?>
+
+		@section('meta_title', $meta_title)
+		@section('meta_keywords', $meta_keywords)
+		@section('meta_description', $meta_description)
+
+
+		<div class="w-full inline-block" {{$class_dir}}>
+			<!-- report start -->
+			<div class="fixed z-50 inset-0 overflow-y-auto" id="report" style="display:none">
+				<div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0" {{$class_dir}}>
+					<div class="fixed inset-0 transition-opacity" aria-hidden="true">
+						<div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+					</div>
+					<!-- This element is to trick the browser into centering the modal contents. -->
+					<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+					<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+						<div class="bg-white px-6 py-4 sm:px-12 sm:py-8">
+							<div class="mb-6">
+								<div class="{{$class_dir_text_lr}}">
+									<h3 class="block text-xl text-black font-semibold mb-2 sm:mb-4" id="modal-headline">
+										{{__('post_detail.item report')}}
+									</h3>
+									<div class="">
+										<div class="py-2">
+											@foreach($report_types as $report)
+											<label class="block text-base text-black font-semibold mb-2"><input type="radio" value="{{$report->id}}" name="re_type" class="re_type mx-2" required>{{$report->name}}</label>
+											@endforeach
+										</div>
+										<div class="py-2">
+											<label class="block text-base text-black font-semibold mb-2 sm:mb-4">{{__('post_detail.comment')}}:</label>
+											<textarea id="comment" maxlength="500" placeholder="{{__('post_detail.type here')}}" rows="4" required class="text-base shadow appearance-none border-l-2 border-gray-400 bg-gray-100 rounded w-full p-2 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+											<p class="text-xs font-medium item-center text-black">{{__('post_detail.character limit')}}: 500</p>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="sm:flex sm:flex-row-reverse sm:space-x-3 {{$class_dir_popup_btn}}">
+								<button type="button" class="w-full inline-flex justify-center rounded-md border-2 border-transparent shadow-sm px-4 py-2 pb-3 bg-green-500 text-base font-semibold text-white hover:bg-white hover:text-green-500 hover:border-green-500 focus:outline-none sm:w-auto sm:text-sm transition-all ease-linear duration-500" id="submit">
+									{{__('post_detail.send complaint')}}
+								</button>
+								<button type="button" id="cancel" class="w-full inline-flex justify-center rounded-md border-2 border-gray-300 shadow-sm px-4 py-2 pb-3 bg-white text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none sm:mt-0 mt-3 sm:w-auto sm:text-sm transition-all ease-linear duration-500">
+									{{__('post_detail.cancel')}}
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- report end -->
+
+
+
+			<!--Begin -- block 1-->
+			<div class="relative w-full inline-block mt-6 sm:mt-12 md:mt-16 lg:mt-20 xl:mt-24">
+				<div class="container mx-auto sm:p-0 lg:px-4">
+					<div class="relative w-full inline-block sm:px-4 lg:p-0">
+						<div class="w-full sm:w-7/12 {{$class_dir_float_lr}} mb-5 sm:mb-8">
+							@if($product[0]->images=="")
+							<p class="text-center p-10 font-semibold">{{__('post_detail.no images to preview')}}</p>
+							@else
+							<div class="w-full float-left relative">
+
+								<!--Top or Feature Ad-->
+								<?php
+								$ad_type = App\Models\TblPost::getAddtype($product[0]->id);
+								$ad_type = ($ad_type == "") ? "" : str_replace('_', ' ', strtoupper($ad_type->ad_type));
+								$ad_type_class = ($ad_type == "") ? "" : "bg-yellow-500";
+								?>
+								<div class="absolute left-0 top-0 z-10">
+									<h3 class="text-xs text-white font-semibold relative"><span class="<?php echo $ad_type_class; ?> px-2 py-1 rounded-tr-lg rounded-br-lg uppercase inline-block">{{$ad_type}}</span></h3>
+								</div>
+
+								<div class="absolute right-0 top-0 z-10">
+									<!-- <a class="inline-block px-2 pt-0 pb-1 rounded-tl-lg rounded-bl-lg text-lg text-white font-normal bg-green-500" href="https://www.youtube.com/"><i class="fa fa-youtube-play" aria-hidden="true"></i></a> -->
+
+									@if(!empty($product[0]->video_url))
+									<button class="inline-block px-2 pt-0 pb-1 rounded-tl-lg rounded-bl-lg text-lg text-white font-normal bg-green-500" id="view_video"><i class="fa fa-youtube-play" aria-hidden="true"></i></button>
+									@endif
+								</div>
+
+								<!--Product Url-->
+
+								<div class="px-3 sm:px-7 sm:bg-white lg:bg-gray-100">
+									<div class="product_image">
+										<?php
+										$images = explode(',', $product[0]->images);
+										foreach ($images as $r) {
+											$exp_imgURLs = explode('/', $r);
+											$imgName = end($exp_imgURLs);
+											$is_file = base_path() . '/storage/app/public/adpost/predefined/' . $imgName;
+											if (is_file($is_file)) {
+												// $imgUrl = URL::to('storage/adpost/predefined/normal/' . $imgName);
+												$imgUrlEx = '../storage/adpost/predefined/normal/' . $imgName;
+												$checkIt = public_path('/storage/adpost/predefined/normal/' . $imgName);
+												if (file_exists($checkIt)) {
+													$imgUrl = URL::to('storage/adpost/predefined/normal/' . $imgName);
+												} else {
+													$imgUrl = URL::to('storage/adpost/predefined/' . $imgName);
+												}
+											} else {
+												$imgUrl = URL::to('storage/adpost/predefined/' . $imgName);
+											}
+											$imgUrlfinal = $imgUrl;
+										?>
+											<div class="prod_img">
+												<div class="flex items-center prod_img_inner justify-center">
+													<img class="max-h-full" src="{{ $imgUrlfinal }}" alt="{{ $product[0]->title }}">
+												</div>
+											</div>
+										<?php } ?>
+									</div>
+								</div>
+							</div>
+
+							<div class="w-full float-left mt-5 relative px-4">
+								<div class="w-full thumbnail_slider">
+
+									<?php
+									$images = explode(',', $product[0]->images);
+									foreach ($images as $r) {
+										$exp_imgURLs = explode('/', $r);
+										$imgName = end($exp_imgURLs);
+										$is_file = base_path() . '/storage/app/public/adpost/predefined/list/' . $imgName;
+										if (is_file($is_file)) {
+											$imgUrl = URL::to('storage/adpost/predefined/list/' . $imgName);
+										} else {
+											$imgUrl = URL::to('storage/adpost/predefined/' . $imgName);
+										}
+										$imgUrlfinal = $imgUrl;
+									?>
+
+										<div class="thumbnail_img sm:mx-1 lg:mx-4">
+											<div class="flex item-center justify-center h-14 sm:h-16 sm:w-16 md:h-24 md:w-24  lg:h-40 lg:w-40 mx-auto">
+												<img class="object-contain object-center mx-auto cursor-pointer max-w-full max-h-full" src="{{ $imgUrlfinal }}" alt="{{ $product[0]->title }}">
+											</div>
+										</div>
+									<?php } ?>
+
+								</div>
+								<div class="w-full slick_arrow_button cursor-pointer text-right absolute right-0 left-0 top-1/3">
+									<span class="inline-block leading-9 text-left text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-black product_left_arrow slick-arrow absolute left-2 md:left-0"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+									<span class="inline-block leading-9 text-right text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-black product_right_arrow slick-arrow absolute right-2 md:right-0"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+								</div>
+							</div>
+							@endif
+						</div>
+						<div class="w-full sm:w-5/12 float-left mb-5 sm:mb-8">
+							<?php
+							$currentUserId = !empty(auth()->user()->id) ? auth()->user()->id : "";
+							$adPostedUserId = $info_user[0]->id;
+
+							?>
+
+							<div class="mb-0 px-0 md:px-3 xl:px-5 float-left w-full">
+								<div class="mb-0 xl:mb-5 px-2 py-2">
+									<?php
+									$product_condition = App\Models\TblPost::get_product_condition($product[0]->id);
+									?>
+									
+									<h2 class="text-2xl xl:text-4xl capitalize font-normal px-2 pb-2 text-gray-700">{{ $product[0]->title }}
+
+										@if(!empty($product_condition))
+										<span class="bg-gray-500 text-white font-semibold rounded text-xs p-1">{{$product_condition}}</span>
+										@endif
+									</h2>
+									<h2 class="text-2xl xl:text-4xl capitalize font-bold px-2 py-2">
+										<span class="font-bold text-2x1"> <?php echo $currency_symbol[0]; ?>{{ $product[0]->price}} </span>
+									</h2>
+								</div>
+
+								<?php
+								$class_dir_user_icon = ($dir_rtl == "true") ? 'pr-0' : '';
+								?>
+								<a href="<?php echo URL::to('seller-profile/' . $info_user[0]->id); ?>" class="w-full inline-block">
+									<div class="flex flex-wrap items-center my-2 mb-3 xl:mb-5">
+										<div class="w-2/12 px-4 text-center text-green-600 text-3xl xl:text-5xl {{$class_dir_user_icon}}">
+											<i class="fa fa-user"></i>
+										</div>
+										<div class="w-9/12 px-4">
+											<h4 class="text-xl xl:text-2xl capitalize font-bold text-gray-700">{{ $info_user[0]->name }}</h4>
+											<p class="text-lg xl:text-xl text-gray-400">{{__('post_detail.posted by')}}</p>
+										</div>
+										<div class="w-1/12 text-2xl xl:text-3xl xl:text-5xl text-gray-600">
+											@if($dir_rtl =="false")
+											<i class="fa fa-angle-right" aria-hidden="true"></i>
+											@else
+											<i class="fa fa-angle-left" aria-hidden="true"></i>
+											@endif
+										</div>
+									</div>
+								</a>
+								<!-- <div class="border-t border-solid border-gray-200"></div> -->
+								<table class="w-full mt-2 mb-6 py-2">
+									<tbody>
+										<tr>
+											<td class="p-2 text-center text-lg xl:text-xl text-green-600"><i class="fa fa-map-marker fa-lg"></i></td>
+											<td class="p-2 font-semibold text-base xl:text-xl text-gray-700">{{__('post_detail.location')}}</td>
+											<td class="p-2 font-semibold text-sm xl:text-base text-gray-500">{{ $final_city_name}}</td>
+										</tr>
+										<tr>
+											<?php //$joinedon = date('d M Y', strtotime($info_user[0]->created_at));
+											$created_on = date('d M Y', strtotime($product[0]->created_at));
+											?>
+											<td class="p-2 text-center text-xl text-green-600"><i class="fa fa-user fa-lg"></i></td>
+											<td class="p-2 font-semibold text-base xl:text-xl text-gray-700">{{__('p_favourite.posted on')}}</td>
+											<td class="p-2 font-semibold text-sm xl:text-base text-gray-500">{{ $created_on }}</td>
+										</tr>
+
+										<tr>
+											<?php
+											$hide_email = App\Models\TblPost::hide_email_address($info_user[0]->email);
+											?>
+											<td class="p-2 text-center text-base xl:text-xl text-green-600"><i class="fa fa-envelope fa-lg"></i></td>
+											<td class="p-2 font-semibold text-base xl:text-xl text-gray-700">{{__('p_profile.email')}}</td>
+											<td class="p-2 font-semibold text-sm xl:text-base text-gray-500"><a href="">{{ $hide_email }}</a></td>
+										</tr>
+										@if($info_user[0]->show_mobile == 1 )
+										<tr>
+											<?php
+											$hide_mobile_no = App\Models\TblPost::hide_mobile_number($info_user[0]->phone);
+											?>
+											<td class="p-2 text-center text-base xl:text-xl text-green-600"><i class="fa fa-phone fa-lg"></i></td>
+											<td class="p-2 font-semibold text-base xl:text-xl text-gray-600">{{__('p_profile.phone')}}</td>
+											<td class="p-2 font-semibold text-sm xl:text-base text-gray-600"><a href="">{{ $hide_mobile_no }}</a></td>
+										</tr>
+										@endif
+									</tbody>
+								</table>
+
+
+
+
+								<div class="grid grid-cols-2 gap-4">
+									<?php
+									$insight_id = URL::to('/insights/' . $product[0]->id . '');
+									$post_methods = App\Models\TblPostMethod::get_active_post_methods();
+									?>
+									@if($currentUserId == $adPostedUserId)
+									@if(auth()->user()->hasRole('User') == true)
+									<div class="w-full">
+										<button class="w-full text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500"><a class="pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 block" href="{{$insight_id}}" target="_blank">{{__('post_detail.insights')}}</a></button>
+									</div>
+									@endif
+									@endif
+									<?php if ($currentUserId != $adPostedUserId) { ?>
+
+
+										@if(!empty($post_methods))
+										<?php $check_banner_ads = $post_methods->pluck('name')->toArray(); ?>
+										@if(in_array("exchange", $check_banner_ads))
+										@if($product[0]->exchange_to_buy == 1)
+										@if(auth()->user())
+										@if(auth()->user()->hasRole('User') == true)
+										<div class="w-full">
+											<button class="w-full pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500" id="user_exchange_buy">{{__('post_detail.exchange to buy')}}</button>
+										</div>
+										@endif
+										@endif
+										@endif
+										@endif
+										@if(in_array("buynow", $check_banner_ads))
+										@if($product[0]->instant_buy == 1)
+										<div class="w-full">
+											@if(auth()->user())
+											@if(auth()->user()->hasRole('User') == true)
+											<?php $checkout_url = URL::to('/revieworder/' . $product[0]->slug); ?>
+											<button class="w-full text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500">
+												<a class="pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 block" href="{{$checkout_url}}">{{__('post_detail.buy now')}}</a>
+											</button>
+											@endif
+											@else
+											<button class="w-full pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500" id="user_instant_buy">{{__('post_detail.buy now')}}</button>
+											@endif
+										</div>
+										@endif
+										@endif
+										@endif
+									<?php } ?>
+
+
+									<!--</div>	
+										
+									<div class="flex space-x-2 lg:space-x-6">-->
+									@if($product[0]->fixed_price == 0)
+									@if(!empty($currentUserId) && ($currentUserId != $adPostedUserId))
+									@if(auth()->user()->hasRole('User') == true)
+									<div class="w-full float-left">
+										<button class="w-full pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500" id="user_make_offer">{{__('post_detail.make an offer')}}</button>
+									</div>
+									@endif
+									@endif
+									@endif
+
+									<?php if (auth()->user()) {
+										if (auth()->user()->id != $product[0]->user_id) { ?>
+											@if(auth()->user()->hasRole('User') == true)
+											<div class="w-full">
+												<button class="w-full pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-gray-600 bg-transparent hover:bg-green-500 hover:border-green-500 hover:text-white transition-all ease-linear duration-500" id="report_ad">{{__('post_detail.report this ad')}}</button>
+											</div>
+											@endif
+									<?php }
+									} ?>
+								</div>
+								<?php if ($currentUserId != $adPostedUserId) { ?>
+									<div class="w-full float-left">
+										<?php
+										$chaturl = URL::to('/chatting') . '?to=' . $adPostedUserId . '&p=' . $product[0]->id . '&type=';
+										?>
+										<button class="w-full mt-4 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal bg-gray-300 border rounded cursor-pointer outline-none focus:outline-none rounded-lg transition-all ease-linear duration-500 hover:bg-gray-800 hover:text-white" id="chat-with-seller"><a class="pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 block" href="<?php echo $chaturl; ?>">
+												{{__('post_detail.chat with seller')}}
+											</a></button>
+									</div>
+								<?php } ?>
+
+								@if(auth()->user() && $check_is_paid->count()==0)
+								@if(auth()->user()->hasRole('User') == true)
+								<?php
+								$urlnew = URL::to('/selectPackage?post=' . $product[0]->id . '');
+								if ($adPostedUserId == $currentUserId) {
+								?>
+
+
+									<button class="w-full mt-5 text-sm sm:text-xs lg:text-base xl:text-lg font-semibold leading-normal bg-gray-300 border rounded cursor-pointer outline-none focus:outline-none rounded-lg transition-all ease-linear duration-500 hover:bg-gray-800 hover:text-white" id="chat-with-seller">
+										<a class="pt-2 xl:pt-3 pb-3 xl:pb-4 px-1 md:px-2 block" href="{{$urlnew}}">
+											{{__('post_detail.sell fast')}}
+										</a></button>
+
+								<?php } ?>
+								@endif
+								@endif
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--End -- block 1-->
+
+			<!--Begin -- block 2-->
+			<div class="relative w-full inline-block">
+				<div class="container mx-auto px-4">
+					<div class="w-full inline-block">
+						<div class="w-full sm:w-5/12 {{$class_dir_float_rl}} mb-8">
+							<div class="px-0 md:px-3 xl:px-5">
+								<div class="mb-8">
+									<div id="map" class="h-72"></div>
+									<script>
+										function initMap() {
+											// The location of Uluru
+											var val_lat = '{{ $info_location[0]->latitude }}';
+											var val_lag = '{{ $info_location[0]->logitude }}';
+											var mapOptions = {
+												center: new google.maps.LatLng(parseFloat(val_lat), parseFloat(val_lag)),
+												zoom: 15
+											}
+											var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+											var marker = new google.maps.Marker({
+												position: new google.maps.LatLng(parseFloat(val_lat), parseFloat(val_lag)),
+												map: map,
+												animation: google.maps.Animation.Drop
+											});
+										}
+									</script>
+									<!--Map end-->
+
+								</div>
+
+								<!-- Recently Viewed products Desktop - slider start -->
+
+
+
+								<div class="w-full pb-0 float-left sm:block hidden">
+									<div class="relative">
+										<p class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-700 pb-6">{{__('post_detail.recently viewed ads')}}</p>
+										<div class="{{$class_dir_slider}} recently_viewed">
+											@foreach($recently_viewed_products as $d)
+
+											<div class="w-1/2 pb-3 lg:pb-6 float-left">
+												<?php echo $k = App\Models\Setting::htmlAdBlock($d['id']); ?>
+											</div>
+											@endforeach
+										</div>
+										<?php $cat_class = ($dir_rtl == "true") ? "left-0 flex flex-row-reverse" : "right-0 flex"; ?>
+
+										<div class="slick_arrow_button float-right text-right absolute top-0 {{$cat_class}}">
+											<span class="mr-2 sm:mr-1 md:mr-2 lg:mr-4 bg-green-500 rounded-full text-center text-white recent_left_arrow w-8 h-8 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+											<span class="bg-green-500 rounded-full text-center text-white recent_right_arrow w-8 h-8 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-9 lg:h-9 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+										</div>
+									</div>
+
+								</div>
+
+								<!-- Recently Viewed products Desktop - slider end -->
+							</div>
+						</div>
+
+						<div class="relative w-full sm:w-7/12 float-left mb-8">
+							<div class="mb-0 px-2 py-2 float-left w-full">
+								<?php $created_on = date('d M Y', strtotime($product[0]->created_at)); ?>
+								<p class="text-lg font-semibold">{{ $created_on }} - {{$category_name}} - <i class="fa fa-map-marker fa-lg"></i> {{ $final_city_name }}</p>
+							</div>
+							<!-- common star rating begin-->
+							<div class="px-2 py-2 w-full float-left">
+								<div class="mt-2 items-center">
+									<?php
+									$starwhite = URL::asset('/images/star1.png');
+									$starFill = URL::asset('/images/star2.png');
+									?>
+									<label class="inline-flex items-center mr-2 text-green-500 text-xl"><img src="{{ ($avg_rating>=1)?$starFill:$starwhite }}" class="w-4 h-4" /></label>
+									<label class="inline-flex items-center mr-2 text-green-500 text-xl"><img src="{{ ($avg_rating>=2)?$starFill:$starwhite }}" class="w-4 h-4" /></label>
+									<label class="inline-flex items-center mr-2 text-green-500 text-xl"><img src="{{ ($avg_rating>=3)?$starFill:$starwhite }}" class="w-4 h-4" /></label>
+									<label class="inline-flex items-center mr-2 text-green-500 text-xl"><img src="{{ ($avg_rating>=4)?$starFill:$starwhite }}" class="w-4 h-4" /></label>
+									<label class="inline-flex items-center mr-2 text-green-500 text-xl"><img src="{{ ($avg_rating>=5)?$starFill:$starwhite }}" class="w-4 h-4" /></label>
+									<label class="inline-flex items-center mr-2">{{ $avg_rating }} Star</label>
+								</div>
+							</div>
+
+
+							<?php
+							$detail_url = App\Models\TblPost::get_post_slug($product[0]->slug);
+
+							$images = explode(',', $product[0]->images);
+
+							if (!empty($images[0])) {
+								$imageurl = URL::asset('/storage') . '/' . $images[0];
+							} else {
+								$imageurl = "";
+							}
+							$url = URL::to('/' . $product[0]->slug);
+
+							?>
+
+
+							@section('whatsapp_meta')
+							<meta property="og:image" content="<?php echo $imageurl; ?>">
+							<meta property="og:url" content="<?php echo $detail_url; ?>">
+							<meta property="og:title" content="<?php echo $product[0]->title; ?>">
+							@endsection
+							<div class="ml-0 mt-2 px-2 py-2 w-full float-left inline-block">
+								<!-- twitter -->
+								<a class="p-1 bg-blue-400 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-block text-center" href="https://twitter.com/share?text=<?php echo $url; ?>" target="_blank">
+									<i class="fa fa-twitter"></i>
+								</a>
+								<!-- facebook -->
+								<a class="p-1 bg-blue-600 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-block text-center" rel="nofollow" href="http://www.facebook.com/share.php?u=<?php echo $detail_url; ?>" target="_blank">
+									<i class="fa fa-facebook-f"></i>
+								</a>
+								<!-- whatsapp -->
+								<a class="p-1 bg-green-500 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-block text-center" href="https://api.whatsapp.com:/send?text=<?php echo $detail_url; ?>" target="_blank">
+									<i class="fa fa-whatsapp"></i>
+								</a>
+								<!-- linkedin -->
+								<a class="p-1 bg-blue-800 text-white w-8 h-8 rounded-full outline-none focus:outline-none mr-1 mb-1 inline-block text-center" href="https://www.linkedin.com/shareArticle?mini=true&url=<?php echo $detail_url; ?>&title=&summary=&source=" target="_blank">
+									<i class="fa fa-linkedin"></i>
+								</a>
+							</div>
+
+
+							<div class="relative w-full float-left mb-8">
+								<div class="w-full inline-block mt-3 lg:mt-4 xl:mt-6 px-2 py-2">
+									<div class="w-full float-left mb-3 md:mb-4">
+										<div class="prod_info_title w-full float-left cursor-pointer active">
+											<h2 class="font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2 md:mb-4 {{$class_dir_float_lr}}">{{__('post_detail.description')}}</h2>
+											<div class="arw {{$class_dir_float_rl}} text-2xl lg:text-3xl xl:text-4xl text-black transition-all ease-linear duration-150">
+												<i class="fa fa-angle-down" aria-hidden="true"></i>
+											</div>
+										</div>
+										<div :class="{'flex p-5 border-t border-gray-200': open, 'hidden': !open}" class="prod_info_content w-full float-left mb-2 md:mb-4">
+											<p class="text-base text-black">{{ $product[0]->description }}</p>
+										</div>
+									</div>
+
+									<div class="w-full float-left mb-3 md:mb-4">
+										<div class="prod_info_title w-full float-left cursor-pointer">
+											<h2 class="font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl mb-2 md:mb-4 {{$class_dir_float_lr}}" @click="open = !open">{{__('post_detail.item details')}}</h2>
+											<div class="arw {{$class_dir_float_rl}} text-2xl lg:text-3xl xl:text-4xl text-black transition-all ease-linear duration-150">
+												<i class="fa fa-angle-down" aria-hidden="true"></i>
+											</div>
+										</div>
+										<div :class="{'flex p-5 border-t border-gray-200': open, 'hidden': !open}" class="prod_info_content hidden w-full float-left mb-2 md:mb-4">
+											<?php 
+										     if (!empty($additional)) { ?>
+												<ul>
+													<?php foreach ($additional as $k) { ?>
+
+														<?php
+														if ($k['type'] == "file") {
+															$imageurl2 = URL::asset('/storage') . '/' . $k['value'];
+														?>
+															<li class="w-full xl:w-2/4 {{$class_dir_float_lr}} font-semibold text-base mt-2 md:mt-4"><span class="text-gray-600 w-2/4 {{$class_dir_float_lr}} px-2">{{$k['label']}}</span><span class="text-black w-2/4 float-left px-2"><img src="{{ $imageurl2 }}" /></span></li>
+															<?php } else {
+
+															if ($k['label'] == "Budget") {
+															?>
+																<li class="w-full xl:w-2/4 {{$class_dir_float_lr}} font-semibold text-base mt-2 md:mt-4"><span class="text-gray-600 w-2/4 {{$class_dir_float_lr}} px-2">{{$k['label']}}</span><span class="text-black w-2/4 float-left px-2"><?php echo $currency_symbol[0]; ?>{{$k['value']}}</span></li>
+															<?php
+															} else {
+															?>
+																<li class="w-full xl:w-2/4 {{$class_dir_float_lr}} font-semibold text-base mt-2 md:mt-4"><span class="text-gray-600 w-2/4 {{$class_dir_float_lr}} px-2">{{$k['label']}}</span><span class="text-black w-2/4 float-left px-2">{{$k['value']}}</span></li>
+															<?php
+
+															}
+															?>
+
+														<?php } ?>
+
+
+													<?php } ?>
+												</ul>
+											<?php } ?>
+										</div>
+									</div>
+
+									<div class="w-full float-left mb-3 md:mb-4">
+										<div class="prod_info_title w-full float-left cursor-pointer">
+											<h2 class="font-bold text-lg md:text-xl lg:text-2xl xl:text-3xl mb-4 {{$class_dir_float_lr}}">{{__('post_detail.reviews')}}</h2>
+
+											<div class="arw {{$class_dir_float_rl}} text-2xl lg:text-3xl xl:text-4xl text-black transition-all ease-linear duration-150">
+												<i class="fa fa-angle-down" aria-hidden="true"></i>
+											</div>
+										</div>
+										<div :class="{'flex p-5 border-t border-gray-200': open, 'hidden': !open}" class="prod_info_content hidden w-full float-left mb-2 md:mb-4">
+
+											<!--post review begin-->
+											@if(Auth::user())
+											@if(auth()->user()->hasRole('User') == true)
+											<?php
+											/* check - user already review this post.. */
+											$chk_user_id = auth()->user()->id;
+											$chk_post_id = $product[0]->id;
+											$chk_post_user_id = $product[0]->user_id;
+											$chk_review = App\Models\TblReview::where('user_id', $chk_user_id)->where('post_id', $chk_post_id)->count();
+											?>
+											@if(!$chk_review > 0 && $chk_user_id!=$chk_post_user_id)
+											<form action="{{ URL::to('review-store') }}" method="POST" enctype="multipart/form-data">
+												@csrf
+												<div class="float-right mb-4">
+													<label class="inline-flex items-center mr-2 text-green-500 text-xl"><input type="hidden" id="ad1_hidden" value="1"><img src="{{ $starwhite }}" onmouseover="change(this.id);" id="ad1" class="w-4 h-4" /></label>
+													<label class="inline-flex items-center mr-2 text-green-500 text-xl"><input type="hidden" id="ad2_hidden" value="2"><img src="{{ $starwhite }}" onmouseover="change(this.id);" id="ad2" class="w-4 h-4" /></label>
+													<label class="inline-flex items-center mr-2 text-green-500 text-xl"><input type="hidden" id="ad3_hidden" value="3"><img src="{{ $starwhite }}" onmouseover="change(this.id);" id="ad3" class="w-4 h-4" /></label>
+													<label class="inline-flex items-center mr-2 text-green-500 text-xl"><input type="hidden" id="ad4_hidden" value="4"><img src="{{ $starwhite }}" onmouseover="change(this.id);" id="ad4" class="w-4 h-4" /></label>
+													<label class="inline-flex items-center mr-2 text-green-500 text-xl"><input type="hidden" id="ad5_hidden" value="5"><img src="{{ $starwhite }}" onmouseover="change(this.id);" id="ad5" class="w-4 h-4" /></label>
+												</div>
+												<textarea maxlength="500" class="review_text w-full h-36 rounded-lg px-6 py-4 text-base text-black mb-4 border-l-4 border-gray-400 bg-gray-100 focus:outline-none resize-none placeholder-black" placeholder="{{__('post_detail.write your review')}}" name="review_text" required="required"></textarea>
+												<p class="text-xs font-bold item-center text-gray-800">{{__('post_detail.character limit')}}: 500</p>
+												<input type="hidden" name="review_ratings" id="adrating" />
+												<input type="hidden" name="post_id" value="{{ $product[0]->id }}" />
+												<input type="hidden" name="user_id" value="{{Auth::user()->id}}" />
+												<input type="hidden" name="redirect_url" value="{{ request()->path() }}" />
+												<button type="submit()" class="float-right px-6 md:px-10 xl:px-16 py-3 xl:py-4 text-base lg:text-lg xl:text-xl font-semibold leading-normal cursor-pointer outline-none focus:outline-none rounded-lg border-2 border-green-500 bg-transparent hover:bg-green-500 hover:border-green-500 text-green-500 hover:text-white transition-all ease-linear duration-500">{{__('post_detail.save')}}</button>
+											</form>
+
+											<?php
+											$blacklist_words = App\Models\TblPost::get_blacklist();
+											?>
+											<!--review end-->
+											<script>
+												// remove blacklist words
+												$(document).ready(function() {
+													$(".review_text").on('keyup', function(e) {
+														var blacklist = <?php echo $blacklist_words; ?>;
+														var words = $(".review_text").val();
+														var str = words.trim().split(" ");
+														var lastWord = str[str.length - 1];
+														var lowerword = lastWord.toLowerCase();
+														var array_index = jQuery.inArray(lowerword, blacklist);
+														if (array_index >= 0) {
+															$(".review_text").val($(".review_text").val().replace(lastWord, ''));
+														}
+													});
+												});
+											</script>
+											@endif
+											@endif
+											@else
+											<div class="text-center">
+												<button class="bg-green-700 text-white font-bold uppercase text-xs rounded shadow hover:shadow-md outline-none focus:outline-none mr-1 transition-all ease-linear duration-500" type="button">
+													<a class="px-4 py-2 block" href="{{ URL::to('login') }}">{{__('post_detail.login to post review')}}</a></button>
+											</div>
+											@endif
+
+											<!--post review end-->
+
+											@foreach($review as $r)
+											<?php $newform = date('d M Y', strtotime($r->created_at)) ?>
+											@if(($r->approved == "1"))
+											<div class="w-full float-left mt-4 md:mt-8">
+												<div class="bg-gray-100 px-4 py-4">
+													<div class="bg-white px-4 py-4">
+														<div class="mb-2">
+															<div class="inline-flex items-center mr-2">
+																<p class="bg-green-500 rounded-lg border text-white text-lg px-3 py-1">{{ $r->ratings }}<i class="fa fa-star-o ml-2"></i></p>
+															</div>
+															<div class="inline-flex items-center mr-2">
+																<p class="text-lg text-black font-semibold">{{ $r->name }}</p>
+															</div>
+														</div>
+
+														<div class="mb-2">
+															<p class="text-base md:text-lg text-black">{{ $r->comment }}</p>
+														</div>
+
+														<div class="mb-1">
+															<p class="text-base md:text-lg text-black">{{ $newform }}</p>
+														</div>
+
+													</div>
+												</div>
+											</div>
+											@endif
+											@if(auth()->user())
+											@if($r->approved != "1" && auth()->user()->id == $r->user_id)
+
+											<div class="w-full float-left mt-4 md:mt-8">
+												<div class="bg-gray-100 px-4 py-4">
+													<div class="bg-white px-4 py-4">
+														<div class="mb-2">
+															<div class="inline-flex items-center mr-2">
+																<p class="bg-green-500 rounded-lg border text-white text-lg px-3 py-1">{{ $r->ratings }}<i class="fa fa-star-o ml-2"></i></p>
+															</div>
+															<div class="inline-flex items-center mr-2">
+																<p class="text-lg text-black font-semibold">{{ $r->name }}</p>
+															</div>
+														</div>
+
+														<div class="mb-2">
+															<p class="text-base md:text-lg text-black">{{ $r->comment }}</p>
+														</div>
+
+														<div class="mb-1">
+															<p class="text-base md:text-lg text-black">{{ $newform }}</p>
+														</div>
+
+														<div>
+															<p class="text-base md:text-lg text-red-500">{{__('post_detail.your comment is waiting for approval')}}.</p>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											@endif
+											@endif
+											@endforeach
+
+
+
+										</div>
+
+
+
+									</div>
+
+
+								</div>
+							</div>
+
+							<!-- Recently Viewed products Mobile - slider start -->
+
+							<div class="w-full pb-0 float-left sm:hidden">
+								<div class="relative">
+									<p class="text-lg sm:text-xl md:text-2xl font-bold text-gray-700 pb-4">{{__('post_detail.recently viewed ads')}}</p>
+									<div class="{{$class_dir_slider}} recently_viewed_mob">
+										<?php $i = 0; ?>
+										@foreach($recently_viewed_products as $d)
+										<div class="w-1/2 pb-3 lg:pb-6 float-left">
+											<?php echo $k = App\Models\Setting::htmlAdBlock($d['id']); ?>
+										</div>
+										@endforeach
+									</div>
+									<?php $cat_class = ($dir_rtl == "true") ? "left-0 flex flex-row-reverse" : "right-0 flex"; ?>
+
+									<div class="slick_arrow_button float-right text-right absolute top-0 {{$cat_class}}">
+										<span class="mr-2 lg:mr-4 bg-green-500 rounded-full text-center text-white recent_left_arrow w-8 h-8 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+										<span class="bg-green-500 rounded-full text-center text-white recent_right_arrow w-8 h-8 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+									</div>
+								</div>
+							</div>
+
+							<!-- Recently Viewed products Mobile - slider end -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- common start rating end-->
+
+			<!--End -- block 2-->
+
+
+
+
+			<!-- Begin -- block 3 -->
+
+			<!-- start related products--->
+			<div class="w-full inline-block">
+				<div class="container px-4 mx-auto relative" wire:ignore>
+					<p class="text-2xl font-bold text-gray-700 pb-4">{{__('post_detail.related ads')}}</p>
+					<div class="{{$class_dir_slider}} related_products w-full">
+						<?php //if(count($related_products)==0){ echo "<p class='text-lg font-semibold my-5'>No Products Found</p>"; }
+						?>
+						<?php $i = 0; ?>
+						@foreach($related_products as $d)
+						<?php $userExistCheck = App\Models\User::where('id',$d['user_id'])->get()->count();
+						if($userExistCheck>0){
+						?>
+						<!--<div class="w-1/2 md:w-1/3 sm:w-1/3 lg:w-1/3 xl:w-1/4 pb-3 lg:pb-6 float-left">-->
+						<div class=" w-1/2 sm:w-1/3 md:w-1/3 lg:w-1/4 xl:w-1/5 pb-3 lg:pb-6 float-left">
+							<?php echo $k = App\Models\Setting::htmlAdBlock($d['id']); ?>
+						</div>
+						<?php } ?>
+						@endforeach
+					</div>
+
+					<?php $cat_class = ($dir_rtl == "true") ? "left-5 flex flex-row-reverse" : "right-5 flex"; ?>
+
+					<div class="slick_arrow_button float-right text-right absolute top-0 {{$cat_class}}">
+						<span class="mr-2 lg:mr-4 bg-green-500 rounded-full text-center text-white related_left_arrow w-8 h-8 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-left" aria-hidden="true"></i></span>
+						<span class="bg-green-500 rounded-full text-center text-white related_right_arrow w-8 h-8 cursor-pointer flex items-center justify-center"><i class="fa fa-angle-right" aria-hidden="true"></i></span>
+					</div>
+
+					<?php if (count($related_products) == 0) {
+						echo "<p class='text-lg font-semibold my-5'>No Products Found</p>";
+					} ?>
+				</div>
+			</div>
+			<!-- End related products -->
+
+
+			@if(!empty($product[0]->video_url))
+			<?php
+
+			// $youtube_url = preg_replace(
+			// 	"/\s*[a-zA-Z\/\/:\.]*youtu(be.com\/watch\?v=|.be\/)([a-zA-Z0-9\-_]+)([a-zA-Z0-9\/\*\-\_\?\&\;\%\=\.]*)/i",
+			// 	"<iframe width=\"420\" height=\"345\" src=\"//www.youtube.com/embed/$2\" allowfullscreen></iframe>",
+			// 	$product[0]->video_url
+			// );
+
+			$yt_url = $product[0]->video_url;
+			$url_parsed_arr = parse_url($yt_url);
+			if ($url_parsed_arr['host'] == "www.youtube.com" && substr($url_parsed_arr['path'], 0, 7) == "/embed/") {
+
+				$youtube_url = "<iframe width='420' height='345' src='" . $yt_url . "' allowfullscreen></iframe>";
+			} else {
+				$youtube_url = "Video Not available.!";
+			}
+
+			?>
+			<!--- product video start --->
+			<div class="fixed z-50 inset-0 overflow-y-auto" id="view_video_popup" style="display:none">
+				<div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+					<div class="fixed inset-0 transition-opacity" aria-hidden="true">
+						<div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+					</div>
+					<!-- This element is to trick the browser into centering the modal contents. -->
+					<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+					<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+
+						<div class="bg-white px-6 py-4 sm:px-12 sm:py-8">
+							<div class="mb-6">
+								<div class="{{$class_dir_text_lr}}">
+									<h3 class="block text-xl text-black font-semibold mb-2 sm:mb-4" id="modal-headline">
+										Product Video
+									</h3>
+									<div class="pt-2">
+										<!-- youtube iframe display here -->
+										<?php echo $youtube_url; ?>
+									</div>
+								</div>
+							</div>
+							<div class="sm:flex sm:flex-row-reverse sm:space-x-3 {{$class_dir_popup_btn}}">
+								<button type="button" id="cancel_video" class="mt-3 w-full inline-flex justify-center rounded-md border-2 border-gray-300 shadow-sm px-4 py-2 pb-3 bg-white text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm transition-all ease-linear duration-500">
+									{{__('post_detail.cancel')}}
+								</button>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+			<!--- product video end --->
+			@endif
+
+
+
+
+			<!-- begin - exchange to buy-->
+
+			@if (!empty($currentUserId) && ($currentUserId != $adPostedUserId))
+			<?php
+			$visible_posts = App\Models\TblPost::getMyPost($currentUserId);
+			?>
+			<!-- exchage to buy start -->
+			<div class="fixed z-50 inset-0 overflow-y-auto" id="user_exchange_buy_data" style="display:none">
+				<div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+					<div class="fixed inset-0 transition-opacity" aria-hidden="true">
+						<div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+					</div>
+					<!-- This element is to trick the browser into centering the modal contents. -->
+					<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+					<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-auto shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+						<div class="bg-white px-6 py-4 sm:px-12 sm:py-8">
+							<div class="mb-3">
+								<div class="{{$class_dir_text_lr}}">
+									<h3 class="block text-xl text-black font-semibold mb-4" id="modal-headline">
+										{{__('post_detail.exchange to buy')}}
+									</h3>
+
+									@if(!empty($visible_posts))
+									<div class="">
+										<div class="flex flex-wrap mt-2 mb-2 sm:justify-center">
+											@foreach($visible_posts as $visible_post)
+											<?php
+											$imgUrlfinal = App\Models\TblChat::getPostImgForList($visible_post->id);
+											$slug = App\Models\TblPost::get_post_slug($visible_post->slug);
+											?>
+											<div class="w-2/4 sm:w-1/4 lg:w-2/6 items-center mb-2">
+												<div class="border rounded border-gray-50 p-2 pt-6 relative">
+													<input type="checkbox" name="selected_pid" class="selected_post absolute top-0 w-4 h-4 left-0 right-0 mx-auto" value="{{$visible_post->id}}" />
+													<a href="{{$slug}}">
+														<img class="h-24 w-24 object-center object-cover mx-auto" src="{{$imgUrlfinal}}" />
+														<p class="text-center text-sm mt-2 h-6 truncate">{{$visible_post->title}}</p>
+													</a>
+												</div>
+											</div>
+											@endforeach
+										</div>
+									</div>
+									@endif
+								</div>
+							</div>
+
+
+							<div class="sm:flex sm:flex-row-reverse sm:space-x-3 {{$class_dir_popup_btn}}">
+								@if(!empty($visible_posts))
+								<button type="button" class="w-full inline-flex justify-center rounded-md border-2 border-transparent shadow-sm px-4 py-2 bg-green-500 text-base font-semibold text-white hover:bg-white hover:text-green-500 hover:border-green-500 focus:outline-none sm:w-auto sm:text-sm transition-all ease-linear duration-500" id="exchange_submit">
+									{{__('messages.submit')}}
+								</button>
+								@endif
+
+								<button type="button" id="exchange_cancel" class="w-full inline-flex justify-center rounded-md border-2 border-gray-300 shadow-sm px-4 py-2 pb-3 bg-white text-base font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm mt-3 transition-all ease-linear duration-500">
+									{{__('post_detail.cancel')}}
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- exchage to buy end -->
+			@endif
+
+			<!-- end - exchage to buy-->
+
+
+
+			<!-- make offer block 1 -->
+			@if (!empty($currentUserId) && ($currentUserId != $adPostedUserId))
+			@if($product[0]->fixed_price == 0)
+			<!-- make an offer -->
+			<div class="fixed z-40 inset-0 overflow-y-auto" id="user_make_offer_data" style="display:none">
+				<div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+					<div class="fixed inset-0 transition-opacity" aria-hidden="true">
+						<div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+					</div>
+					<!-- This element is to trick the browser into centering the modal contents. -->
+					<span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+					<div class="inline-block align-bottom bg-white rounded-lg text-left overflow-auto shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full" role="dialog" aria-modal="true" aria-labelledby="modal-headline">
+						<div class="bg-white px-6 py-4 sm:px-12 sm:py-8">
+							<div class="">
+								<div class="{{$class_dir_text_lr}}">
+									<div class="flex flex-wrap">
+										<h3 class="block text-xl text-black font-semibold mb-2" id="modal-headline">
+											{{__('post_detail.make an offer')}}
+										</h3>
+									</div>
+									<div class="py-2">
+										<label class="block text-black text-xl font-bold mb-4 text-center">{{__('post_detail.ask price')}} <span class="text-red-600 font-bold text-md"><?php echo round($product[0]->price); ?> $</span></label>
+										<label class="block text-base text-black font-semibold mb-2 sm:mb-4">{{__('post_detail.your offer price')}}:</label>
+										<input type="text" id="ask_price" placeholder="{{__('post_detail.enter price')}}" required class="text-base appearance-none border-l-2 border-gray-400 bg-gray-100 rounded w-full p-2 py-3 text-gray-700 leading-tight focus:outline-none" />
+										<p class="text-xs font-bold item-center text-gray-800"></p>
+										<textarea id="make_offer_message" placeholder="{{__('post_detail.type message here')}}" rows="3" required class="mt-4 text-base appearance-none border-l-2 border-gray-400 bg-gray-100 rounded w-full p-2 text-gray-700 leading-tight focus:outline-none"></textarea>
+
+									</div>
+									<div class="sm:flex sm:flex-row-reverse sm:space-x-3 {{$class_dir_popup_btn}}">
+										<button type="button" class="w-full inline-flex justify-center rounded-md border-2 border-transparent shadow-sm px-4 py-2 pb-3 bg-green-500 text-base font-medium text-white hover:text-green-500 hover:bg-white hover:border-green-500 focus:outline-none sm:w-auto sm:text-sm transition-all ease-linear duration-500" id="make_offer_submit">
+											{{__('messages.submit')}}
+										</button>
+										<button type="button" id="make_offer_cancel" class="mt-3 w-full inline-flex justify-center rounded-md border-2 border-gray-300 shadow-sm px-4 py-2 pb-3 bg-white text-base font-medium text-gray-700 hover:bg-gray-200 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm transition-all ease-linear duration-500">
+											{{__('post_detail.cancel')}}
+										</button>
+
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			@endif
+			<!-- make an offer -->
+			@endif
+
+			<!-- make offer block 2 -->
+
+
+
+
+			<!-- End -- block 3 -->
+
+		</div>
+
+
+		{!! config('app.google_map_script') !!}
+		<script type="text/javascript">
+			<?php if (!empty($product[0]->video_url)) { ?>
+				// view video        
+				$('#view_video').on('click', function(e) {
+					document.querySelector("#view_video_popup").style.display = "block";
+				});
+				$('#cancel_video').on('click', function(e) {
+					document.querySelector("#view_video_popup").style.display = "none";
+					// window.location.reload();
+				});
+				// end video
+			<?php } ?>
+
+			// report ad start
+			$('#report_ad').on('click', function(e) {
+				var user = "{{auth()->user()}}";
+				var post_id = "{{$product[0]->id}}";
+				if (user == "") {
+					window.location.href = "/login";
+				} else {
+					document.querySelector("#report").style.display = "block";
+				}
+				$('#submit').on('click', function(e) {
+					var comment = $('#comment').val();
+					var retype = $('input[name="re_type"]:checked').val();
+					if (comment == "") //change if condition
+					{
+						toastr.warning('Comment field is required..');
+					}
+					if (retype == null) {
+						toastr.warning('retype field is required..');
+					}
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: "{{ route('report_ad') }}",
+						data: {
+							comment: comment,
+							retype: retype,
+							post_id: post_id
+						},
+						success: function(data) {
+							document.querySelector("#report").style.display = "none";
+							$('#comment').val('');
+							$('input[name="re_type"]').attr('checked', false);
+							toastr.success(data.message);
+						}
+					});
+				});
+				$('#cancel').on('click', function(e) {
+					document.querySelector("#report").style.display = "none";
+				});
+			});
+			// report ad end
+
+			<?php if (!empty($currentUserId) && ($currentUserId != $adPostedUserId)) { ?>
+				<?php if ($product[0]->exchange_to_buy == 1) { ?>
+					$('#user_exchange_buy').on('click', function(e) {
+						var user = "{{auth()->user()}}";
+						if (user != "") {
+							document.querySelector("#user_exchange_buy_data").style.display = "block";
+						}
+					});
+					$(".selected_post").change(function() {
+						var maxAllowed = 1;
+						var cnt = $("input[name='selected_pid']:checked").length;
+						if (cnt > maxAllowed) {
+							$(this).prop("checked", "");
+							toastr.warning('Cannot select more than one product to exchange!');
+						}
+					});
+
+					$('#exchange_submit').on('click', function(e) {
+						var selected_post = $("input[name='selected_pid']:checked").val();
+						var user_id = "<?php echo !empty(auth()->user()) ? auth()->user()->id : ""; ?>"
+						var post_owner = "{{$info_user[0]->id}}";
+						var post_id = "{{$product[0]->id}}";
+						if (selected_post == "" || selected_post == "undefined" || selected_post == null) //change if condition
+						{
+							toastr.warning('Choose any product to exchange!');
+							return false;
+						} else {
+							$.ajax({
+								type: 'POST',
+								dataType: 'json',
+								url: "{{ route('add_exchange') }}",
+								data: {
+									exchange_id: selected_post,
+									post_id: post_id,
+									post_owner: post_owner,
+									user_id: user_id
+								},
+								success: function(data) {
+									document.querySelector("#user_exchange_buy_data").style.display = "none";
+									$('input:checkbox[name="selected_pid"]').attr('checked', false);
+									if (data.flag == 1) {
+										toastr.success(data.message);
+									} else {
+										toastr.warning(data.message);
+									}
+								}
+							});
+						}
+					});
+					$('#exchange_cancel').on('click', function(e) {
+						document.querySelector("#user_exchange_buy_data").style.display = "none";
+					});
+				<?php } ?>
+				<?php if ($product[0]->fixed_price == 0) { ?>
+					$('#user_make_offer').on('click', function(e) {
+						var user = "{{auth()->user()}}";
+						if (user != "") {
+							document.querySelector("#user_make_offer_data").style.display = "block";
+						}
+					});
+					$('#make_offer_cancel').on('click', function(e) {
+						document.querySelector("#user_make_offer_data").style.display = "none";
+					});
+					$('#make_offer_submit').on('click', function(e) {
+						var to = "{{$info_user[0]->id}}";
+						var post_id = "{{$product[0]->id}}";
+						var message = $("#make_offer_message").val();
+						var price = $("#ask_price").val();
+						var orginal_price = "<?php echo round($product[0]->price); ?>";
+						var make_offer = "yes";
+						if ((price > orginal_price) || (price == "") || (price == 0)) {
+							toastr.warning('Please enter valid offer price.');
+							return false;
+						} else {
+							$.ajax({
+								type: 'POST',
+								dataType: 'json',
+								url: "{{ URL::to('send_chat') }}",
+								data: {
+									chat_message: price,
+									to: to,
+									post_id: post_id,
+									image: "",
+									make_offer: make_offer
+								},
+								success: function(data) {
+									document.querySelector("#user_make_offer_data").style.display = "none";
+									$("#ask_price").val("");
+									$("#make_offer_message").val("");
+									toastr.success("Your offer sent successfully!");
+								}
+							});
+						}
+					});
+				<?php } ?>
+			<?php } ?>
+
+			$(window).load(function() {
+				$("ul.slides li").css({
+					"width": "auto !important"
+				});
+				// The slider being synced must be initialized first
+				$('#carousel').flexslider({
+					animation: "slide",
+					controlNav: false,
+					animationLoop: false,
+					slideshow: false,
+					itemMargin: 5,
+					asNavFor: '#slider'
+				});
+				$('#slider').flexslider({
+					animation: "slide",
+					controlNav: false,
+					animationLoop: false,
+					slideshow: false,
+					sync: "#carousel"
+				});
+			});
+		</script>
+		<!--slider end-->
+		<style>
+			#carousel ul.slides li {
+				width: auto !important;
+			}
+		</style>
+		<!--star rating-->
+		<script type="text/javascript">
+			var staryellow = "{{ URL::asset('/images/star2.png') }}";
+			var starwhite = "{{ URL::asset('/images/star1.png') }}";
+
+			function change(id) {
+				var cname = "ad";
+				var ab = document.getElementById(id + "_hidden").value;
+				document.getElementById(cname + "rating").value = ab;
+				//set input values dynamicaly
+				var element = document.getElementById(cname + "rating");
+				element.dispatchEvent(new Event('input'));
+				for (var i = ab; i >= 1; i--) {
+					document.getElementById(cname + i).src = staryellow;
+				}
+				var id = parseInt(ab) + 1;
+				for (var j = id; j <= 5; j++) {
+					document.getElementById(cname + j).src = starwhite;
+				}
+			}
+		</script>
+		<!--star rating-->
+		<script type="text/javascript">
+			jQuery(document).ready(function() {
+				// jQuery(".related_products").slick({
+				// 	dots: false,
+				// 	infinite: false,
+				// 	slidesToShow: 3,
+				// 	slidesToScroll: 1,
+				// 	responsive: [{
+				// 			breakpoint: 1024,
+				// 			settings: {
+				// 				slidesToShow: 2,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		},
+				// 		{
+				// 			breakpoint: 600,
+				// 			settings: {
+				// 				slidesToShow: 2,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		},
+				// 		{
+				// 			breakpoint: 480,
+				// 			settings: {
+				// 				slidesToShow: 1,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		}
+				// 	]
+				// });
+
+				// jQuery(".recently_viewed_products").slick({
+				// 	dots: false,
+				// 	infinite: false,
+				// 	slidesToShow: 1,
+				// 	slidesToScroll: 1,
+				// 	responsive: [{
+				// 			breakpoint: 1024,
+				// 			settings: {
+				// 				slidesToShow: 2,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		},
+				// 		{
+				// 			breakpoint: 600,
+				// 			settings: {
+				// 				slidesToShow: 2,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		},
+				// 		{
+				// 			breakpoint: 480,
+				// 			settings: {
+				// 				slidesToShow: 1,
+				// 				slidesToScroll: 1,
+				// 				infinite: false,
+				// 				dots: false
+				// 			}
+				// 		}
+				// 	]
+				// });
+
+
+			});
+
+			(function() {
+				// store the slider in a local variable
+				var $window = $(window),
+					flexslider = {
+						vars: {}
+					};
+				// tiny helper function to add breakpoints
+				function getGridSize() {
+					return (window.innerWidth < 600) ? 2 : (window.innerWidth < 900) ? 3 : 4;
+				}
+				$(function() {
+					//SyntaxHighlighter.all();
+				});
+				$window.load(function() {
+					$('.flexslider').flexslider({
+						controlNav: false,
+						animation: "slide",
+						animationSpeed: 600,
+						animationLoop: false,
+						itemWidth: 210,
+						itemMargin: 5,
+						minItems: getGridSize(), // use function to pull in initial value
+						maxItems: getGridSize(), // use function to pull in initial value
+						start: function(slider) {
+							$('body').removeClass('loading');
+							flexslider = slider;
+						}
+					});
+				});
+				// check grid size on resize event
+				$window.resize(function() {
+					var gridSize = getGridSize();
+					flexslider.vars.minItems = gridSize;
+					flexslider.vars.maxItems = gridSize;
+				});
+			}());
+		</script>
+		<script>
+			// $(window).load(function() {
+			var isActiveuser = '<?php echo (!empty(auth()->user())) ? "1" : "0"; ?>';
+			$("#user_info_closed").click(function() {
+				if (isActiveuser == 0) {
+					toastr.warning('Please login to show the detail..');
+					return false;
+				}
+				$("#user_info_closed").css('display', 'none');
+				$("#user_info_open").css('display', 'block');
+			})
+			$("#chat_with_seller_closed").click(function() {
+				if (isActiveuser == 0) {
+					toastr.warning('Please login to chat with seller..');
+					return false;
+				}
+				$("#chat_with_seller_closed").css('display', 'none');
+				$("#chat_with_seller_open").css('display', 'block');
+			})
+			$("#user_exchange_buy").click(function() {
+				if (isActiveuser == 0) {
+					window.location.href = "{{URL::to('/login')}}";
+				}
+			});
+			$("#user_instant_buy").click(function() {
+				if (isActiveuser == 0) {
+					window.location.href = "{{URL::to('/login')}}";
+				}
+			});
+
+			$("#user_make_offer").click(function() {
+				if (isActiveuser == 0) {
+					window.location.href = "{{URL::to('/login')}}";
+				}
+			});
+
+			// });
+		</script>
+
+
+
+	</div>

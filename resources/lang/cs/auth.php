@@ -1,0 +1,21 @@
+<?php
+return array (
+  'failed' => 'Tyto údaje neodpovídají našim záznamům.',
+  'password' => 'Poskytnuté heslo je nesprávné.',
+  'throttle' => 'Příliš mnoho pokusů o přihlášení. Zkuste to prosím znovu za :seconds sekund.',
+  'choose' => 'Vyberte své kategorie',
+  'done' => 'Hotovo',
+  'sell' => 'Prodat',
+  'to reach' => 'Dosáhnout',
+  'top ad' => 'Nejlepší reklamy',
+  'feature ad' => 'Hlavní reklamy',
+  'Star' => 'Hvězda',
+  'UPHOLSTERY MATERIAL' => 'Čalounický Materiál',
+  'No Of Doors' => 'Počet Dveří',
+  'Key features' => 'Klíčové Funkce',
+  'Body' => 'Karoserie',
+  'Engine Size' => 'Objem Motoru',
+  'Offers' => 'Nabídky',
+  'color' => 'Barva',
+  'offline' => 'Offline',
+);

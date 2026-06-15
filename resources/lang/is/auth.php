@@ -1,0 +1,23 @@
+<?php
+return array (
+  'failed' => 'Þessi auðkenni stemma ekki við skráningar okkar.',
+  'password' => 'Gefið lykilorð er rangt.',
+  'throttle' => 'Of margar innskráningar tilraunir. Vinsamlegast reyndu aftur í :seconds sekúndur.',
+  'choose' => 'Veldu flokkana þína',
+  'done' => 'Lokið',
+  'sell' => 'Selja',
+  'feature ad' => 'Eiginleikaauglýsingar',
+  'top ad' => 'Topp auglýsingar',
+  'Star' => 'Stjarna',
+  'UPHOLSTERY MATERIAL' => 'Áklæðnaður Efni',
+  'No Of Doors' => 'Fjöldi Hurða',
+  'Key features' => 'Helstu Eiginleikar',
+  'Body' => 'Líkami',
+  'Engine Size' => 'Stærð Vélbúnaðar',
+  'Computer Table' => 'Tölvuborð',
+  'Offers' => 'Tilboð',
+  'color' => 'Litur',
+  'online' => 'Á netinu',
+  'offline' => 'Ótengdur',
+  'Online' => 'Á netinu',
+);

@@ -1,0 +1,23 @@
+<?php
+return array (
+  'reset' => 'Vaše heslo bylo obnoveno!',
+  'sent' => 'Poslali jsme vám e-mail s odkazem na obnovení hesla!',
+  'throttled' => 'Před dalším pokusem vyčkejte.',
+  'token' => 'Tento token pro obnovení hesla je neplatný.',
+  'user' => 'Nemůžeme najít uživatele s touto e-mailovou adresou.',
+  'choose' => 'Vyberte své kategorie',
+  'done' => 'Hotovo',
+  'sell' => 'Prodat',
+  'to reach' => 'Dosáhnout',
+  'top ad' => 'Nejlepší reklamy',
+  'feature ad' => 'Hlavní reklamy',
+  'Star' => 'Hvězda',
+  'UPHOLSTERY MATERIAL' => 'Čalounický Materiál',
+  'No Of Doors' => 'Počet Dveří',
+  'Key features' => 'Klíčové Funkce',
+  'Body' => 'Karoserie',
+  'Engine Size' => 'Objem Motoru',
+  'Offers' => 'Nabídky',
+  'color' => 'Barva',
+  'offline' => 'Offline',
+);

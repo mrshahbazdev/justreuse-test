@@ -1,0 +1,23 @@
+<?php
+return array (
+  'all categories' => 'Tutte le categorie',
+  'location' => 'Posizione',
+  'sort_by_colon' => 'Ordina per: ',
+  'recently_posted' => 'Pubblicato di recente',
+  'price_low_to_high' => 'Prezzo: Basso ad Alto',
+  'price_high_to_low' => 'Prezzo: Alto a Basso',
+  'popular' => 'Popolare',
+  'Brands' => 'Marchi',
+  'choose' => 'Scegli le tue categorie',
+  'done' => 'Fatto',
+  'sell' => 'Vendere',
+  'feature ad' => 'Annunci in evidenza',
+  'top ad' => 'Migliori annunci',
+  'Star' => 'Stella',
+  'UPHOLSTERY MATERIAL' => 'Materiale di Rivestimento',
+  'Computer Table' => 'Tavolo per computer',
+  'Dial Shape' => 'Forma del Quadrante ',
+  'color' => 'Colore ',
+  'online' => 'Online ',
+  'Online' => 'in linea',
+);

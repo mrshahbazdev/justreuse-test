@@ -1,0 +1,262 @@
+<?php
+namespace App\Http\Livewire;
+use Livewire\Component;
+use App\Models\User_profile;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
+use Livewire\WithFileUploads;
+use Storage;
+use DB;
+use App\Models\Setting;
+use Livewire\Livewire;
+use App\Models\TblLanguage;
+use App\Models\TblCity;
+use App\Models\TblCountry;
+use App\Models\TblState;
+use Illuminate\Http\Request;
+$path_to_file = base_path() . '/vendor/twilio/sdk/src/Twilio/autoload.php';
+if (is_file($path_to_file)) {
+    require base_path() . '/vendor/twilio/sdk/src/Twilio/autoload.php';
+}
+use Twilio\Rest\Client;
+use function PHPUnit\Framework\isNull;
+class MyprofileComponent extends Component
+{
+    use WithFileUploads;
+    public $first_name, $last_name, $phone, $address_line1, $address_line2, $date_of_birth, $gender, $user_id, $show_mobile;
+    public $name, $email, $profile_photo_path, $new_profile_photo_path, $stripe_public_key, $stripe_private_key, $mobile_verified, $p_lang, $p_curr;
+    public $isOpen = 0;
+    public $cnfopen = 0;
+    public $state = [];
+    public $gendArr = array("male" => "Male", "female" => "Female", "other" => "Other");
+    public $city_name, $city_lat, $main_city_name, $city_lag, $country_long, $country_short, $state_long, $state_short;
+    public function mount()
+    {
+        $id = Auth::user()->id;
+        $user_pro = Auth::user($id)->user_profile;
+        $user = User::find($id);
+        $this->user_id = $id;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->profile_photo_path = $user->profile_photo_path;
+        $this->first_name = $user_pro->first_name;
+        $this->last_name = $user_pro->last_name;
+        $this->phone = $user_pro->phone;
+        $this->address_line1 = $user_pro->address_line1;
+        $this->address_line2 = $user_pro->address_line2;
+        $this->date_of_birth = $user_pro->date_of_birth;
+        $this->gender = $user_pro->gender;
+        $this->show_mobile = $user_pro->show_mobile;
+        $this->mobile_verified = $user_pro->mobile_verified;
+        $this->stripe_public_key = $user_pro->stripe_public_key;
+        $this->stripe_private_key = $user_pro->stripe_private_key;
+        $this->p_lang  = $user->preferred_language;
+        $this->p_curr = $user->preferred_currency;
+        return view('livewire.post.edit');
+    }
+    public function render()
+    {
+        $id = Auth::user()->id;
+        $user_pro = Auth::user($id)->user_profile;
+        $city_id = $user_pro->city_id;
+        $info_location = TblCity::join('tbl_countries', 'tbl_cities.country_id', '=', 'tbl_countries.id')
+            ->join('tbl_states', 'tbl_cities.state_id', '=', 'tbl_states.id')
+            ->where('tbl_cities.id', $city_id)
+            ->get(['tbl_cities.*', 'tbl_countries.code as country_short', 'tbl_countries.name as country_long', 'tbl_states.code as state_short', 'tbl_states.name as state_long']);
+        return view('livewire.myprofile.show', compact('info_location'));
+    }
+    public function store(Request $request)
+    {
+        $user = User::where('id', Auth::user()->id);
+        $imagename = "";
+        if ($this->new_profile_photo_path != null) {
+            $imagename = $this->new_profile_photo_path->store('profile-photos', 'public');
+            $user->update([
+                'profile_photo_path' => $imagename
+            ]);
+        }
+        $user->update([
+            'name' => $this->name,
+            'email' => $this->email,
+        ]);
+        $user_pro = Auth::user(Auth::user()->id)->user_profile;
+        $user_profile = User_profile::findOrFail($user_pro->id);
+        // dd($this->city_lag,$this->city_lat,$this->main_city_name,$this->city_name,$this->country_long,$this->country_short,$this->state_long,$this->state_short);
+        // autocomplete location
+        $city_id = $user_profile->city_id;
+        $city_name = $this->city_name;            // this is local area
+        $main_city_name = $this->main_city_name;  // this is city name like chennai, madurai
+        $city_lat = $this->city_lat;
+        $city_lag = $this->city_lag;
+        $country_long = $this->country_long;
+        $country_short = $this->country_short;
+        $state_long = $this->state_long;
+        $state_short = $this->state_short;
+        if (!empty($city_name) && !empty($main_city_name) && !empty($city_lat) && !empty($city_lag) && !empty($country_long) && !empty($country_short) && !empty($state_long) && !empty($state_short)) {
+            //get country info
+            $country_id = "";
+            $state_id = "";
+            $city_id = "";
+            $tbl_country = TblCountry::where('code', $country_short)->where('name', $country_long)->get();
+            if ($tbl_country->count() == 0) {
+                $country_id = TblCountry::create([
+                    'code' => $country_short,
+                    'name' => $country_long
+                ])->id;
+            } else {
+                $country_id = $tbl_country[0]->id;
+            }
+            //get state info
+            $tbl_state = TblState::where('country_id', $country_id)->where('code', $state_short)->where('name', $state_long)->get();
+            if ($tbl_state->count() == 0) {
+                $state_id = TblState::create([
+                    'country_id' => $country_id,
+                    'code' => $state_short,
+                    'name' => $state_long
+                ])->id;
+            } else {
+                $state_id = $tbl_state[0]->id;
+            }
+            //get city info
+            $tbl_cities = TblCity::where('country_id', $country_id)->where('state_id', $state_id)->where('name', $main_city_name)->where('locality', $city_name)->get();
+            if ($tbl_cities->count() == 0) {
+                $city_id = TblCity::create([
+                    'country_id' => $country_id,
+                    'state_id' => $state_id,
+                    'locality' => $city_name,
+                    'name' => $main_city_name,
+                    'latitude' => $city_lat,
+                    'logitude' => $city_lag
+                ])->id;
+            } else {
+                $city_id = $tbl_cities[0]->id;
+            }
+            // dd($city_id);
+            // end
+        }
+        $user_profile->update([
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'city_id' => $city_id,
+            // 'address_line1' => $this->address_line1,
+            'address_line2' => $this->address_line2,
+            'date_of_birth' => $this->date_of_birth,
+            'gender' => $this->gender,
+            'show_mobile' => $this->show_mobile,
+            'stripe_private_key' => !empty($this->stripe_private_key) ? $this->stripe_private_key : "",
+            'stripe_public_key' => !empty($this->stripe_public_key) ? $this->stripe_public_key : ""
+        ]);
+        $phone = $this->phone;
+        $check_phoneno = User_profile::where('phone', $phone)->where('user_id', '!=', Auth::user()->id)->pluck('user_id')->first();
+        if (!empty($check_phoneno)) {
+            $get_ph_user = User::where('id', $check_phoneno)->whereNull('deleted_at')->first();
+            if (empty($get_ph_user)) {
+                $user->update([
+                    'phone' => $this->phone,
+                    'preferred_language' => $this->p_lang,
+                    'preferred_currency' => $this->p_curr
+                ]);
+                $user_profile->update([
+                    'phone' => $this->phone,
+                    'preferred_language' => $this->p_lang,
+                    'preferred_currency' => $this->p_curr
+                ]);
+            } else {
+                $user->update([
+                    'preferred_language' => $this->p_lang,
+                    'preferred_currency' => $this->p_curr
+                ]);
+                $user_profile->update([
+                    'preferred_language' => $this->p_lang,
+                    'preferred_currency' => $this->p_curr
+                ]);
+                Session()->flash('message', 'Phone number already exist!');
+                Session()->flash('class', 'error');
+            }
+        } else {
+            $user->update([
+                'phone' => $this->phone,
+                'preferred_language' => $this->p_lang,
+                'preferred_currency' => $this->p_curr
+            ]);
+            $user_profile->update([
+                'phone' => $this->phone,
+                'preferred_language' => $this->p_lang,
+                'preferred_currency' => $this->p_curr
+            ]);
+        }
+        if ($this->p_lang == "") {
+            $get_default = TblLanguage::where('active', '1')->where('default', '1')->first()->toArray();
+            $locale = $get_default['locale'];
+            $redirect_url = URL::to('locale') . '/' . $locale;
+        } else {
+            $redirect_url = URL::to('locale') . '/' . $this->p_lang;
+        }
+        //$redirect_url = url('/my-profile');
+        Session()->flash('message', 'Updated Successfully');
+        Session()->flash('class', 'error');
+        return redirect($redirect_url);
+    }
+    public function profile_send_otp()
+    {
+        $phone = request()->phone;
+        $e164 = request()->e164;
+        $check = User_profile::where('user_id', '!=', Auth::id())->where('phone', $phone)->pluck('user_id')->first();
+        $check_user = User::where('id', $check)->whereNull('deleted_at')->first();
+        if (empty($check_user)) {
+            //$code = mt_rand(1000, 9999);
+            $code = 1234;
+            // $account_sid = getenv("TWILIO_SID");
+            // $auth_token = getenv("TWILIO_TOKEN");
+            // $twilio_number = getenv("TWILIO_FROM");
+            // $client = new Client($account_sid, $auth_token);
+            // $message = $client->messages
+            //     ->create(
+            //         $e164,
+            //         [
+            //             "body" => "Dear Customer,use code $code to verify your mobile number!",
+            //             "from" => $twilio_number
+            //         ]
+            //     );
+            $node = User_profile::where('user_id', Auth::id())->pluck('id')->first();
+            DB::table('user_profiles')->where('id', $node)->update(['otp' => $code]);
+            return response()->json(['result' => "success", 'message' => 'OTP sent your mobile number successfully!']);
+        } else {
+            return response()->json(['result' => "error", 'message' => 'Phone number already exist!']);
+        }
+    }
+    function profile_verify_otp()
+    {
+        $otp = request()->otp;
+        $phone = request()->phone;
+        $check = User_profile::where('user_id', Auth::id())->where('otp', $otp)->pluck('user_id')->first();
+        if (!empty($check)) {
+            $node = User_profile::where('user_id', Auth::id())->pluck('id')->first();
+            DB::table('user_profiles')->where('id', $node)->update(['phone' => $phone, 'mobile_verified' => 1]);
+            $return_url =  URL::to('/my-profile');
+            return response()->json(['result' => "success", 'message' => 'Verified successfully!', "return_url" => $return_url]);
+        } else {
+            return response()->json(['result' => "error", 'message' => 'Invalid OTP']);
+        }
+    }
+    public function deleteAccount()
+    {
+        $datetime = date("Y-m-d");
+        $curr_user_id = Auth::id();
+        $user = User::find($curr_user_id);
+        $to_id = $curr_user_id;
+        $slug = url('/');
+        if ($user != null) {
+            // if ($user == true) {
+                $mail_data = array("send_maildata" => array('to_id' => $to_id, 'message' => "Thank you for joining us. Your account has been deleted successfully.You have **7 days** to reactivate your account. If you do not reactivate, your account will be permanently deleted.Contact us if you need assistance.", 'subject' => "Account Deleted", 'ad_url' => $slug));
+                $mail_key = "account_deleted";
+                Setting::notification_mail($mail_data, $mail_key);
+                $user->update(['is_blocked' => '1','deleted_at' => $datetime]);
+                //once account deleted flag updated, get logout itself
+                session()->flush(); // removes all session data
+                redirect(url('/'));
+            // }
+        }
+    }
+}

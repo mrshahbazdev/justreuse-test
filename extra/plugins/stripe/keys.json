@@ -1,0 +1,10 @@
+{
+  "key_1":[{
+    "label":"Stripe publish Key",
+    "name" : "STRIPE_PUBLISH_KEY"
+  }],
+  "key_2":[{
+    "label":"Stripe secret Key",
+    "name" : "STRIPE_SECRET_KEY"
+  }]
+}

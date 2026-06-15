@@ -1,0 +1,130 @@
+<?php
+return array (
+  'accepted' => 'Fältet :attribute måste accepteras.',
+  'active_url' => 'Fältet :attribute är inte en giltig URL.',
+  'after' => 'Fältet :attribute måste vara ett datum efter :date.',
+  'after_or_equal' => 'Fältet :attribute måste vara ett datum efter eller lika med :date.',
+  'alpha' => 'Fältet :attribute får endast innehålla bokstäver.',
+  'alpha_dash' => 'Fältet :attribute får endast innehålla bokstäver, siffror, bindestreck och understreck.',
+  'alpha_num' => 'Fältet :attribute får endast innehålla bokstäver och siffror.',
+  'array' => 'Fältet :attribute måste vara en array.',
+  'before' => 'Fältet :attribute måste vara ett datum före :date.',
+  'before_or_equal' => 'Fältet :attribute måste vara ett datum före eller lika med :date.',
+  'between' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara mellan :min och :max.',
+    'file' => 'Fältet :attribute måste vara mellan :min och :max kilobyte.',
+    'string' => 'Fältet :attribute måste vara mellan :min och :max tecken.',
+    'array' => 'Fältet :attribute måste ha mellan :min och :max objekt.',
+  ),
+  'boolean' => 'Fältet :attribute måste vara sant eller falskt.',
+  'confirmed' => 'Bekräftelsen av fältet :attribute matchar inte.',
+  'date' => 'Fältet :attribute är inte ett giltigt datum.',
+  'date_equals' => 'Fältet :attribute måste vara ett datum lika med :date.',
+  'date_format' => 'Fältet :attribute matchar inte formatet :format.',
+  'different' => 'Fälten :attribute och :other måste vara olika.',
+  'digits' => 'Fältet :attribute måste vara :digits siffror.',
+  'digits_between' => 'Fältet :attribute måste vara mellan :min och :max siffror.',
+  'dimensions' => 'Fältet :attribute har ogiltiga bildmått.',
+  'distinct' => 'Fältet :attribute har en dublett.',
+  'email' => 'Fältet :attribute måste vara en giltig e-postadress.',
+  'ends_with' => 'Fältet :attribute måste sluta med en av följande: :values.',
+  'exists' => 'Det valda :attribute är ogiltigt.',
+  'file' => 'Fältet :attribute måste vara en fil.',
+  'filled' => 'Fältet :attribute måste ha ett värde.',
+  'gt' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara större än :value.',
+    'file' => 'Fältet :attribute måste vara större än :value kilobyte.',
+    'string' => 'Fältet :attribute måste vara längre än :value tecken.',
+    'array' => 'Fältet :attribute måste ha fler än :value objekt.',
+  ),
+  'gte' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara större än eller lika med :value.',
+    'file' => 'Fältet :attribute måste vara större än eller lika med :value kilobyte.',
+    'string' => 'Fältet :attribute måste vara lika med eller längre än :value tecken.',
+    'array' => 'Fältet :attribute måste ha :value objekt eller mer.',
+  ),
+  'image' => 'Fältet :attribute måste vara en bild.',
+  'in' => 'Det valda :attribute är ogiltigt.',
+  'in_array' => 'Fältet :attribute finns inte i :other.',
+  'integer' => 'Fältet :attribute måste vara ett heltal.',
+  'ip' => 'Fältet :attribute måste vara en giltig IP-adress.',
+  'ipv4' => 'Fältet :attribute måste vara en giltig IPv4-adress.',
+  'ipv6' => 'Fältet :attribute måste vara en giltig IPv6-adress.',
+  'json' => 'Fältet :attribute måste vara en giltig JSON-sträng.',
+  'lt' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara mindre än :value.',
+    'file' => 'Fältet :attribute måste vara mindre än :value kilobyte.',
+    'string' => 'Fältet :attribute måste vara kortare än :value tecken.',
+    'array' => 'Fältet :attribute måste ha färre än :value objekt.',
+  ),
+  'lte' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara mindre än eller lika med :value.',
+    'file' => 'Fältet :attribute måste vara mindre än eller lika med :value kilobyte.',
+    'string' => 'Fältet :attribute måste vara lika med eller kortare än :value tecken.',
+    'array' => 'Fältet :attribute får inte ha fler än :value objekt.',
+  ),
+  'max' => 
+  array (
+    'numeric' => 'Fältet :attribute får inte vara större än :max.',
+    'file' => 'Fältet :attribute får inte vara större än :max kilobyte.',
+    'string' => 'Fältet :attribute får inte vara längre än :max tecken.',
+    'array' => 'Fältet :attribute får inte ha fler än :max objekt.',
+  ),
+  'mimes' => 'Fältet :attribute måste vara en fil av typen: :values.',
+  'mimetypes' => 'Fältet :attribute måste vara en fil av typen: :values.',
+  'min' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara minst :min.',
+    'file' => 'Fältet :attribute måste vara minst :min kilobyte.',
+    'string' => 'Fältet :attribute måste vara minst :min tecken.',
+    'array' => 'Fältet :attribute måste ha minst :min objekt.',
+  ),
+  'multiple_of' => 'Fältet :attribute måste vara en multipel av :value',
+  'not_in' => 'Det valda :attribute är ogiltigt.',
+  'not_regex' => 'Fältet :attribute formatet är ogiltigt.',
+  'numeric' => 'Fältet :attribute måste vara ett nummer.',
+  'password' => 'Lösenordet är felaktigt.',
+  'present' => 'Fältet :attribute måste finnas.',
+  'regex' => 'Fältet :attribute formatet är ogiltigt.',
+  'required' => 'Fältet :attribute är obligatoriskt.',
+  'required_if' => 'Fältet :attribute är obligatoriskt när :other är :value.',
+  'required_unless' => 'Fältet :attribute är obligatoriskt om inte :other är i :values.',
+  'required_with' => 'Fältet :attribute är obligatoriskt när :values är närvarande.',
+  'required_with_all' => 'Fältet :attribute är obligatoriskt när :values är närvarande.',
+  'required_without' => 'Fältet :attribute är obligatoriskt när :values inte är närvarande.',
+  'required_without_all' => 'Fältet :attribute är obligatoriskt när ingen av :values är närvarande.',
+  'same' => 'Fälten :attribute och :other måste matcha.',
+  'size' => 
+  array (
+    'numeric' => 'Fältet :attribute måste vara :size.',
+    'file' => 'Fältet :attribute måste vara :size kilobyte.',
+    'string' => 'Fältet :attribute måste vara :size tecken.',
+    'array' => 'Fältet :attribute måste innehålla :size objekt.',
+  ),
+  'starts_with' => 'Fältet :attribute måste börja med en av följande: :values.',
+  'string' => 'Fältet :attribute måste vara en sträng.',
+  'timezone' => 'Fältet :attribute måste vara en giltig tidszon.',
+  'unique' => 'Fältet :attribute är redan upptaget.',
+  'uploaded' => 'Fältet :attribute misslyckades att ladda upp.',
+  'url' => 'Fältet :attribute formatet är ogiltigt.',
+  'uuid' => 'Fältet :attribute måste vara en giltig UUID.',
+  'custom' => 
+  array (
+    'attribute-name' => 
+    array (
+      'rule-name' => 'anpassat-meddelande',
+    ),
+  ),
+  'attributes' => 
+  array (
+  ),
+  'choose' => 'Välj dina kategorier',
+  'done' => 'Klar',
+  'sell' => 'Sälj',
+  'Star' => 'Stjärna',
+);

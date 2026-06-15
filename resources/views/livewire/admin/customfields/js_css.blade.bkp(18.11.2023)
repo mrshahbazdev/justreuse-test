@@ -1,0 +1,108 @@
+<?php $rand = date("is");?>
+<script src="{{ URL::to('js/adminformbuilder/jquery.min.js') }}"></script>
+<script src="{{ URL::to('js/adminformbuilder/jquery-ui.min.js') }}"></script>
+<script src="{{ URL::to('js/adminformbuilder/form-builder-cf.min.js') }}?rand={{$rand}}"></script>
+<script src="{{ URL::to('js/jquery.tagsinput-admin.js') }}?rand={{$rand}}"></script>
+<link rel="stylesheet" href="{{ URL::to('css/jquery.tagsinput-admin.css') }} " />
+
+<script>
+    function setTagField(id) {
+        $("#" + id + " .field-options ol .option-value").tagsInput();
+    }
+    /* disable name of name field */
+    $("#build-wrap").bind("DOMSubtreeModified", function() {
+        $('.fld-name').attr('readonly', true);
+        $('.fld-name').css("background", "#efefef");
+    });
+
+    $("body").delegate(".field-options ol", "DOMNodeInserted", function() {
+        FieldId = $(".field-brandwithmodel-preview").parent('.prev-holder').parent('li').attr('id');
+        if ((FieldId != "undefined") || (FieldId != "") || (FieldId != null)) {
+            FieldDivId = FieldId + "-holder";
+            setTagField(FieldDivId);
+            $("#" + FieldDivId + " .field-options ol li").css("cssText", "display: flow-root !important;width: 100% !important;");
+        }
+    });
+
+    var userAttrs = {};
+    var options = {
+        onOpenFieldEdit: function(editPanel) {
+            var FieldClassName = $(editPanel).find('.fld-className').val();
+            var str1 = FieldClassName;
+            var str2 = "inputtags";
+            if (str1.indexOf(str2) != -1) {
+                FieldId = $(".field-brandwithmodel-preview").parent('.prev-holder').parent('li').attr('id');
+                FieldDivId = FieldId + "-holder";
+                setTagField(FieldDivId);
+                $("#" + FieldDivId + " .field-options ol li").css("cssText", "display: flow-root !important;width: 100% !important;");
+                // $("#" + FieldDivId + " .field-options ol .option-value").tagsInput();
+            }
+        },
+        // ... All your options here ...
+        disabledAttrs: ['multiple', 'access', 'description'],
+        inputSets: [{
+            label: 'Brands With Models',
+            showHeader: false, // optional
+            fields: [{
+                type: 'select',
+                label: 'Brands',
+                name: "brandwithmodel",
+                className: 'inputtags form-control',
+                multiple: false,
+                values: [{
+                        label: 'Brand Name',
+                        value: '',
+                        selected: false
+                    },
+                    {
+                        label: 'Brand Name',
+                        value: '',
+                        selected: false
+                    }
+                ],
+            }, ]
+        }, ],
+    }
+
+    var formBuilder = $('#build-wrap').formBuilder(options);
+    var json_html = <?php echo $data['html']; ?>
+
+    //Fill old data - begin
+    setTimeout(function() {
+        formBuilder.actions.setData(json_html);
+    }, 500);
+    //Fill old data - end
+
+    //Save action - begin
+    $('#post_json_insert').click(function() {
+        var jsondata = formBuilder.actions.getData('json');
+        var jsonCount = jQuery.parseJSON(jsondata).length;
+        var jsonFinal = (jsonCount == 0) ? '' : jsondata;
+        $('#id_cathtml').val(jsonFinal);
+        $('#id_catfieldcount').val(jsonCount);
+    });
+
+    //cancel begin
+    $("#post_cancel").click(function() {
+        location.href = document.referrer;
+    });
+    //cancel end
+</script>
+
+<style>
+    li.input-set-control::before {
+        content: '\e806';
+        font-family: "formbuilder-icons";
+    }
+
+    .tagsinput {
+        margin-left: 29px;
+        margin-top: 10px;
+    }
+
+    .tag-input:focus,
+    .tag-input.error {
+        outline: none;
+        border: unset !important;
+    }
+</style>

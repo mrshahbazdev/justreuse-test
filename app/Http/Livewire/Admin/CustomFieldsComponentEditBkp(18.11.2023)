@@ -1,0 +1,264 @@
+<?php
+
+namespace App\Http\Livewire\Admin;
+
+use App\Models\TblCategory;
+use Livewire\Component;
+use App\Models\TblCustomField;
+use App\Models\TblFieldsDetail;
+use App\Models\TblFieldsOption;
+use App\Models\User;
+use Illuminate\Support\Facades\URL;
+use Session;
+
+use function PHPUnit\Framework\isEmpty;
+
+class CustomFieldsComponentEdit extends Component
+{
+	public $ancestors;
+	public function render()
+	{
+		$uuid  = request()->id;
+		$id =  TblCategory::where('uuid', $uuid)->get();
+		$id = $id[0]->id;
+
+		$checkData =  TblCustomField::where('cat_id', $id)->get();
+		$catInfo = TblCategory::find($id);
+		$this->ancestors = TblCategory::ancestorsAndSelf($id);
+
+		$data = array("cat_id" => $catInfo->id, "cat_title" => $catInfo->title, "html" => "", "field_count" => "0");
+		if ($checkData->count() > 0) {
+			$data = array("cat_id" => $catInfo->id, "cat_title" => $catInfo->title, "html" => $checkData[0]['html'], "field_count" => $checkData[0]['field_count']);
+		}
+		//dd($data);
+		return view('livewire.admin.customfields.edit', compact('data'));
+	}
+
+
+	public function update($formdata)
+	{
+
+		//redirect url
+		$parentid = TblCategory::where('id', $formdata['catid'])->get()[0]['parent_id'];
+		$redirect_url = URL::to('/admin/category/');
+		if ($parentid != null && $parentid != "") {
+			$uuid = TblCategory::where('id', $parentid)->get()[0]['uuid'];
+			$redirect_url = $redirect_url . '/' . $uuid . '/subcategories';
+		}
+		//redirect url
+
+		//start check demo user
+		$isDemoUser = User::isDemoUser();
+		if($isDemoUser["result"]==true)
+		{
+			session()->flash('message', $isDemoUser["message"]);
+			Session()->flash('result', '0');
+			return redirect($redirect_url);
+		}
+	//end check demo user
+
+		$catid = $formdata['catid'];
+		$html = $formdata['cathtml'];
+		$fieldcount = $formdata['catfieldcount'];
+		$isExist =  TblCustomField::where('cat_id', $catid)->count();
+		$insertedId = 0;
+
+		if ($isExist == 0) {
+			$query = TblCustomField::create([
+				'cat_id' => $catid,
+				'html' => $html,
+				'field_count' => $fieldcount
+			]);
+			$insertedId = $query->id;
+		} else {
+			$record = TblCustomField::where('cat_id', $catid);
+			$record->update([
+				'html' => $html,
+				'field_count' => $fieldcount
+			]);
+		}
+
+
+
+		//begin transaction -- while insert 
+		$jsd = json_decode($html, true);
+	//	dd($jsd);
+		if ($insertedId != 0 && $jsd != null) {
+			foreach ($jsd as $r) {
+				$name = strip_tags($r['label']);
+				$type =  $r['type']; //checkbox,select,or text
+				$required = "0";
+				if (array_key_exists('required', $r)) {
+					$required = ($r['required'] == true) ? "1" : "0";
+				}
+
+				$filter = "0";
+				if (array_key_exists('filter', $r)) {
+					$filter = ($r['filter'] == true) ? "1" : "0";
+				}
+
+				$helptext = "";
+				if (array_key_exists('description', $r)) {
+					$helptext = $r['description'];
+				}
+				$formfieldname = $r['name'];
+
+				$last_inserted_id = TblFieldsDetail::create([
+					'cat_id' => $catid,
+					'name' => $name,
+					'type' => $type,
+					'required' => $required,
+					'filter' => $filter,
+					'helptext' => $helptext,
+					'form_field_name' => $formfieldname
+				])->id;
+
+
+				if (array_key_exists('values', $r)) {
+					$options = $r['values'];
+
+					if ($r['name'] == "brandwithmodel") {
+						foreach ($options as $j) {
+							$opt_key = $j['label'];
+							$opt_value = $j['value'];
+							$s = TblFieldsOption::create([
+								'cat_id' => $catid,
+								'field_id' => $last_inserted_id,
+								'key' => $opt_key,
+								'value' => $opt_value,
+								'form_field_name' => $formfieldname
+							]);
+						}
+					} else {
+						foreach ($options as $j) {
+							$opt_key = $j['label'];
+							$opt_value = $j['value'];
+							$s = TblFieldsOption::create([
+								'cat_id' => $catid,
+								'field_id' => $last_inserted_id,
+								'key' => $opt_key,
+								'value' => $opt_value,
+								'form_field_name' => $formfieldname
+							]);
+						}
+					}
+				}
+			}
+		}
+		//update process
+		if ($insertedId == 0  && $jsd != null) {
+
+			$newFormFields = array();
+			foreach ($jsd as $r) {
+
+				$name = strip_tags($r['label']);
+				$type =  $r['type']; //checkbox,select,or text
+				$required = "0";
+				if (array_key_exists('required', $r)) {
+					$required = ($r['required'] == true) ? "1" : "0";
+				}
+
+				$filter = "0";
+				if (array_key_exists('filter', $r)) {
+					$filter = ($r['filter'] == true) ? "1" : "0";
+				}
+
+				$helptext = "";
+				if (array_key_exists('description', $r)) {
+					$helptext = $r['description'];
+				}
+				$formfieldname = $r['name'];
+
+				$isInFieldDetail = TblFieldsDetail::where('cat_id', $catid)->where('form_field_name', $formfieldname)->count();
+				if ($isInFieldDetail == 0) {
+					//begin insert with new fields
+					$last_inserted_id = TblFieldsDetail::create([
+						'cat_id' => $catid,
+						'name' => $name,
+						'type' => $type,
+						'required' => $required,
+						'filter' => $filter,
+						'helptext' => $helptext,
+						'form_field_name' => $formfieldname
+					])->id;
+
+
+					if (array_key_exists('values', $r)) {
+						$options = $r['values'];
+						foreach ($options as $j) {
+							$opt_key = $j['label'];
+							$opt_value = $j['value'];
+							$s = TblFieldsOption::create([
+								'cat_id' => $catid,
+								'field_id' => $last_inserted_id,
+								'key' => $opt_key,
+								'value' => $opt_value,
+								'form_field_name' => $formfieldname
+							]);
+						}
+					}
+				} else {
+					$recordId = TblFieldsDetail::where('cat_id', $catid)->where('form_field_name', $formfieldname)->get();
+					$last_inserted_id = $recordId[0]['id'];
+					//dd($last_inserted_id);
+					//update begin with exist keys
+					$record = TblFieldsDetail::where('id', $last_inserted_id);
+					//$record = TblFieldsDetail::where('cat_id',$catid)->where('form_field_name',$formfieldname);
+					$record->update([
+						'name' => $name,
+						'helptext' => $helptext,
+						'required' => $required,
+						'filter' => $filter
+					]);
+
+					//$last_inserted_id = $record->id;
+
+
+					if (array_key_exists('values', $r)) {
+						$activeOptions = array();
+						$options = $r['values'];
+						foreach ($options as $j) {
+							$opt_key = $j['label'];
+							$opt_value = $j['value'];
+							$isInFieldOpts = TblFieldsOption::where('cat_id', $catid)->where('key', $opt_key)->where('value', $opt_value)->where('form_field_name', $formfieldname)->count();
+
+							if ($isInFieldOpts == 0) {
+								$s = TblFieldsOption::create([
+									'cat_id' => $catid,
+									'field_id' => $last_inserted_id,
+									'key' => $opt_key,
+									'value' => $opt_value,
+									'form_field_name' => $formfieldname
+								]);
+							}
+							// else{
+							// 	$ksk = TblFieldsOption::where('cat_id',$catid)->where('key',$opt_key)->where('value',$opt_value)->where('form_field_name',$formfieldname);
+							// 	$ksk->update([
+							// 		'key'=>$opt_key,
+							// 		'value'=>$opt_value
+							// 	]);
+
+							// }
+							array_push($activeOptions, $opt_key);
+						}
+						$upd0 = TblFieldsOption::where('cat_id', $catid)->where('form_field_name', $formfieldname)->whereNotIn('key', $activeOptions);
+						$upd0->update(['active' => '0']);
+					}
+				}
+
+				array_push($newFormFields, $formfieldname);
+			}
+
+			//at last -> deactive previous fields
+			$upd1 = TblFieldsDetail::where('cat_id', $catid)->whereNotIn('form_field_name', $newFormFields);
+			$upd1->update(['active' => '0']);
+
+			$upd2 = TblFieldsOption::where('cat_id', $catid)->whereNotIn('form_field_name', $newFormFields);
+			$upd2->update(['active' => '0']);
+		}
+
+		Session::flash('result', '1');
+		Session::flash('message', 'Updated Successfully');
+		return redirect($redirect_url);
+	}
+}

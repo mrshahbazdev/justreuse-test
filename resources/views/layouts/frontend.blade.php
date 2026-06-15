@@ -73,9 +73,11 @@
 		{{ do_action('apm_header_enqueue') }}
 
 		@livewireScripts
+		@livewireStyles
 	</head>
 
 	<body class="antialiased overflow-x-hidden">
+		@livewire('mini-chat')
 		{{ do_action('apm_before_main_content') }}
 
 		@include('cookie-consent::index')

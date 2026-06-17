@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Models\TblBannerAdvertisement;
 use App\Models\TblBanners;
 use App\Models\TblCategory;
+use App\Models\TblPayment;
 use App\Models\TblCity;
 use App\Models\TblCountry;
 use App\Models\TblPost;

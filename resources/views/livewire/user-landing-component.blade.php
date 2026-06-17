@@ -168,6 +168,27 @@
                 </div>
             </section>
 
+            {{-- ===== PAID / PROMOTED ADS ===== --}}
+            <section class="listings-section reveal">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-bullhorn"></i> Promoted Ads</h2>
+                    <a href="{{ $searchUrl }}" class="section-view-all">See More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="product-grid">
+                    @forelse($paid_ads_list as $ad)
+                        {!! App\Models\Setting::htmlAdBlock($ad['id']) !!}
+                    @empty
+                        <div class="empty-ads-state">
+                            <div class="empty-ads-icon">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <h4>No Promoted Ads Yet</h4>
+                            <p>Boost your listing to appear here. <a href="{{ url('/post/add') }}">Post your ad</a> and promote it!</p>
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+
             {{-- ===== LATEST ADS ===== --}}
             @if(!empty($posts) && count($posts) > 0)
             <section class="listings-section reveal">
@@ -230,7 +251,7 @@
                         <h2>Get the JustReused App</h2>
                         <p>Manage your ads, chat with buyers, and discover deals on the go.</p>
                         <div class="app-buttons">
-                            <a href="#" class="app-btn">
+                            <a href="https://apps.apple.com/pk/app/justreused/id6499257286" class="app-btn" target="_blank" rel="noopener">
                                 <i class="fab fa-apple"></i>
                                 <div class="app-btn-text">
                                     <span class="subtitle">Download on the</span>

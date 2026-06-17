@@ -24,6 +24,7 @@ class UserLandingComponent extends Component
     public $perPage = 20;
     public $increaseBy = 10;
     public $featurs_ad_list, $top_ads_list, $newdatas;
+    public $paid_ads_list;
     public $main_categories, $random_categories;
     public $banner_ads, $banner_type, $enable_banner_map;
 
@@ -144,6 +145,43 @@ class UserLandingComponent extends Component
         $this->featurs_ad_list = $feature_ads;
         $this->top_ads_list = $top_ads;
         $this->newdatas = $latest_ads;
+
+        // --- Paid/Promoted Ads (seeded random order, daily rotation) ---
+        $daily_seed = crc32(date('Y-m-d'));
+        $curr_date = date('Y-m-d H:i:s');
+        $blockedUsers = \App\Models\User::blocked_users();
+        $paid_ads_query = TblPayment::join('tbl_posts', 'tbl_posts.id', '=', 'tbl_payments.post_id')
+            ->join('tbl_cities', 'tbl_cities.id', '=', 'tbl_posts.city')
+            ->join('packages', 'packages.id', '=', 'tbl_payments.package_id')
+            ->join('users', 'users.id', '=', 'tbl_payments.user_id')
+            ->whereNull('tbl_posts.deleted_at')
+            ->where('tbl_posts.active', 1)
+            ->where('tbl_posts.sold_status', 0)
+            ->where('tbl_payments.start_date', '<=', $curr_date)
+            ->where('tbl_payments.end_date', '>=', $curr_date)
+            ->where('tbl_payments.active', '1')
+            ->whereNotIn('tbl_payments.user_id', $blockedUsers)
+            ->select([
+                'tbl_posts.id as id',
+                'tbl_posts.giving_away as giving_away',
+                'tbl_posts.category_id as category_id',
+                'tbl_posts.title as title',
+                'tbl_posts.locality as locality',
+                'tbl_posts.price as price',
+                'tbl_posts.currency_id as currency_id',
+                'tbl_posts.slug as slug',
+                'tbl_posts.description as description',
+                'tbl_posts.created_at as created_at',
+                'tbl_posts.images as images',
+                'packages.ad_type as ad_type',
+                'tbl_cities.name as city_name',
+                'users.name as posted_by',
+            ])
+            ->orderByRaw("RAND({$daily_seed})")
+            ->limit(12)
+            ->get()
+            ->toArray();
+        $this->paid_ads_list = $paid_ads_query;
 
         // --- Banner Ads ---
         $home_banners = TblBanners::whereNull('deleted_at')->orderBy('id', 'desc')->limit(3)->get()->map(function ($banner) {

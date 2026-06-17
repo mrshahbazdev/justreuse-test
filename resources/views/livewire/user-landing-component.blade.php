@@ -58,7 +58,7 @@
                     <div class="hero-cta-row">
                         <a href="{{ $searchUrl }}" class="hero-btn-primary"><i class="fas fa-search"></i> Browse Listings</a>
                         @if(auth()->check())
-                            <a href="{{ url('/post/add') }}" class="hero-btn-secondary"><i class="fas fa-plus"></i> Post an Ad</a>
+                            <a href="{{ url('/post-add') }}" class="hero-btn-secondary"><i class="fas fa-plus"></i> Post an Ad</a>
                         @else
                             <a href="{{ url('/login') }}" class="hero-btn-secondary"><i class="fas fa-plus"></i> Post an Ad</a>
                         @endif
@@ -138,7 +138,7 @@
                                 <i class="fas fa-fire-flame-curved"></i>
                             </div>
                             <h4>No Top Ads Yet</h4>
-                            <p>Premium listings will appear here. <a href="{{ url('/post/add') }}">Post your ad</a> to get started!</p>
+                            <p>Premium listings will appear here. <a href="{{ url('/post-add') }}">Post your ad</a> to get started!</p>
                         </div>
                     @endforelse
                 </div>
@@ -164,7 +164,7 @@
                                 <i class="fas fa-star"></i>
                             </div>
                             <h4>No Featured Ads Yet</h4>
-                            <p>Featured listings will appear here. <a href="{{ url('/post/add') }}">Post your ad</a> to get featured!</p>
+                            <p>Featured listings will appear here. <a href="{{ url('/post-add') }}">Post your ad</a> to get featured!</p>
                         </div>
                     @endforelse
                 </div>
@@ -185,7 +185,7 @@
                                 <i class="fas fa-bullhorn"></i>
                             </div>
                             <h4>No Promoted Ads Yet</h4>
-                            <p>Boost your listing to appear here. <a href="{{ url('/post/add') }}">Post your ad</a> and promote it!</p>
+                            <p>Boost your listing to appear here. <a href="{{ url('/post-add') }}">Post your ad</a> and promote it!</p>
                         </div>
                     @endforelse
                 </div>
@@ -735,6 +735,11 @@
             .hero-image-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .icon-card { padding: 20px 12px; }
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .product-grid .h-48 { height: 140px; }
+            .product-grid .p-4 { padding: 10px; }
+            .product-grid .ad-title { font-size: 13px; }
+            .product-grid .ad-price { font-size: 15px !important; }
+            .product-grid .ad-loc { font-size: 11px; }
             .features-section { grid-template-columns: 1fr; gap: 16px; padding: 30px 0; }
             .category-buttons { gap: 8px; }
             .category-btn { padding: 8px 14px; font-size: 13px; }
@@ -747,7 +752,14 @@
         @media (max-width: 480px) {
             .hero-text h1 { font-size: 28px; letter-spacing: -1px; }
             .hero-text p { font-size: 15px; }
-            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .product-grid .h-48 { height: 120px; }
+            .product-grid .p-4 { padding: 8px; }
+            .product-grid .ad-title { font-size: 12px; }
+            .product-grid .ad-price { font-size: 14px !important; margin-top: 2px !important; }
+            .product-grid .ad-loc { font-size: 10px; }
+            .product-grid .text-sm.line-through { font-size: 11px; }
+            .product-grid .rounded-full { padding: 4px 8px; font-size: 11px; }
             .hero-image-grid { grid-template-columns: repeat(2, 1fr); }
             .banner-carousel { aspect-ratio: 16 / 6; }
         }

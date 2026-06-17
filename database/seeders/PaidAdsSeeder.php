@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\TblBannerAdvertisement;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -18,6 +19,14 @@ class PaidAdsSeeder extends Seeder
         $now = Carbon::now();
         $startDate = $now->copy()->subDays(5);
         $endDate = $now->copy()->addDays(30);
+
+        // Use the first available user as the banner owner
+        $user = User::first();
+        if (!$user) {
+            $this->command->error('No users found in database. Please create a user first.');
+            return;
+        }
+        $userId = $user->id;
 
         $banners = [
             [
@@ -45,7 +54,7 @@ class PaidAdsSeeder extends Seeder
 
         foreach ($banners as $banner) {
             TblBannerAdvertisement::create([
-                'user_id' => null,
+                'user_id' => $userId,
                 'category_id' => null,
                 'page' => $banner['page'],
                 'web_banner' => $banner['web_banner'],

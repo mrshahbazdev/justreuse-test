@@ -176,7 +176,7 @@ class LandingPageAdsSeeder extends Seeder
                 'content' => [
                     'headline' => 'Sell Your Old Gadgets Today',
                     'subtitle' => 'Turn unused items into cash. Post your ad in 60 seconds — totally free!',
-                    'link' => 'https://www.justreused.com/post/add',
+                    'link' => 'https://www.justreused.com/post-add',
                     'cta_text' => 'Post Free Ad',
                     'image' => 'user_ads/ad-sell-gadgets.svg',
                     'logo' => 'user_ad_logos/logo-sell.svg',

@@ -4,7 +4,6 @@ namespace App\View\Components;
 
 use Illuminate\View\Component;
 use App\Models\UserAdvertisement;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class DisplayAd extends Component
@@ -13,12 +12,8 @@ class DisplayAd extends Component
 
     public function __construct($pageLocation, $categoryId = null)
     {
-        // Cache for 30 minutes (1800 seconds)
-        $cacheKey = "ad_{$pageLocation}" . ($categoryId ? "_cat_{$categoryId}" : '') . '_' . now()->format('YmdH');
-        
-        $this->finalHtml = Cache::remember($cacheKey, 1800, function () use ($pageLocation, $categoryId) {
-            return $this->getAdHtml($pageLocation, $categoryId);
-        });
+        // No cache — pick a random ad on every page load so multiple users' ads rotate
+        $this->finalHtml = $this->getAdHtml($pageLocation, $categoryId);
     }
 
     private function getAdHtml($pageLocation, $categoryId)

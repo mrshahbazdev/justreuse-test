@@ -1,6 +1,6 @@
 @if($finalHtml)
-    <div class="my-6 user-advertisement">
+    <section class="user-advertisement reveal">
         {!! $finalHtml !!}
-    </div>
+    </section>
 @endif
 

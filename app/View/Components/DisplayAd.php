@@ -59,12 +59,14 @@ class DisplayAd extends Component
         $width = is_numeric($widthValue) ? $widthValue . 'px' : 'auto';
         $height = is_numeric($heightValue) ? $heightValue . 'px' : 'auto';
 
-        $imageUrl = isset($advertisement->content['image']) ? Storage::url($advertisement->content['image']) : '';
+        $rawImage = $advertisement->content['image'] ?? '';
+        $imageUrl = $rawImage ? (str_starts_with($rawImage, 'http') ? $rawImage : Storage::url($rawImage)) : '';
         $headline = e($advertisement->content['headline'] ?? '');
         $subtitle = e($advertisement->content['subtitle'] ?? '');
         $link = e($advertisement->content['link'] ?? '#');
         $cta_text = e($advertisement->content['cta_text'] ?? 'Learn More');
-        $logoUrl = isset($advertisement->content['logo']) ? Storage::url($advertisement->content['logo']) : 'https://via.placeholder.com/40x40.png?text=Ad';
+        $rawLogo = $advertisement->content['logo'] ?? '';
+        $logoUrl = $rawLogo ? (str_starts_with($rawLogo, 'http') ? $rawLogo : Storage::url($rawLogo)) : 'https://via.placeholder.com/40x40.png?text=Ad';
 
         $processedHtml = str_replace(
             ['__IMAGE_URL__', '__HEADLINE__', '__SUBTITLE__', '__LINK__', '__CTA_TEXT__', '__LOGO_URL__', '__WIDTH__', '__HEIGHT__'],

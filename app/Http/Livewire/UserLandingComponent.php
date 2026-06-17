@@ -142,13 +142,37 @@ class UserLandingComponent extends Component
         if (empty($latest_ads)) {
             $latest_ads = TblPost::get_latest_ads_home_pages($final_result_array, $ids, $pagination);
         }
+
+        // If still no premium ads, fallback to showing recent active posts
+        $daily_seed = crc32(date('Y-m-d'));
+        if (empty($feature_ads)) {
+            $feature_ads = TblPost::join('tbl_cities', 'tbl_cities.id', '=', 'tbl_posts.city')
+                ->whereNull('tbl_posts.deleted_at')
+                ->where('tbl_posts.active', 1)
+                ->where('tbl_posts.sold_status', 0)
+                ->select(['tbl_posts.id as id', 'tbl_posts.category_id as category_id', 'tbl_posts.title as title', 'tbl_posts.price as price', 'tbl_posts.currency_id as currency_id', 'tbl_posts.slug as slug', 'tbl_posts.created_at as created_at', 'tbl_posts.images as images', 'tbl_cities.name as city_name'])
+                ->orderByRaw("RAND({$daily_seed})")
+                ->limit(10)
+                ->get()
+                ->toArray();
+        }
+        if (empty($top_ads)) {
+            $top_ads = TblPost::join('tbl_cities', 'tbl_cities.id', '=', 'tbl_posts.city')
+                ->whereNull('tbl_posts.deleted_at')
+                ->where('tbl_posts.active', 1)
+                ->where('tbl_posts.sold_status', 0)
+                ->select(['tbl_posts.id as id', 'tbl_posts.category_id as category_id', 'tbl_posts.title as title', 'tbl_posts.price as price', 'tbl_posts.currency_id as currency_id', 'tbl_posts.slug as slug', 'tbl_posts.created_at as created_at', 'tbl_posts.images as images', 'tbl_cities.name as city_name'])
+                ->orderByRaw("RAND(" . ($daily_seed + 1) . ")")
+                ->limit(10)
+                ->get()
+                ->toArray();
+        }
         
         $this->featurs_ad_list = $feature_ads;
         $this->top_ads_list = $top_ads;
         $this->newdatas = $latest_ads;
 
         // --- Paid/Promoted Ads (seeded random order, daily rotation) ---
-        $daily_seed = crc32(date('Y-m-d'));
         $curr_date = date('Y-m-d H:i:s');
         $blockedUsers = \App\Models\User::blocked_users();
         $paid_ads_query = TblPayment::join('tbl_posts', 'tbl_posts.id', '=', 'tbl_payments.post_id')
@@ -182,6 +206,30 @@ class UserLandingComponent extends Component
             ->limit(12)
             ->get()
             ->toArray();
+
+        // Fallback: if no paid ads, show recent active posts
+        if (empty($paid_ads_query)) {
+            $paid_ads_query = TblPost::join('tbl_cities', 'tbl_cities.id', '=', 'tbl_posts.city')
+                ->whereNull('tbl_posts.deleted_at')
+                ->where('tbl_posts.active', 1)
+                ->where('tbl_posts.sold_status', 0)
+                ->select([
+                    'tbl_posts.id as id',
+                    'tbl_posts.category_id as category_id',
+                    'tbl_posts.title as title',
+                    'tbl_posts.locality as locality',
+                    'tbl_posts.price as price',
+                    'tbl_posts.currency_id as currency_id',
+                    'tbl_posts.slug as slug',
+                    'tbl_posts.created_at as created_at',
+                    'tbl_posts.images as images',
+                    'tbl_cities.name as city_name',
+                ])
+                ->orderByRaw("RAND({$daily_seed})")
+                ->limit(12)
+                ->get()
+                ->toArray();
+        }
         $this->paid_ads_list = $paid_ads_query;
 
         // --- Banner Ads ---

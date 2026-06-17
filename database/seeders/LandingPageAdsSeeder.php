@@ -8,6 +8,7 @@ use App\Models\UserAdvertisement;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class LandingPageAdsSeeder extends Seeder
@@ -123,6 +124,38 @@ class LandingPageAdsSeeder extends Seeder
             ]
         );
 
+        // ─── GENERATE LOCAL BANNER IMAGES ───
+        Storage::disk('public')->makeDirectory('user_ads');
+        Storage::disk('public')->makeDirectory('user_ad_logos');
+
+        $bannerImages = [
+            'ad-summer-sale.svg' => ['bg' => '#F97316', 'grad' => '#fb923c', 'text' => '☀ SUMMER SALE', 'sub' => 'Up to 70% Off — Electronics, Fashion & More', 'w' => 1200, 'h' => 400],
+            'ad-sell-gadgets.svg' => ['bg' => '#10b981', 'grad' => '#34d399', 'text' => '📱 Sell Your Gadgets', 'sub' => 'Post your ad in 60 seconds — Totally Free!', 'w' => 1200, 'h' => 400],
+            'ad-premium.svg' => ['bg' => '#764ba2', 'grad' => '#667eea', 'text' => '⭐ Premium Membership', 'sub' => 'Verified Badge • Priority Listing • Instant Chat', 'w' => 800, 'h' => 400],
+            'ad-download-app.svg' => ['bg' => '#3b82f6', 'grad' => '#6366f1', 'text' => '📲 Get the App', 'sub' => 'Buy & Sell on the Go — iOS & Android', 'w' => 800, 'h' => 400],
+            'ad-iphone-deal.svg' => ['bg' => '#ef4444', 'grad' => '#f97316', 'text' => '🔥 iPhone 15 Pro', 'sub' => 'Certified Refurbished — Save 40%!', 'w' => 600, 'h' => 400],
+            'ad-furniture.svg' => ['bg' => '#059669', 'grad' => '#10b981', 'text' => '🛋 Furniture Sale', 'sub' => 'Quality Pre-Owned — Local Pickup Available', 'w' => 600, 'h' => 400],
+        ];
+
+        foreach ($bannerImages as $filename => $data) {
+            $svg = $this->generateBannerSvg($data['bg'], $data['grad'], $data['text'], $data['sub'], $data['w'], $data['h']);
+            Storage::disk('public')->put('user_ads/' . $filename, $svg);
+        }
+
+        $logoImages = [
+            'logo-jr.svg' => ['bg' => '#F97316', 'text' => 'JR'],
+            'logo-sell.svg' => ['bg' => '#10b981', 'text' => 'S'],
+            'logo-pro.svg' => ['bg' => '#764ba2', 'text' => 'P'],
+            'logo-app.svg' => ['bg' => '#3b82f6', 'text' => 'A'],
+            'logo-deal.svg' => ['bg' => '#ef4444', 'text' => 'D'],
+            'logo-home.svg' => ['bg' => '#059669', 'text' => 'H'],
+        ];
+
+        foreach ($logoImages as $filename => $data) {
+            $svg = $this->generateLogoSvg($data['bg'], $data['text']);
+            Storage::disk('public')->put('user_ad_logos/' . $filename, $svg);
+        }
+
         // ─── DEMO ADS ───
         $demoAds = [
             [
@@ -133,8 +166,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Grab the best deals on electronics, fashion & more. Limited time offer!',
                     'link' => 'https://www.justreused.com',
                     'cta_text' => 'Shop Now',
-                    'image' => 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=400&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=JR&background=F97316&color=fff&size=80',
+                    'image' => 'user_ads/ad-summer-sale.svg',
+                    'logo' => 'user_ad_logos/logo-jr.svg',
                 ],
             ],
             [
@@ -145,8 +178,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Turn unused items into cash. Post your ad in 60 seconds — totally free!',
                     'link' => 'https://www.justreused.com/post/add',
                     'cta_text' => 'Post Free Ad',
-                    'image' => 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=JR&background=10b981&color=fff&size=80',
+                    'image' => 'user_ads/ad-sell-gadgets.svg',
+                    'logo' => 'user_ad_logos/logo-sell.svg',
                 ],
             ],
             [
@@ -157,8 +190,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Get verified badge, priority listing & instant chat with buyers.',
                     'link' => 'https://www.justreused.com/selectPackage',
                     'cta_text' => 'Upgrade Now',
-                    'image' => 'https://images.unsplash.com/photo-1560472355-536de3962603?w=600&h=400&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=PRO&background=764ba2&color=fff&size=80',
+                    'image' => 'user_ads/ad-premium.svg',
+                    'logo' => 'user_ad_logos/logo-pro.svg',
                 ],
             ],
             [
@@ -169,8 +202,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Chat, buy & sell on the go. Available on iOS and Android.',
                     'link' => 'https://apps.apple.com/pk/app/justreused/id6499257286',
                     'cta_text' => 'Get the App',
-                    'image' => 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=APP&background=3b82f6&color=fff&size=80',
+                    'image' => 'user_ads/ad-download-app.svg',
+                    'logo' => 'user_ad_logos/logo-app.svg',
                 ],
             ],
             [
@@ -181,8 +214,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Certified refurbished with warranty. Save 40% vs retail!',
                     'link' => 'https://www.justreused.com',
                     'cta_text' => 'View Deal',
-                    'image' => 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400&h=300&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=DEAL&background=ef4444&color=fff&size=80',
+                    'image' => 'user_ads/ad-iphone-deal.svg',
+                    'logo' => 'user_ad_logos/logo-deal.svg',
                 ],
             ],
             [
@@ -193,8 +226,8 @@ class LandingPageAdsSeeder extends Seeder
                     'subtitle' => 'Quality pre-owned sofas, tables & more. Local pickup available.',
                     'link' => 'https://www.justreused.com',
                     'cta_text' => 'Browse Now',
-                    'image' => 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop&q=80',
-                    'logo' => 'https://ui-avatars.com/api/?name=HOME&background=059669&color=fff&size=80',
+                    'image' => 'user_ads/ad-furniture.svg',
+                    'logo' => 'user_ad_logos/logo-home.svg',
                 ],
             ],
         ];
@@ -220,6 +253,41 @@ class LandingPageAdsSeeder extends Seeder
         }
 
         $this->command->info('Landing page ad zones, templates, and demo ads seeded successfully!');
-        $this->command->info('Zones created: ' . $topBannerZone->id . ', ' . $midBannerZone->id . ', ' . $sidebarZone->id);
+        $this->command->info('Images stored in: storage/app/public/user_ads/ and user_ad_logos/');
+    }
+
+    /**
+     * Generate a professional-looking SVG banner image.
+     */
+    private function generateBannerSvg(string $bg, string $grad, string $text, string $sub, int $w, int $h): string
+    {
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="{$w}" height="{$h}" viewBox="0 0 {$w} {$h}">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:{$bg}"/>
+      <stop offset="100%" style="stop-color:{$grad}"/>
+    </linearGradient>
+  </defs>
+  <rect width="{$w}" height="{$h}" fill="url(#bg)" rx="16"/>
+  <circle cx="100" cy="80" r="120" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="{$w}" cy="{$h}" r="200" fill="rgba(255,255,255,0.04)"/>
+  <text x="50%" y="42%" font-family="system-ui,-apple-system,sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">{$text}</text>
+  <text x="50%" y="62%" font-family="system-ui,-apple-system,sans-serif" font-size="20" fill="rgba(255,255,255,0.9)" text-anchor="middle" dominant-baseline="middle">{$sub}</text>
+</svg>
+SVG;
+    }
+
+    /**
+     * Generate a simple circular logo SVG.
+     */
+    private function generateLogoSvg(string $bg, string $text): string
+    {
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <circle cx="40" cy="40" r="40" fill="{$bg}"/>
+  <text x="50%" y="54%" font-family="system-ui,-apple-system,sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">{$text}</text>
+</svg>
+SVG;
     }
 }

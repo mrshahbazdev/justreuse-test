@@ -103,15 +103,22 @@
             {{-- ===== USER ADVERTISEMENT – TOP BANNER ===== --}}
             <x-display-ad page-location="landing_top_banner" />
 
-            {{-- ===== BANNER ADS SECTION 1 ===== --}}
+            {{-- ===== BANNER ADS CAROUSEL ===== --}}
             @if(!empty($banner_ads) && count($banner_ads) > 0)
             <section class="banner-section reveal">
-                <div class="banner-slider" id="bannerSlider1">
-                    @foreach(array_slice($banner_ads, 0, 2) as $banner)
-                        <a href="{{ $banner['url'] ?? '#' }}" class="banner-slide" target="_blank" rel="noopener">
+                <div class="banner-carousel" id="bannerCarousel">
+                    @foreach($banner_ads as $index => $banner)
+                        <a href="{{ $banner['url'] ?? '#' }}" class="banner-carousel-slide {{ $index === 0 ? 'active' : '' }}" target="_blank" rel="noopener">
                             <img src="{{ $banner['image'] }}" alt="Advertisement" loading="lazy">
                         </a>
                     @endforeach
+                    @if(count($banner_ads) > 1)
+                    <div class="banner-carousel-dots">
+                        @foreach($banner_ads as $index => $banner)
+                            <button class="carousel-dot {{ $index === 0 ? 'active' : '' }}" data-index="{{ $index }}"></button>
+                        @endforeach
+                    </div>
+                    @endif
                 </div>
             </section>
             @endif
@@ -137,18 +144,7 @@
                 </div>
             </section>
             
-            {{-- ===== BANNER ADS SECTION 2 ===== --}}
-            @if(!empty($banner_ads) && count($banner_ads) > 2)
-            <section class="banner-section reveal">
-                <div class="banner-slider">
-                    @foreach(array_slice($banner_ads, 2) as $banner)
-                        <a href="{{ $banner['url'] ?? '#' }}" class="banner-slide" target="_blank" rel="noopener">
-                            <img src="{{ $banner['image'] }}" alt="Advertisement" loading="lazy">
-                        </a>
-                    @endforeach
-                </div>
-            </section>
-            @endif
+            {{-- Banner ads are now shown in the single carousel above --}}
 
             {{-- ===== USER ADVERTISEMENT – MIDDLE BANNER ===== --}}
             <x-display-ad page-location="landing_mid_banner" />
@@ -514,31 +510,55 @@
             border-radius: 6px;
         }
 
-        /* ===== Banner Ads ===== */
+        /* ===== Banner Ads Carousel ===== */
         .banner-section {
             margin-bottom: 40px;
         }
-        .banner-slider {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
+        .banner-carousel {
+            position: relative;
             border-radius: 16px;
             overflow: hidden;
-        }
-        .banner-slide {
-            display: block;
-            border-radius: 16px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .banner-slide:hover {
-            transform: scale(1.01);
-        }
-        .banner-slide img {
             width: 100%;
-            height: 160px;
+            aspect-ratio: 16 / 4;
+        }
+        .banner-carousel-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            pointer-events: none;
+        }
+        .banner-carousel-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .banner-carousel-slide img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
             border-radius: 16px;
+        }
+        .banner-carousel-dots {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 5;
+        }
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: transparent;
+            cursor: pointer;
+            transition: background 0.3s;
+            padding: 0;
+        }
+        .carousel-dot.active {
+            background: #fff;
         }
 
         /* ===== User Advertisement Zones ===== */
@@ -722,19 +742,53 @@
             .app-download-text h2 { font-size: 24px; }
             .app-image img { width: 160px; }
             .hero-btn-primary, .hero-btn-secondary { padding: 12px 22px; font-size: 14px; width: 100%; justify-content: center; }
-            .banner-slide img { height: 120px; }
+            .banner-carousel { aspect-ratio: 16 / 5; }
         }
         @media (max-width: 480px) {
             .hero-text h1 { font-size: 28px; letter-spacing: -1px; }
             .hero-text p { font-size: 15px; }
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .hero-image-grid { grid-template-columns: repeat(2, 1fr); }
-            .banner-slide img { height: 100px; }
+            .banner-carousel { aspect-ratio: 16 / 6; }
         }
     </style>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // ─── Banner Carousel Auto-Slide ───
+        (function() {
+            const carousel = document.getElementById('bannerCarousel');
+            if (!carousel) return;
+            const slides = carousel.querySelectorAll('.banner-carousel-slide');
+            const dots = carousel.querySelectorAll('.carousel-dot');
+            if (slides.length <= 1) return;
+
+            let current = 0;
+            let interval;
+
+            function goTo(index) {
+                slides[current].classList.remove('active');
+                dots[current] && dots[current].classList.remove('active');
+                current = (index + slides.length) % slides.length;
+                slides[current].classList.add('active');
+                dots[current] && dots[current].classList.add('active');
+            }
+
+            function startAutoSlide() {
+                interval = setInterval(() => goTo(current + 1), 4000);
+            }
+
+            dots.forEach(dot => {
+                dot.addEventListener('click', () => {
+                    clearInterval(interval);
+                    goTo(parseInt(dot.dataset.index));
+                    startAutoSlide();
+                });
+            });
+
+            startAutoSlide();
+        })();
+
         Livewire.on('locationSet', () => {
             setTimeout(() => window.location.reload(), 250);
         });

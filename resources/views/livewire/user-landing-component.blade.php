@@ -100,6 +100,9 @@
                 </div>
             </section>
 
+            {{-- ===== USER ADVERTISEMENT – TOP BANNER ===== --}}
+            <x-display-ad page-location="landing_top_banner" />
+
             {{-- ===== BANNER ADS SECTION 1 ===== --}}
             @if(!empty($banner_ads) && count($banner_ads) > 0)
             <section class="banner-section reveal">
@@ -147,6 +150,9 @@
             </section>
             @endif
 
+            {{-- ===== USER ADVERTISEMENT – MIDDLE BANNER ===== --}}
+            <x-display-ad page-location="landing_mid_banner" />
+
             {{-- ===== FEATURED ADS ===== --}}
             <section class="listings-section reveal">
                 <div class="section-header">
@@ -188,6 +194,9 @@
                     @endforelse
                 </div>
             </section>
+
+            {{-- ===== USER ADVERTISEMENT – SIDEBAR / INLINE ===== --}}
+            <x-display-ad page-location="landing_sidebar" />
 
             {{-- ===== LATEST ADS ===== --}}
             @if(!empty($posts) && count($posts) > 0)
@@ -530,6 +539,20 @@
             height: 160px;
             object-fit: cover;
             border-radius: 16px;
+        }
+
+        /* ===== User Advertisement Zones ===== */
+        .user-advertisement {
+            margin: 32px 0;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        .user-advertisement a {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .user-advertisement a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
         /* ===== Product Grid ===== */

@@ -37,6 +37,9 @@ class Register extends Component
 
     public function updated($propertyName)
     {
+        if ($propertyName === 'phone_country') {
+            return;
+        }
         $this->validateOnly($propertyName);
     }
 

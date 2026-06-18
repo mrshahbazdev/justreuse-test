@@ -11,6 +11,7 @@
     @endphp
 
     <title>@yield('meta_title', $settings['meta_title'])</title>
+    @include('partials.favicon')
     @yield('whatsapp_meta')
     <meta property="og:title" content="@yield('meta_title', $settings['meta_title'])">
     <meta name="keywords" content="@yield('meta_keywords', $settings['meta_keywords'])">

@@ -122,7 +122,7 @@
 		</style>
 		<!--  favicon -->
        <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
-		
+		@include('partials.favicon')
 	   {{ do_action('apm_header_css','other') }}
 	   {{ do_action('apm_header_enqueue','other') }}
 	  

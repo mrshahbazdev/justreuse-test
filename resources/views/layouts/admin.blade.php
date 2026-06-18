@@ -17,6 +17,7 @@
   <!-- css start -->
   <link rel="stylesheet" href="{{ URL::to('fontawesome-free/css/all.min.css') }}">
   <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
+  @include('partials.favicon')
   <!-- <link rel="stylesheet" href="{{ URL::to('css/all.min.css') }}"> -->
   <link href="{{ URL::to('css/toastr.css') }}" rel="stylesheet">
   <link rel="stylesheet" href="{{ URL::to('css/image-uploader.min.css') }}">

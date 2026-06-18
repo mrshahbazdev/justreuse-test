@@ -5,6 +5,7 @@
         <script src="{{ URL::to('js/jquery-1.10.2.js') }}"></script>    
         <script src="{{ URL::to('js/jquery.min.js') }}"></script> 
         <title>Classified</title>
+        @include('partials.favicon')
         @livewireScripts
     </head>
     <body class="antialiased">       

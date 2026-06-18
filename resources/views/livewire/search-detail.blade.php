@@ -1,4 +1,4 @@
-<div>
+<div x-data="filterModal()">
     <div class="search-section">
         <div class="search-content">
             <h1 class="search-title">Find What You Need</h1>
@@ -75,7 +75,8 @@
         $totalSteps = $allFiltersList->count();
     @endphp
 
-    <div x-data="filterModal()" data-total-steps="{{ $totalSteps }}">
+    <div>
+        <span x-ref="totalStepsRef" data-steps="{{ $totalSteps }}" style="display:none"></span>
         {{-- Filter Modal Toggle Button --}}
         <div class="filter-modal-toggle-bar">
             <button class="filter-modal-open-btn" @click="openModal()">
@@ -239,7 +240,7 @@
             </div>
         </div>
     </div>
-    </div> {{-- close x-data="filterModal()" wrapper --}}
+    </div>
 
     <div class="container">
         <main class="main-content">
@@ -923,7 +924,8 @@
                 currentStep: 0,
                 searchTerm: '',
                 get totalSteps() {
-                    var steps = parseInt(this.$el.dataset.totalSteps) || 1;
+                    var ref = this.$refs.totalStepsRef;
+                    var steps = ref ? (parseInt(ref.dataset.steps) || 1) : 1;
                     if (this.currentStep >= steps) {
                         this.currentStep = Math.max(0, steps - 1);
                     }

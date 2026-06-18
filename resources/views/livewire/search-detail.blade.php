@@ -69,29 +69,29 @@
     </div>
     @endif
 
-    {{-- Filter Modal Toggle Button --}}
-    <div class="filter-modal-toggle-bar">
-        <button class="filter-modal-open-btn" @click="$dispatch('open-filter-modal')">
-            <i class="fas fa-sliders-h"></i> Advanced Filters
-            @if($hasActiveFilters)
-                <span class="filter-modal-badge">!</span>
-            @endif
-        </button>
-    </div>
-
-    {{-- Step-by-Step Filter Modal --}}
+    {{-- Filter Modal Toggle + Step-by-Step Modal --}}
     @php
         $allFiltersList = $this->allFilters->values();
         $totalSteps = $allFiltersList->count();
     @endphp
 
-    <div x-data="filterModal({{ $totalSteps }})"
-         x-show="open" x-cloak
-         @open-filter-modal.window="openModal()"
-         class="filter-modal-overlay"
-         x-transition:enter="fm-fade-in"
-         x-transition:leave="fm-fade-out"
-         @keydown.escape.window="closeModal()">
+    <div x-data="filterModal({{ $totalSteps }})">
+        {{-- Filter Modal Toggle Button --}}
+        <div class="filter-modal-toggle-bar">
+            <button class="filter-modal-open-btn" @click="openModal()">
+                <i class="fas fa-sliders-h"></i> Advanced Filters
+                @if($hasActiveFilters)
+                    <span class="filter-modal-badge">!</span>
+                @endif
+            </button>
+        </div>
+
+        {{-- Modal Overlay --}}
+        <div x-show="open" x-cloak
+             class="filter-modal-overlay"
+             x-transition:enter="fm-fade-in"
+             x-transition:leave="fm-fade-out"
+             @keydown.escape.window="closeModal()">
 
         <div class="filter-modal-container" @click.outside="closeModal()">
             {{-- Modal Header --}}
@@ -239,6 +239,7 @@
             </div>
         </div>
     </div>
+    </div> {{-- close x-data="filterModal()" wrapper --}}
 
     <div class="container">
         <main class="main-content">

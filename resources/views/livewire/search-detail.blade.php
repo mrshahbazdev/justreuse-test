@@ -75,7 +75,7 @@
         $totalSteps = $allFiltersList->count();
     @endphp
 
-    <div x-data="filterModal({{ $totalSteps }})">
+    <div x-data="filterModal()" data-total-steps="{{ $totalSteps }}">
         {{-- Filter Modal Toggle Button --}}
         <div class="filter-modal-toggle-bar">
             <button class="filter-modal-open-btn" @click="openModal()">
@@ -103,14 +103,14 @@
                     <h3 class="filter-modal-title"><i class="fas fa-filter"></i> Filters</h3>
                 </div>
                 <div class="filter-modal-header-right">
-                    <span class="fm-step-indicator" x-text="'Step ' + (currentStep + 1) + ' / {{ $totalSteps }}'"></span>
+                    <span class="fm-step-indicator" x-text="'Step ' + (currentStep + 1) + ' / ' + totalSteps"></span>
                     <button @click="closeModal()" class="fm-close-btn"><i class="fas fa-times"></i></button>
                 </div>
             </div>
 
             {{-- Progress Bar --}}
             <div class="fm-progress-bar">
-                <div class="fm-progress-fill" :style="'width: ' + ((currentStep + 1) / {{ $totalSteps }} * 100) + '%'"></div>
+                <div class="fm-progress-fill" :style="'width: ' + ((currentStep + 1) / totalSteps * 100) + '%'"></div>
             </div>
 
             {{-- Modal Body — one step per filter --}}
@@ -917,11 +917,17 @@
     </style>
 
     <script>
-        function filterModal(totalSteps) {
+        function filterModal() {
             return {
                 open: false,
                 currentStep: 0,
-                totalSteps: totalSteps,
+                get totalSteps() {
+                    var steps = parseInt(this.$el.dataset.totalSteps) || 1;
+                    if (this.currentStep >= steps) {
+                        this.currentStep = Math.max(0, steps - 1);
+                    }
+                    return steps;
+                },
                 openModal() {
                     this.open = true;
                     this.currentStep = 0;

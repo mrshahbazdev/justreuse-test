@@ -117,7 +117,7 @@
             {{-- Modal Body — one step per filter --}}
             <div class="filter-modal-body">
                 @foreach($allFiltersList as $stepIndex => $filter)
-                    <div x-show="currentStep === {{ $stepIndex }}" class="fm-step-content" wire:key="fm-step-{{ $filter->id }}">
+                    <div class="fm-step-content" wire:key="fm-step-{{ $filter->id }}" style="display:none">
                         <div class="fm-step-label">
                             <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
                             <div>
@@ -926,11 +926,26 @@
                     searchTerm: '',
                     get totalSteps() {
                         var ref = this.$refs.totalStepsRef;
-                        var steps = ref ? (parseInt(ref.dataset.steps) || 1) : 1;
-                        if (this.currentStep >= steps) {
-                            this.currentStep = Math.max(0, steps - 1);
+                        return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+                    },
+                    init() {
+                        this.$watch('currentStep', function() { this.syncStepVisibility(); }.bind(this));
+                        this.$watch('open', function(val) { if (val) this.$nextTick(function() { this.syncStepVisibility(); }.bind(this)); }.bind(this));
+                        if (window.Livewire) {
+                            Livewire.hook('message.processed', function() {
+                                this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
+                            }.bind(this));
                         }
-                        return steps;
+                    },
+                    syncStepVisibility() {
+                        var steps = this.$el.querySelectorAll('.fm-step-content');
+                        var current = this.currentStep;
+                        steps.forEach(function(el, i) {
+                            el.style.display = (i === current) ? '' : 'none';
+                        });
+                        if (current >= steps.length && steps.length > 0) {
+                            this.currentStep = steps.length - 1;
+                        }
                     },
                     openModal() {
                         this.open = true;
@@ -944,7 +959,8 @@
                         document.body.style.overflow = '';
                     },
                     nextStep() {
-                        if (this.currentStep < this.totalSteps - 1) {
+                        var steps = this.$el.querySelectorAll('.fm-step-content');
+                        if (this.currentStep < steps.length - 1) {
                             this.currentStep++;
                             this.searchTerm = '';
                         }

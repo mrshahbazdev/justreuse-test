@@ -116,7 +116,7 @@
             {{-- Modal Body — one step per filter --}}
             <div class="filter-modal-body">
                 @foreach($allFiltersList as $stepIndex => $filter)
-                    <div x-show="currentStep === {{ $stepIndex }}" x-data="{ searchTerm: '' }" class="fm-step-content" wire:key="fm-step-{{ $filter->id }}">
+                    <div x-show="currentStep === {{ $stepIndex }}" class="fm-step-content" wire:key="fm-step-{{ $filter->id }}">
                         <div class="fm-step-label">
                             <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
                             <div>
@@ -921,6 +921,7 @@
             return {
                 open: false,
                 currentStep: 0,
+                searchTerm: '',
                 get totalSteps() {
                     var steps = parseInt(this.$el.dataset.totalSteps) || 1;
                     if (this.currentStep >= steps) {
@@ -931,20 +932,24 @@
                 openModal() {
                     this.open = true;
                     this.currentStep = 0;
+                    this.searchTerm = '';
                     document.body.style.overflow = 'hidden';
                 },
                 closeModal() {
                     this.open = false;
+                    this.searchTerm = '';
                     document.body.style.overflow = '';
                 },
                 nextStep() {
                     if (this.currentStep < this.totalSteps - 1) {
                         this.currentStep++;
+                        this.searchTerm = '';
                     }
                 },
                 prevStep() {
                     if (this.currentStep > 0) {
                         this.currentStep--;
+                        this.searchTerm = '';
                     }
                 }
             };

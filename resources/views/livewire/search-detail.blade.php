@@ -1,4 +1,4 @@
-<div x-data="filterModal()">
+<div x-data="filterModal">
     <div class="search-section">
         <div class="search-content">
             <h1 class="search-title">Find What You Need</h1>
@@ -117,7 +117,7 @@
             {{-- Modal Body — one step per filter --}}
             <div class="filter-modal-body">
                 @foreach($allFiltersList as $stepIndex => $filter)
-                    <div x-show="currentStep === {{ $stepIndex }}" class="fm-step-content" wire:key="fm-step-{{ $filter->id }}">
+                    <div class="fm-step-content" wire:key="fm-step-{{ $filter->id }}" style="display:none">
                         <div class="fm-step-label">
                             <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
                             <div>
@@ -918,43 +918,61 @@
     </style>
 
     <script>
-        function filterModal() {
-            return {
-                open: false,
-                currentStep: 0,
-                searchTerm: '',
-                get totalSteps() {
-                    var ref = this.$refs.totalStepsRef;
-                    var steps = ref ? (parseInt(ref.dataset.steps) || 1) : 1;
-                    if (this.currentStep >= steps) {
-                        this.currentStep = Math.max(0, steps - 1);
-                    }
-                    return steps;
-                },
-                openModal() {
-                    this.open = true;
-                    this.currentStep = 0;
-                    this.searchTerm = '';
-                    document.body.style.overflow = 'hidden';
-                },
-                closeModal() {
-                    this.open = false;
-                    this.searchTerm = '';
-                    document.body.style.overflow = '';
-                },
-                nextStep() {
-                    if (this.currentStep < this.totalSteps - 1) {
-                        this.currentStep++;
+        document.addEventListener('alpine:init', function() {
+            Alpine.data('filterModal', function() {
+                return {
+                    open: false,
+                    currentStep: 0,
+                    searchTerm: '',
+                    get totalSteps() {
+                        var ref = this.$refs.totalStepsRef;
+                        return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+                    },
+                    init() {
+                        this.$watch('currentStep', function() { this.syncStepVisibility(); }.bind(this));
+                        this.$watch('open', function(val) { if (val) this.$nextTick(function() { this.syncStepVisibility(); }.bind(this)); }.bind(this));
+                        if (window.Livewire) {
+                            Livewire.hook('message.processed', function() {
+                                this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
+                            }.bind(this));
+                        }
+                    },
+                    syncStepVisibility() {
+                        var steps = this.$el.querySelectorAll('.fm-step-content');
+                        var current = this.currentStep;
+                        steps.forEach(function(el, i) {
+                            el.style.display = (i === current) ? '' : 'none';
+                        });
+                        if (current >= steps.length && steps.length > 0) {
+                            this.currentStep = steps.length - 1;
+                        }
+                    },
+                    openModal() {
+                        this.open = true;
+                        this.currentStep = 0;
                         this.searchTerm = '';
-                    }
-                },
-                prevStep() {
-                    if (this.currentStep > 0) {
-                        this.currentStep--;
+                        document.body.style.overflow = 'hidden';
+                    },
+                    closeModal() {
+                        this.open = false;
                         this.searchTerm = '';
+                        document.body.style.overflow = '';
+                    },
+                    nextStep() {
+                        var steps = this.$el.querySelectorAll('.fm-step-content');
+                        if (this.currentStep < steps.length - 1) {
+                            this.currentStep++;
+                            this.searchTerm = '';
+                        }
+                    },
+                    prevStep() {
+                        if (this.currentStep > 0) {
+                            this.currentStep--;
+                            this.searchTerm = '';
+                        }
                     }
-                }
-            };
-        }
+                };
+            });
+        });
     </script>
 </div>

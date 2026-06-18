@@ -1,4 +1,46 @@
-<div x-data="filterModal">
+<div x-data="{
+    open: false,
+    currentStep: 0,
+    searchTerm: '',
+    get totalSteps() {
+        var ref = this.$refs.totalStepsRef;
+        return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+    },
+    init() {
+        var self = this;
+        self.$watch('currentStep', function() { self.syncStepVisibility(); });
+        self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
+        if (window.Livewire) {
+            Livewire.hook('message.processed', function() {
+                self.$nextTick(function() { self.syncStepVisibility(); });
+            });
+        }
+    },
+    syncStepVisibility() {
+        var steps = this.$el.querySelectorAll('.fm-step-content');
+        var current = this.currentStep;
+        steps.forEach(function(el, i) { el.style.display = (i === current) ? '' : 'none'; });
+        if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
+    },
+    openModal() {
+        this.open = true;
+        this.currentStep = 0;
+        this.searchTerm = '';
+        document.body.style.overflow = 'hidden';
+    },
+    closeModal() {
+        this.open = false;
+        this.searchTerm = '';
+        document.body.style.overflow = '';
+    },
+    nextStep() {
+        var steps = this.$el.querySelectorAll('.fm-step-content');
+        if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
+    },
+    prevStep() {
+        if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
+    }
+}">
     <div class="search-section">
         <div class="search-content">
             <h1 class="search-title">Find What You Need</h1>
@@ -917,62 +959,5 @@
         }
     </style>
 
-    <script>
-        document.addEventListener('alpine:init', function() {
-            Alpine.data('filterModal', function() {
-                return {
-                    open: false,
-                    currentStep: 0,
-                    searchTerm: '',
-                    get totalSteps() {
-                        var ref = this.$refs.totalStepsRef;
-                        return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
-                    },
-                    init() {
-                        this.$watch('currentStep', function() { this.syncStepVisibility(); }.bind(this));
-                        this.$watch('open', function(val) { if (val) this.$nextTick(function() { this.syncStepVisibility(); }.bind(this)); }.bind(this));
-                        if (window.Livewire) {
-                            Livewire.hook('message.processed', function() {
-                                this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
-                            }.bind(this));
-                        }
-                    },
-                    syncStepVisibility() {
-                        var steps = this.$el.querySelectorAll('.fm-step-content');
-                        var current = this.currentStep;
-                        steps.forEach(function(el, i) {
-                            el.style.display = (i === current) ? '' : 'none';
-                        });
-                        if (current >= steps.length && steps.length > 0) {
-                            this.currentStep = steps.length - 1;
-                        }
-                    },
-                    openModal() {
-                        this.open = true;
-                        this.currentStep = 0;
-                        this.searchTerm = '';
-                        document.body.style.overflow = 'hidden';
-                    },
-                    closeModal() {
-                        this.open = false;
-                        this.searchTerm = '';
-                        document.body.style.overflow = '';
-                    },
-                    nextStep() {
-                        var steps = this.$el.querySelectorAll('.fm-step-content');
-                        if (this.currentStep < steps.length - 1) {
-                            this.currentStep++;
-                            this.searchTerm = '';
-                        }
-                    },
-                    prevStep() {
-                        if (this.currentStep > 0) {
-                            this.currentStep--;
-                            this.searchTerm = '';
-                        }
-                    }
-                };
-            });
-        });
-    </script>
+
 </div>

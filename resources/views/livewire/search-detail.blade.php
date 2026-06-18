@@ -169,7 +169,7 @@
                                 @endif
                                 <ul class="filter-options-list fm-options-list">
                                     @foreach($filter->options as $option)
-                                        <li x-show="!searchTerm || '{{ strtolower($option->title) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-cat-opt-{{ $option->id }}">
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-cat-opt-{{ $option->id }}">
                                             <label class="filter-option-label">
                                                 <input type="radio" wire:model.live="categorySlug" name="modalCategorySlug" value="{{ $option->slug }}" class="filter-radio">
                                                 <span class="custom-radio-mark"></span>
@@ -188,7 +188,7 @@
                                 @endif
                                 <ul class="filter-options-list fm-options-list">
                                     @foreach($filter->options as $option)
-                                        <li x-show="!searchTerm || '{{ strtolower($option->title) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-subcat-opt-{{ $option->id }}">
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-subcat-opt-{{ $option->id }}">
                                             <label class="filter-option-label">
                                                 <input type="radio" wire:model.live="selectedSubCategory" name="modalSubCategory" value="{{ $option->slug }}" class="filter-radio">
                                                 <span class="custom-radio-mark"></span>
@@ -207,7 +207,7 @@
                                 @endif
                                 <ul class="filter-options-list fm-options-list">
                                     @foreach($filter->options as $option)
-                                        <li x-show="!searchTerm || '{{ strtolower($option->key) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-custom-opt-{{ $option->id }}">
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->key)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-custom-opt-{{ $option->id }}">
                                             <label class="filter-option-label">
                                                 <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
                                                 <span class="custom-check-mark"></span>

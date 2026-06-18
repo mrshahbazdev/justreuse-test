@@ -284,7 +284,7 @@ class Setting extends Model
 		$user_currency = TblPost::userCurrencyConversion($currentUserId, $post_det[0]->price, $post_det[0]->currency_id);
 		$default_currency = $settings['default_currency'];
 		$post_title = $post_det[0]->title;
-		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 25, "...");
+		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 45, "...");
 		$post_price = $post_det[0]->price;
 		$post_price_old = $post_det[0]->price;
 		$base_currency = "USD";
@@ -342,7 +342,7 @@ class Setting extends Model
 		    <div class="p-4">
 		        <!-- Title -->
 		        <a href="' . $slug . '">
-		            <h3 class="font-bold text-slate-900 line-clamp-1 ad-title capitalize">' . $post_title_short . '</h3>
+		            <h3 class="font-medium text-slate-800 text-sm line-clamp-2 ad-title capitalize">' . $post_title_short . '</h3>
 		        </a>';
 
 		        // Price Section
@@ -401,7 +401,7 @@ class Setting extends Model
 		$user_currency = TblPost::userCurrencyConversion($currentUserId, $post_det[0]->price, $post_det[0]->currency_id);
 		$default_currency = $settings['default_currency'];
 		$post_title = $post_det[0]->title;
-		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 25, "...");
+		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 45, "...");
 		$post_price = $post_det[0]->price;
 		$get_categoryname_short = mb_strimwidth($get_categoryname1, 0, 15, "..");
 		//$location_icon = URL::to(''). 'images/frontend/Group111.png';
@@ -485,7 +485,7 @@ class Setting extends Model
 		$currency_symbol = TblPost::get_post_currency($slected_currency);
 		$currency = $currency_symbol[0];
 		$post_title = $post_det[0]->title;
-		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 25, "...");
+		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 45, "...");
 		$post_price = $post_det[0]->price;
 		$get_categoryname_short = mb_strimwidth($get_categoryname1, 0, 15, "..");
 		//$location_icon = URL::to(''). 'images/frontend/Group111.png';
@@ -566,7 +566,7 @@ class Setting extends Model
 		$currency_symbol = TblPost::get_post_currency($slected_currency);
 		$currency = $currency_symbol[0];
 		$post_title = $post_det[0]->title;
-		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 25, "...");
+		$post_title_short = mb_strimwidth($post_det[0]->title, 0, 45, "...");
 		$post_price = $post_det[0]->price;
 		$get_categoryname_short = mb_strimwidth($get_categoryname1, 0, 15, "..");
 		//$location_icon = URL::to(''). 'images/frontend/Group111.png';

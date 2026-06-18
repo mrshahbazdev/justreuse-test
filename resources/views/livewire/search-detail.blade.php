@@ -1,46 +1,4 @@
-<div x-data="{
-    open: false,
-    currentStep: 0,
-    searchTerm: '',
-    get totalSteps() {
-        var ref = this.$refs.totalStepsRef;
-        return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
-    },
-    init() {
-        var self = this;
-        self.$watch('currentStep', function() { self.syncStepVisibility(); });
-        self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
-        if (window.Livewire) {
-            Livewire.hook('message.processed', function() {
-                self.$nextTick(function() { self.syncStepVisibility(); });
-            });
-        }
-    },
-    syncStepVisibility() {
-        var steps = this.$el.querySelectorAll('.fm-step-content');
-        var current = this.currentStep;
-        steps.forEach(function(el, i) { el.style.display = (i === current) ? '' : 'none'; });
-        if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
-    },
-    openModal() {
-        this.open = true;
-        this.currentStep = 0;
-        this.searchTerm = '';
-        document.body.style.overflow = 'hidden';
-    },
-    closeModal() {
-        this.open = false;
-        this.searchTerm = '';
-        document.body.style.overflow = '';
-    },
-    nextStep() {
-        var steps = this.$el.querySelectorAll('.fm-step-content');
-        if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
-    },
-    prevStep() {
-        if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
-    }
-}">
+<div>
     <div class="search-section">
         <div class="search-content">
             <h1 class="search-title">Find What You Need</h1>
@@ -117,7 +75,54 @@
         $totalSteps = $allFiltersList->count();
     @endphp
 
-    <div>
+    <div x-data="{
+        open: false,
+        currentStep: 0,
+        searchTerm: '',
+        get totalSteps() {
+            var ref = this.$refs.totalStepsRef;
+            return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+        },
+        getSteps() {
+            var body = this.$refs.modalBody;
+            return body ? body.querySelectorAll('.fm-step-content') : [];
+        },
+        init() {
+            var self = this;
+            self.$watch('currentStep', function() { self.syncStepVisibility(); });
+            self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
+            if (window.Livewire) {
+                Livewire.hook('message.processed', function() {
+                    self.$nextTick(function() { self.syncStepVisibility(); });
+                });
+            }
+        },
+        syncStepVisibility() {
+            var steps = this.getSteps();
+            var current = this.currentStep;
+            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === current) ? '' : 'none'; }
+            if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
+        },
+        openModal() {
+            this.open = true;
+            this.currentStep = 0;
+            this.searchTerm = '';
+            document.body.style.overflow = 'hidden';
+            this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
+        },
+        closeModal() {
+            this.open = false;
+            this.searchTerm = '';
+            document.body.style.overflow = '';
+        },
+        nextStep() {
+            var steps = this.getSteps();
+            if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
+        },
+        prevStep() {
+            if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
+        }
+    }" wire:ignore.self>
         <span x-ref="totalStepsRef" data-steps="{{ $totalSteps }}" style="display:none"></span>
         {{-- Filter Modal Toggle Button --}}
         <div class="filter-modal-toggle-bar">
@@ -157,7 +162,7 @@
             </div>
 
             {{-- Modal Body — one step per filter --}}
-            <div class="filter-modal-body">
+            <div class="filter-modal-body" x-ref="modalBody">
                 @foreach($allFiltersList as $stepIndex => $filter)
                     <div class="fm-step-content" wire:key="fm-step-{{ $filter->id }}" style="display:none">
                         <div class="fm-step-label">

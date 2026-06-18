@@ -120,7 +120,12 @@
 
                 const phoneInput = window.intlTelInput(phoneInputField, {
                     initialCountry: "auto",
-                    geoIpLookup: cb => { fetch("https://ipapi.co/json").then(res => res.json()).then(data => cb(data.country_code)).catch(() => cb("us")); },
+                    geoIpLookup: function(cb) {
+                        fetch("https://ipwho.is/")
+                            .then(function(res) { return res.json(); })
+                            .then(function(data) { cb(data.country_code || "us"); })
+                            .catch(function() { cb("us"); });
+                    },
                     separateDialCode: true,
                     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"
                 });

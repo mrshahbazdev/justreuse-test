@@ -274,6 +274,7 @@ class PostDetail extends Component
                     'info_location' => $this->info_location,
                     'product' => $this->product,
                     'category_name' => $this->category_name,
+                    'category_slug' => $this->category_slug ?? '',
                     'report_types' => $this->report_types,
                     'info_user' => $this->info_user,
                     'check_is_paid' => $this->check_is_paid,

@@ -121,9 +121,9 @@
                 const phoneInput = window.intlTelInput(phoneInputField, {
                     initialCountry: "auto",
                     geoIpLookup: function(cb) {
-                        fetch("https://freeipapi.com/api/json/")
+                        fetch("/geo-country")
                             .then(function(res) { return res.json(); })
-                            .then(function(data) { cb(data.countryCode || "us"); })
+                            .then(function(data) { cb(data.country_code || "us"); })
                             .catch(function() { cb("us"); });
                     },
                     separateDialCode: true,

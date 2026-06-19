@@ -43,18 +43,10 @@
     });
 
     function getIp(callback) {
-      fetch('https://ipinfo.io/json', {
-          headers: {
-            'Accept': 'application/json'
-          }
-        })
+      fetch('/geo-country')
         .then((resp) => resp.json())
-        .catch(() => {
-          return {
-            country: 'in',
-          };
-        })
-        .then((resp) => callback(resp.country));
+        .then((data) => callback(data.country_code || 'us'))
+        .catch(() => callback('us'));
     }
     const phoneInputField = document.querySelector("#phone");
     const phoneInput = window.intlTelInput(phoneInputField, {

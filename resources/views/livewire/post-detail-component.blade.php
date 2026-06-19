@@ -74,7 +74,11 @@
         {{-- Breadcrumb --}}
         <div class="pd-breadcrumb">
             <a href="/">Home</a><span>/</span>
-            <a href="/{{ strtolower($category_name) }}">{{ $category_name }}</a><span>/</span>
+            @php
+                $searchedUrl = Session::get('Searchedurl');
+                $categoryUrl = $searchedUrl ? $searchedUrl . '&c=' . urlencode($category_slug) : '/' . request()->segment(1) . '?loc=' . urlencode(request('loc', '')) . '&c=' . urlencode($category_slug);
+            @endphp
+            <a href="{{ $categoryUrl }}">{{ $category_name }}</a><span>/</span>
             <span class="text-gray-500">{{ Str::limit($post->title, 40) }}</span>
         </div>
 

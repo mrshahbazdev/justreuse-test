@@ -169,6 +169,7 @@ class PostDetailComponent extends Component
         return view('livewire.post-detail-component', [
             'info_location' => $info_location,
             'category_name' => $category->title ?? 'N/A',
+            'category_slug' => $category->slug ?? '',
             'info_user' => $info_user,
             'related_products' => $related_products,
             'report_types' => $report_types,

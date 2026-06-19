@@ -159,7 +159,7 @@ class SearchDetail extends Component
         $customFilters = collect($this->customFieldsForView)
             ->where('form_field_name', '!=', 'modelswithbrand')
             ->filter(function ($field) {
-                return in_array($field->type, ['select', 'checkbox-group', 'radio-group']);
+                return in_array($field->type, ['select', 'autocomplete', 'checkbox-group', 'radio-group']);
             })
             ->map(function ($field) {
                 $field->group = $this->getFilterGroup($field->name, $this->selectedCategory->title ?? null);
@@ -276,7 +276,7 @@ class SearchDetail extends Component
             ->where('active', '1')->where('filter', '1')->with('options')->get();
         
         foreach ($this->customFieldsForView as $field) {
-            if (in_array($field->type, ['checkbox-group', 'select', 'radio-group'])) {
+            if (in_array($field->type, ['checkbox-group', 'select', 'autocomplete', 'radio-group'])) {
                 if (!isset($this->customFilters[$field->id]) || !is_array($this->customFilters[$field->id])) {
                     $this->customFilters[$field->id] = [];
                 }

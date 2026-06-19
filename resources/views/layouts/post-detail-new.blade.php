@@ -174,6 +174,7 @@
     </style>
 		<!--  favicon -->
        <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
+		@include('partials.favicon')
 		
 
 	

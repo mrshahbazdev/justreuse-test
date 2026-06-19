@@ -17,6 +17,7 @@
 
     <!-- favicon -->
     <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
+    @include('partials.favicon')
 
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="{{ URL::to('css/tailwind.min.css') }}">
+    @include('partials.favicon')
 
     @yield('whatsapp_meta')
     <?php

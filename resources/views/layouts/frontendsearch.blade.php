@@ -20,6 +20,7 @@
 
     <!--  favicon -->
     <link rel="shortcut icon" href="{{ URL::to('/storage/'.$settings['fav_icon']) }}">
+    @include('partials.favicon')
     <link rel="stylesheet" href="{{ URL::to('css/slick.css') }}">
     <link rel="stylesheet" href="{{ URL::to('css/tailwind.min.css') }}">
     <link rel="stylesheet" href="{{ URL::to('css/fontawesome.min.css') }}">

@@ -96,10 +96,15 @@ $views_count = $product[0]->views_count ?? 0;
 
         {{-- Breadcrumb --}}
         @if(!empty($category_name))
+        @php
+            $searchedUrl = Session::get('Searchedurl');
+            $catSlug = $category_slug ?? '';
+            $categoryUrl = $searchedUrl ? $searchedUrl . '&c=' . urlencode($catSlug) : '/' . request()->segment(1) . '?loc=' . urlencode(request('loc', '')) . '&c=' . urlencode($catSlug);
+        @endphp
         <nav class="pd-breadcrumb flex items-center text-sm text-gray-500 mb-5 flex-wrap" aria-label="Breadcrumb">
             <a href="{{ url('/') }}" class="hover:text-green-600 transition"><i class="fa fa-home mr-1"></i>Home</a>
             <i class="fa fa-chevron-right text-[10px] mx-2 text-gray-300"></i>
-            <a href="{{ url('/search?category=' . ($product[0]->category_id ?? '')) }}" class="hover:text-green-600 transition">{{ $category_name }}</a>
+            <a href="{{ $categoryUrl }}" class="hover:text-green-600 transition">{{ $category_name }}</a>
             <i class="fa fa-chevron-right text-[10px] mx-2 text-gray-300"></i>
             <span class="text-gray-800 font-medium truncate max-w-[200px]">{{ $product[0]->title }}</span>
         </nav>

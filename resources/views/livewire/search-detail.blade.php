@@ -69,161 +69,227 @@
     </div>
     @endif
 
-    {{-- Mobile Filter Toggle --}}
-    <button class="mobile-filter-toggle" onclick="document.getElementById('filterSidebar').classList.toggle('sidebar-open')">
-        <i class="fas fa-sliders-h"></i> Filters
-        @if($hasActiveFilters)
-            <span class="mobile-filter-badge">!</span>
-        @endif
-    </button>
+    {{-- Filter Modal Toggle + Step-by-Step Modal --}}
+    @php
+        $allFiltersList = $this->allFilters->values();
+        $totalSteps = $allFiltersList->count();
+    @endphp
 
-    <div class="container">
-        <aside class="sidebar" id="filterSidebar">
-            <div class="sidebar-header">
-                <h2 class="sidebar-title"><i class="fas fa-filter"></i> Filters</h2>
-                <button class="sidebar-close-mobile" onclick="document.getElementById('filterSidebar').classList.remove('sidebar-open')">
-                    <i class="fas fa-times"></i>
-                </button>
+    <div x-data="{
+        open: false,
+        currentStep: 0,
+        searchTerm: '',
+        get totalSteps() {
+            var ref = this.$refs.totalStepsRef;
+            return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+        },
+        getSteps() {
+            var body = this.$refs.modalBody;
+            return body ? body.querySelectorAll('.fm-step-content') : [];
+        },
+        init() {
+            var self = this;
+            self.$watch('currentStep', function() { self.syncStepVisibility(); });
+            self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
+            if (window.Livewire) {
+                Livewire.hook('message.processed', function() {
+                    self.$nextTick(function() { self.syncStepVisibility(); });
+                });
+            }
+        },
+        syncStepVisibility() {
+            var steps = this.getSteps();
+            var current = this.currentStep;
+            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === current) ? '' : 'none'; }
+            if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
+        },
+        openModal() {
+            this.open = true;
+            this.currentStep = 0;
+            this.searchTerm = '';
+            document.body.style.overflow = 'hidden';
+            this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
+        },
+        closeModal() {
+            this.open = false;
+            this.searchTerm = '';
+            document.body.style.overflow = '';
+        },
+        nextStep() {
+            var steps = this.getSteps();
+            if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
+        },
+        prevStep() {
+            if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
+        }
+    }" wire:ignore.self>
+        <span x-ref="totalStepsRef" data-steps="{{ $totalSteps }}" style="display:none"></span>
+        {{-- Filter Modal Toggle Button --}}
+        <div class="filter-modal-toggle-bar">
+            <button class="filter-modal-open-btn" @click="openModal()">
+                <i class="fas fa-sliders-h"></i> Advanced Filters
+                @if($hasActiveFilters)
+                    <span class="filter-modal-badge">!</span>
+                @endif
+            </button>
+        </div>
+
+        {{-- Modal Overlay --}}
+        <div x-show="open" x-cloak
+             class="filter-modal-overlay"
+             x-transition:enter="fm-fade-in"
+             x-transition:leave="fm-fade-out"
+             @keydown.escape.window="closeModal()">
+
+        <div class="filter-modal-container" @click.outside="closeModal()">
+            {{-- Modal Header --}}
+            <div class="filter-modal-header">
+                <div class="filter-modal-header-left">
+                    <button x-show="currentStep > 0" @click="prevStep()" class="fm-nav-back">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h3 class="filter-modal-title"><i class="fas fa-filter"></i> Filters</h3>
+                </div>
+                <div class="filter-modal-header-right">
+                    <span class="fm-step-indicator" x-text="'Step ' + (currentStep + 1) + ' / ' + totalSteps"></span>
+                    <button @click="closeModal()" class="fm-close-btn"><i class="fas fa-times"></i></button>
+                </div>
             </div>
 
-            @php
-                $groupedFilters = $this->allFilters->groupBy('group');
-            @endphp
+            {{-- Progress Bar --}}
+            <div class="fm-progress-bar">
+                <div class="fm-progress-fill" :style="'width: ' + ((currentStep + 1) / totalSteps * 100) + '%'"></div>
+            </div>
 
-            @foreach($groupedFilters as $groupName => $filtersInGroup)
-                <div class="filter-group-card" x-data="{ groupOpen: true }" wire:key="main-group-{{ $groupName }}">
-                    <div class="filter-group-header" @click="groupOpen = !groupOpen">
-                        <div class="filter-group-header-left">
-                            <i class="{{ $this->getGroupIcon($groupName) }} filter-group-icon"></i>
-                            <span>{{ $groupName }}</span>
+            {{-- Modal Body — one step per filter --}}
+            <div class="filter-modal-body" x-ref="modalBody">
+                @foreach($allFiltersList as $stepIndex => $filter)
+                    <div class="fm-step-content" wire:key="fm-step-{{ $filter->id }}" style="display:none">
+                        <div class="fm-step-label">
+                            <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
+                            <div>
+                                <h4 class="fm-step-name">{{ $filter->name }}</h4>
+                                <span class="fm-step-group">{{ $filter->group ?? '' }}</span>
+                            </div>
                         </div>
-                        <i class="fas fa-chevron-down filter-toggle-icon" :class="{ 'rotated': groupOpen }"></i>
-                    </div>
-                    <div class="filter-group-body" x-show="groupOpen" x-collapse.duration.200ms>
-                        @foreach($filtersInGroup as $filter)
-                            @php
-                                $filterIndex = $this->allFilters->search(function ($item) use ($filter) {
-                                    return $item->id == $filter->id;
-                                });
-                                $activeCount = 0;
-                                if ($filter->id === 'main_categories' && $categorySlug) $activeCount = 1;
-                                elseif ($filter->id === 'sub_categories' && $selectedSubCategory) $activeCount = 1;
-                                elseif ($filter->id === 'price_range' && ($minPrice > 0 || $maxPrice < 500000)) $activeCount = 1;
-                                elseif ($filter->id === 'distance' && $distance != 500) $activeCount = 1;
-                                elseif (!in_array($filter->type, ['price', 'distance', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id]))
-                                    $activeCount = count(array_filter($customFilters[$filter->id]));
-                            @endphp
-                            <div class="filter-item-block" 
-                                 x-data="{ itemOpen: false, searchTerm: '' }" 
-                                 wire:key="filter-item-{{ $filter->id }}">
-                                <div class="filter-item-header" @click="itemOpen = !itemOpen">
-                                    <span class="filter-item-name">{{ $filter->name }}</span>
-                                    <div class="filter-item-right">
-                                        @if($activeCount > 0)
-                                            <span class="filter-count-badge">{{ $activeCount }}</span>
-                                        @endif
-                                        <i class="fas fa-chevron-right filter-item-chevron" :class="{ 'rotated-down': itemOpen }"></i>
+
+                        <div class="fm-step-options">
+                            @if($filter->type === 'price')
+                                <div class="price-filter-inline">
+                                    <div class="price-inputs-row">
+                                        <div class="price-input-wrap">
+                                            <label>Min</label>
+                                            <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
+                                        </div>
+                                        <span class="price-separator">–</span>
+                                        <div class="price-input-wrap">
+                                            <label>Max</label>
+                                            <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
+                                        </div>
+                                    </div>
+                                    <div class="price-range-slider-inline">
+                                        <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice" class="slider-min">
+                                        <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice" class="slider-max">
+                                    </div>
+                                    <div class="price-range-labels">
+                                        <span>{{ number_format($minPrice) }}</span>
+                                        <span>{{ number_format($maxPrice) }}</span>
                                     </div>
                                 </div>
-                                <div class="filter-item-body" x-show="itemOpen" x-collapse.duration.200ms>
-                                    @if($filter->type === 'price')
-                                        <div class="price-filter-inline">
-                                            <div class="price-inputs-row">
-                                                <div class="price-input-wrap">
-                                                    <label>Min</label>
-                                                    <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
-                                                </div>
-                                                <span class="price-separator">–</span>
-                                                <div class="price-input-wrap">
-                                                    <label>Max</label>
-                                                    <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
-                                                </div>
-                                            </div>
-                                            <div class="price-range-slider-inline">
-                                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice" class="slider-min">
-                                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice" class="slider-max">
-                                            </div>
-                                            <div class="price-range-labels">
-                                                <span>{{ number_format($minPrice) }}</span>
-                                                <span>{{ number_format($maxPrice) }}</span>
-                                            </div>
-                                        </div>
 
-                                    @elseif($filter->type === 'distance')
-                                        <div class="distance-filter-inline">
-                                            <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="distance-slider-inline">
-                                            <div class="distance-labels">
-                                                <span>500 km</span>
-                                                <span class="distance-current">{{ $distance }} km</span>
-                                                <span>{{ $maxDistance }} km</span>
-                                            </div>
-                                        </div>
-
-                                    @elseif($filter->type === 'main_category_radio')
-                                        @if($filter->options->count() > 6)
-                                        <div class="filter-search-inline">
-                                            <i class="fas fa-search"></i>
-                                            <input type="text" x-model="searchTerm" placeholder="Search categories..." class="filter-search-input">
-                                        </div>
-                                        @endif
-                                        <ul class="filter-options-list">
-                                            @foreach($filter->options as $option)
-                                                <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="cat-opt-{{ $option->id }}">
-                                                    <label class="filter-option-label">
-                                                        <input type="radio" wire:model.live="categorySlug" name="sidebarCategorySlug" value="{{ $option->slug }}" class="filter-radio">
-                                                        <span class="custom-radio-mark"></span>
-                                                        <span class="option-text">{{ $option->title }}</span>
-                                                    </label>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-
-                                    @elseif($filter->type === 'radio')
-                                        @if($filter->options->count() > 6)
-                                        <div class="filter-search-inline">
-                                            <i class="fas fa-search"></i>
-                                            <input type="text" x-model="searchTerm" placeholder="Search..." class="filter-search-input">
-                                        </div>
-                                        @endif
-                                        <ul class="filter-options-list">
-                                            @foreach($filter->options as $option)
-                                                <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="subcat-opt-{{ $option->id }}">
-                                                    <label class="filter-option-label">
-                                                        <input type="radio" wire:model.live="selectedSubCategory" name="sidebarSubCategory" value="{{ $option->slug }}" class="filter-radio">
-                                                        <span class="custom-radio-mark"></span>
-                                                        <span class="option-text">{{ $option->title }}</span>
-                                                    </label>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-
-                                    @else
-                                        @if($filter->options->count() > 6)
-                                        <div class="filter-search-inline">
-                                            <i class="fas fa-search"></i>
-                                            <input type="text" x-model="searchTerm" placeholder="Search options..." class="filter-search-input">
-                                        </div>
-                                        @endif
-                                        <ul class="filter-options-list">
-                                            @foreach($filter->options as $option)
-                                                <li x-show="!searchTerm || '{{ addslashes(strtolower($option->key)) }}'.includes(searchTerm.toLowerCase())" wire:key="custom-opt-{{ $option->id }}">
-                                                    <label class="filter-option-label">
-                                                        <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
-                                                        <span class="custom-check-mark"></span>
-                                                        <span class="option-text">{{ $option->key }}</span>
-                                                    </label>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    @endif
+                            @elseif($filter->type === 'distance')
+                                <div class="distance-filter-inline">
+                                    <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="distance-slider-inline">
+                                    <div class="distance-labels">
+                                        <span>500 km</span>
+                                        <span class="distance-current">{{ $distance }} km</span>
+                                        <span>{{ $maxDistance }} km</span>
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endforeach
-        </aside>
 
+                            @elseif($filter->type === 'main_category_radio')
+                                @if($filter->options->count() > 6)
+                                <div class="filter-search-inline">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" x-model="searchTerm" placeholder="Search categories..." class="filter-search-input">
+                                </div>
+                                @endif
+                                <ul class="filter-options-list fm-options-list">
+                                    @foreach($filter->options as $option)
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-cat-opt-{{ $option->id }}">
+                                            <label class="filter-option-label">
+                                                <input type="radio" wire:model.live="categorySlug" name="modalCategorySlug" value="{{ $option->slug }}" class="filter-radio">
+                                                <span class="custom-radio-mark"></span>
+                                                <span class="option-text">{{ $option->title }}</span>
+                                            </label>
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                            @elseif($filter->type === 'radio')
+                                @if($filter->options->count() > 6)
+                                <div class="filter-search-inline">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" x-model="searchTerm" placeholder="Search..." class="filter-search-input">
+                                </div>
+                                @endif
+                                <ul class="filter-options-list fm-options-list">
+                                    @foreach($filter->options as $option)
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->title)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-subcat-opt-{{ $option->id }}">
+                                            <label class="filter-option-label">
+                                                <input type="radio" wire:model.live="selectedSubCategory" name="modalSubCategory" value="{{ $option->slug }}" class="filter-radio">
+                                                <span class="custom-radio-mark"></span>
+                                                <span class="option-text">{{ $option->title }}</span>
+                                            </label>
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                            @else
+                                @if($filter->options->count() > 6)
+                                <div class="filter-search-inline">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" x-model="searchTerm" placeholder="Search options..." class="filter-search-input">
+                                </div>
+                                @endif
+                                <ul class="filter-options-list fm-options-list">
+                                    @foreach($filter->options as $option)
+                                        <li x-show="!searchTerm || '{{ addslashes(strtolower($option->key)) }}'.includes(searchTerm.toLowerCase())" wire:key="fm-custom-opt-{{ $option->id }}">
+                                            <label class="filter-option-label">
+                                                <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
+                                                <span class="custom-check-mark"></span>
+                                                <span class="option-text">{{ $option->key }}</span>
+                                            </label>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="filter-modal-footer">
+                <button x-show="currentStep > 0" @click="prevStep()" class="fm-btn fm-btn-back">
+                    <i class="fas fa-chevron-left"></i> Back
+                </button>
+                <div class="fm-footer-spacer" x-show="currentStep === 0"></div>
+
+                <div class="fm-footer-right">
+                    <button @click="closeModal()" class="fm-btn fm-btn-skip">
+                        <i class="fas fa-check"></i> Apply & Close
+                    </button>
+                    <button x-show="currentStep < totalSteps - 1" @click="nextStep()" class="fm-btn fm-btn-next">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="container">
         <main class="main-content">
             <div class="top-bar">
                 <div class="results-count">Showing {{ $filtered_data->count() }} of {{ $total_posts }} results</div>
@@ -332,147 +398,259 @@
         .clear-all-btn:hover { background: #fecaca; }
         .clear-all-btn i { margin-right: 4px; font-size: 11px; }
 
-        /* ===== Mobile Filter Toggle ===== */
-        .mobile-filter-toggle {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999;
-            background: var(--primary);
+        /* ===== Filter Modal Toggle Button ===== */
+        .filter-modal-toggle-bar {
+            max-width: 1200px;
+            margin: 0 auto 16px;
+            padding: 0 25px;
+            display: flex;
+            justify-content: flex-start;
+        }
+        .filter-modal-open-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: #fff;
             border: none;
-            padding: 14px 28px;
+            padding: 12px 28px;
             border-radius: 30px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            box-shadow: 0 6px 20px rgba(248,153,27,0.4);
-            transition: all 0.3s ease;
-            gap: 8px;
+            display: inline-flex;
             align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(248, 153, 27, 0.35);
+            transition: all 0.3s ease;
         }
-        .mobile-filter-toggle:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 8px 25px rgba(248,153,27,0.5); }
-        .mobile-filter-badge {
+        .filter-modal-open-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(248, 153, 27, 0.45);
+        }
+        .filter-modal-badge {
             background: #dc2626;
             color: #fff;
             font-size: 10px;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            margin-left: 4px;
         }
 
-        /* ===== Sidebar ===== */
-        .sidebar-header {
+        /* ===== Filter Modal Overlay ===== */
+        [x-cloak] { display: none !important; }
+
+        .filter-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .sidebar-close-mobile { display: none; background: none; border: none; font-size: 20px; color: var(--gray); cursor: pointer; }
+        .fm-fade-in { animation: fmFadeIn 0.25s ease; }
+        .fm-fade-out { animation: fmFadeOut 0.2s ease; }
+        @keyframes fmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fmFadeOut { from { opacity: 1; } to { opacity: 0; } }
 
-        /* ===== Filter Group Card ===== */
-        .filter-group-card {
+        .filter-modal-container {
             background: #fff;
-            border: 1px solid #f0f0f0;
-            border-radius: 10px;
-            margin-bottom: 12px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            animation: fmSlideUp 0.3s ease;
             overflow: hidden;
-            transition: box-shadow 0.2s ease;
         }
-        .filter-group-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        @keyframes fmSlideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
-        .filter-group-header {
+        /* Modal Header */
+        .filter-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 16px;
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.15s ease;
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafbfc;
         }
-        .filter-group-header:hover { background: #fafbfc; }
-        .filter-group-header-left {
+        .filter-modal-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .filter-modal-header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .filter-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0;
+        }
+        .filter-modal-title i {
+            color: var(--primary);
+            margin-right: 6px;
+        }
+        .fm-nav-back {
+            background: none;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .fm-nav-back:hover { background: #f0f0f0; }
+        .fm-step-indicator {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            background: #fff5e6;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .fm-close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #adb5bd;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .fm-close-btn:hover { background: #fee2e2; color: #dc2626; }
+
+        /* Progress Bar */
+        .fm-progress-bar {
+            height: 4px;
+            background: #e9ecef;
+            width: 100%;
+        }
+        .fm-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 0 4px 4px 0;
+            transition: width 0.35s ease;
+        }
+
+        /* Modal Body */
+        .filter-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scrollbar-width: thin;
+            scrollbar-color: #dee2e6 transparent;
+        }
+        .filter-modal-body::-webkit-scrollbar { width: 4px; }
+        .filter-modal-body::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
+
+        /* Step Content */
+        .fm-step-content { min-height: 200px; }
+        .fm-step-label {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .fm-step-icon {
+            color: var(--primary);
+            font-size: 18px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #fff5e6, #ffe8cc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .fm-step-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0 0 2px;
+        }
+        .fm-step-group {
+            font-size: 12px;
+            color: #adb5bd;
+            font-weight: 500;
+        }
+        .fm-step-options { }
+        .fm-options-list {
+            max-height: 340px;
+        }
+
+        /* Modal Footer */
+        .filter-modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafbfc;
+            gap: 12px;
+        }
+        .fm-footer-spacer { flex: 1; }
+        .fm-footer-right {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #1a1a2e;
+            margin-left: auto;
         }
-        .filter-group-icon {
-            color: var(--primary);
-            font-size: 14px;
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #fff5e6, #ffe8cc);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .filter-toggle-icon {
-            font-size: 12px;
-            color: #adb5bd;
-            transition: transform 0.3s ease;
-        }
-        .filter-toggle-icon.rotated { transform: rotate(180deg); }
-
-        .filter-group-body { padding: 0 12px 12px; }
-
-        /* ===== Individual Filter Item ===== */
-        .filter-item-block {
-            border-bottom: 1px solid #f5f5f5;
-        }
-        .filter-item-block:last-child { border-bottom: none; }
-
-        .filter-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border-radius: 6px;
-        }
-        .filter-item-header:hover { background: #f8f9fa; }
-        .filter-item-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #495057;
-        }
-        .filter-item-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .filter-count-badge {
-            background: var(--primary);
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            min-width: 20px;
-            height: 20px;
+        .fm-btn {
+            padding: 10px 22px;
             border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 0 6px;
+            gap: 8px;
+            transition: all 0.2s ease;
         }
-        .filter-item-chevron {
-            font-size: 11px;
-            color: #ced4da;
-            transition: transform 0.3s ease;
+        .fm-btn-back {
+            background: #f0f0f0;
+            color: #495057;
         }
-        .filter-item-chevron.rotated-down { transform: rotate(90deg); }
+        .fm-btn-back:hover { background: #e2e2e2; }
+        .fm-btn-skip {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .fm-btn-skip:hover { background: #c8e6c9; }
+        .fm-btn-next {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(248, 153, 27, 0.3);
+        }
+        .fm-btn-next:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(248, 153, 27, 0.4);
+        }
 
-        .filter-item-body { padding: 4px 6px 10px; }
-
-        /* ===== Inline Search ===== */
+        /* ===== Inline Search (reused inside modal) ===== */
         .filter-search-inline {
             position: relative;
             margin-bottom: 8px;
@@ -769,29 +947,22 @@
         .clear-filters-empty:hover { opacity: 0.9; }
         .clear-filters-empty i { margin-right: 6px; }
 
-        /* ===== Responsive — Mobile Drawer ===== */
-        @media (max-width: 992px) {
-            .mobile-filter-toggle { display: flex; }
-            .sidebar-close-mobile { display: block; }
-
-            .sidebar {
-                position: fixed !important;
-                top: 0 !important;
-                left: -320px;
-                width: 300px !important;
-                height: 100vh !important;
-                z-index: 1001;
-                border-radius: 0 !important;
-                transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-                overflow-y: auto;
-                box-shadow: none;
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .filter-modal-toggle-bar { padding: 0 15px; }
+            .filter-modal-container {
+                max-width: 100%;
+                max-height: 95vh;
+                border-radius: 14px 14px 0 0;
+                margin-top: auto;
             }
-            .sidebar.sidebar-open {
-                left: 0;
-                box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+            .filter-modal-overlay {
+                align-items: flex-end;
+                padding: 0;
             }
-
             .active-filters-bar { padding: 0 15px; }
         }
     </style>
+
+
 </div>

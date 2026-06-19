@@ -768,6 +768,17 @@ Route::get('/sitemap_categories.xml', [Common::class, 'getxmlContent']);
 Route::get('/sitemap_pages.xml', [Common::class, 'getstaticpageContent']);
 Route::get('/sitemap_staticpages.xml', [Common::class, 'getpageContent']);
 Route::get('/sitemap_posts.xml', [Common::class, 'getposts']);
+// Geo IP lookup (server-side to avoid CORS)
+Route::get('/geo-country', function () {
+    try {
+        $ip = request()->ip();
+        $data = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=countryCode"), true);
+        return response()->json(['country_code' => $data['countryCode'] ?? 'us']);
+    } catch (\Exception $e) {
+        return response()->json(['country_code' => 'us']);
+    }
+});
+
 // Search suggestions (JSON) — must be before the catch-all
 Route::get('/search', function () {
     $q = request('q', '');

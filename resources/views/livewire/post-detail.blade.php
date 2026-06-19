@@ -435,17 +435,31 @@ $views_count = $product[0]->views_count ?? 0;
             </div>
         </div>
 
-        <div class="mt-10 lg:mt-14 border-t border-gray-200 pt-10 lg:pt-14">
-            <h2 class="text-2xl font-bold mb-6 flex items-center"><i class="fa fa-th-large text-gray-400 mr-3"></i>{{__('post_detail.related ads')}}</h2>
-            @if(count($related_products) > 0)
+        @php
+            $relatedWithUser = collect($related_products)->filter(function($ad) {
+                return \App\Models\User::where('id', $ad['user_id'])->exists();
+            })->values();
+        @endphp
+        <div class="mt-10 lg:mt-14 border-t border-gray-200 pt-10 lg:pt-14" x-data="{ visibleCount: 8 }">
+            <div class="pd-related-header">
+                <h2 class="text-2xl font-bold flex items-center"><i class="fa fa-th-large text-gray-400 mr-3"></i>{{__('post_detail.related ads')}}</h2>
+                @if($relatedWithUser->count() > 0)
+                    <span class="pd-related-count" x-text="Math.min(visibleCount, {{ $relatedWithUser->count() }}) + ' of {{ $relatedWithUser->count() }}'"></span>
+                @endif
+            </div>
+            @if($relatedWithUser->count() > 0)
             <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                 @foreach($related_products as $d)
-                    <?php $userExistCheck = App\Models\User::where('id', $d['user_id'])->get()->count(); ?>
-                    @if ($userExistCheck > 0)
-                        <?php echo App\Models\Setting::htmlAdBlock($d['id']); ?>
-                    @endif
+                @foreach($relatedWithUser as $index => $d)
+                    <div x-show="{{ $index }} < visibleCount" x-transition>
+                        {!! \App\Models\Setting::htmlAdBlock($d['id']) !!}
+                    </div>
                 @endforeach
             </div>
+            @if($relatedWithUser->count() > 8)
+                <button x-show="visibleCount < {{ $relatedWithUser->count() }}" @click="visibleCount += 8" class="pd-load-more-btn">
+                    <i class="fa fa-arrow-down"></i> Load More
+                </button>
+            @endif
             @else
                 <div class="text-center py-8 text-gray-400">
                     <i class="fa fa-search text-3xl mb-2"></i>
@@ -1304,6 +1318,13 @@ if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*
     /* Skeleton loader */
     .skeleton-loader { background-color: #e2e8f0; animation: pdPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
     @keyframes pdPulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+    /* Related Ads Load More */
+    .pd-related-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .pd-related-count { font-size: 13px; color: #9ca3af; font-weight: 500; }
+    .pd-load-more-btn { display: block; margin: 2rem auto 0; padding: 12px 32px; background: #f3f4f6; color: #374151; font-size: 14px; font-weight: 600; border: 1px solid #e5e7eb; border-radius: 30px; cursor: pointer; transition: all 0.2s ease; }
+    .pd-load-more-btn:hover { background: #e5e7eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .pd-load-more-btn i { margin-right: 6px; }
 
     /* Legacy compat */
     .card { border-radius: 0.75rem; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05); }

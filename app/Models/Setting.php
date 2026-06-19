@@ -249,6 +249,9 @@ class Setting extends Model
 		}
 		
 		$post_det = TblPost::where('id', $post_id)->get();
+		if ($post_det->isEmpty() || empty(trim($post_det[0]->images ?? ''))) {
+			return '';
+		}
 		$city_info = TblCity::where('id', $post_det[0]->city)->get();
 		$imgUrlfinal = TblChat::getPostImg($post_id);
 		$posted_on = date('d M Y', strtotime($post_det[0]->created_at));

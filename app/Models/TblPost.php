@@ -335,7 +335,7 @@ class TblPost extends Model
             ->where('tbl_posts.active', 1)
             ->where('tbl_posts.sold_status', 0)
             ->orderBy('tbl_posts.created_at', 'desc')
-            ->limit(10)
+            ->limit(24)
             ->get(['tbl_posts.*', 'tbl_cities.name as city_name'])->toArray();
         return $resultdata;
     }

@@ -21,10 +21,64 @@
         </div>
     </div>
 
-    {{-- Active Filters Chips Bar --}}
+    {{-- Active Filters + Filter Modal (unified Alpine scope) --}}
     @php
         $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || collect($customFilters)->flatten()->filter()->isNotEmpty();
+        $allFiltersList = $this->allFilters->values();
+        $totalSteps = $allFiltersList->count();
     @endphp
+
+    <div x-data="{
+        open: false,
+        currentStep: 0,
+        searchTerm: '',
+        get totalSteps() {
+            var ref = this.$refs.totalStepsRef;
+            return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
+        },
+        getSteps() {
+            var body = this.$refs.modalBody;
+            return body ? body.querySelectorAll('.fm-step-content') : [];
+        },
+        init() {
+            var self = this;
+            self.$watch('currentStep', function() { self.syncStepVisibility(); });
+            self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
+            if (window.Livewire) {
+                Livewire.hook('message.processed', function() {
+                    if (!self.open) return;
+                    self.$nextTick(function() { self.syncStepVisibility(); });
+                });
+            }
+        },
+        syncStepVisibility() {
+            var steps = this.getSteps();
+            var current = this.currentStep;
+            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === current) ? '' : 'none'; }
+            if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
+        },
+        openModal() {
+            this.open = true;
+            this.currentStep = 0;
+            this.searchTerm = '';
+            document.body.style.overflow = 'hidden';
+            this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
+        },
+        closeModal() {
+            this.open = false;
+            this.searchTerm = '';
+            document.body.style.overflow = '';
+        },
+        nextStep() {
+            var steps = this.getSteps();
+            if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
+        },
+        prevStep() {
+            if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
+        }
+    }" wire:ignore.self>
+
+    {{-- Active Filters Chips Bar --}}
     @if($hasActiveFilters)
     <div class="active-filters-bar">
         <div class="active-filters-inner">
@@ -71,61 +125,6 @@
         </div>
     </div>
     @endif
-
-    {{-- Filter Modal Toggle + Step-by-Step Modal --}}
-    @php
-        $allFiltersList = $this->allFilters->values();
-        $totalSteps = $allFiltersList->count();
-    @endphp
-
-    <div x-data="{
-        open: false,
-        currentStep: 0,
-        searchTerm: '',
-        get totalSteps() {
-            var ref = this.$refs.totalStepsRef;
-            return ref ? (parseInt(ref.dataset.steps) || 1) : 1;
-        },
-        getSteps() {
-            var body = this.$refs.modalBody;
-            return body ? body.querySelectorAll('.fm-step-content') : [];
-        },
-        init() {
-            var self = this;
-            self.$watch('currentStep', function() { self.syncStepVisibility(); });
-            self.$watch('open', function(val) { if (val) self.$nextTick(function() { self.syncStepVisibility(); }); });
-            if (window.Livewire) {
-                Livewire.hook('message.processed', function() {
-                    self.$nextTick(function() { self.syncStepVisibility(); });
-                });
-            }
-        },
-        syncStepVisibility() {
-            var steps = this.getSteps();
-            var current = this.currentStep;
-            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === current) ? '' : 'none'; }
-            if (current >= steps.length && steps.length > 0) { this.currentStep = steps.length - 1; }
-        },
-        openModal() {
-            this.open = true;
-            this.currentStep = 0;
-            this.searchTerm = '';
-            document.body.style.overflow = 'hidden';
-            this.$nextTick(function() { this.syncStepVisibility(); }.bind(this));
-        },
-        closeModal() {
-            this.open = false;
-            this.searchTerm = '';
-            document.body.style.overflow = '';
-        },
-        nextStep() {
-            var steps = this.getSteps();
-            if (this.currentStep < steps.length - 1) { this.currentStep++; this.searchTerm = ''; }
-        },
-        prevStep() {
-            if (this.currentStep > 0) { this.currentStep--; this.searchTerm = ''; }
-        }
-    }" wire:ignore.self>
         <span x-ref="totalStepsRef" data-steps="{{ $totalSteps }}" style="display:none"></span>
         {{-- Filter Modal Toggle Button --}}
         <div class="filter-modal-toggle-bar">

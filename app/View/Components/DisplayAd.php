@@ -20,7 +20,7 @@ class DisplayAd extends Component
     {
         // Select only required columns
         $advertisement = UserAdvertisement::where('status', 'approved')
-            ->where('payment_status', 'paid')
+            ->whereIn('payment_status', ['paid', 'completed'])
             ->whereDate('start_date', '<=', now())
             ->whereDate('end_date', '>=', now())
             ->whereHas('adZone', function ($q) use ($pageLocation) {

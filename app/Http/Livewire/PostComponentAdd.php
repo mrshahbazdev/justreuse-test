@@ -36,6 +36,7 @@ class PostComponentAdd extends Component
     public $selectedParentCategoryTitle;
     public $childCategories = [];
     public $selectedChildCategory;
+    public $selectedChildCategoryTitle;
     public $title;
     public $price;
     public $currency_id;
@@ -102,6 +103,41 @@ class PostComponentAdd extends Component
         }
     }
 
+    public function getTitlePlaceholderProperty()
+    {
+        $examples = [
+            'Automobiles' => ['Cars' => 'e.g. Toyota Corolla 2020 GLI Automatic', 'Motorcycles' => 'e.g. Honda CB150R 2023 Red', 'Trucks' => 'e.g. Hino Truck 2019 10-Wheeler', 'Buses' => 'e.g. Toyota Coaster 2018 30-Seater', 'Boats' => 'e.g. Yamaha Speedboat 2021 150HP'],
+            'Electronics' => ['Mobile Phones' => 'e.g. iPhone 14 Pro Max 256GB Deep Purple', 'Laptops' => 'e.g. MacBook Pro M2 16GB 512GB 2023', 'Tablets' => 'e.g. iPad Air 5th Gen 64GB WiFi', 'Cameras' => 'e.g. Canon EOS R6 Mark II Body Only', 'TVs' => 'e.g. Samsung 55" OLED 4K Smart TV 2024'],
+            'Property' => ['Houses' => 'e.g. 3 Bedroom House in DHA Phase 5', 'Apartments' => 'e.g. 2 Bed Apartment Bahria Town Islamabad', 'Plots' => 'e.g. 10 Marla Plot DHA Phase 8', 'Commercial' => 'e.g. Shop for Sale Gulberg III Lahore', 'Rooms' => 'e.g. Furnished Room for Rent Near UOL'],
+            'Fashion' => ['Men' => 'e.g. Branded Leather Jacket Size L Black', 'Women' => 'e.g. Designer Lawn Suit Unstitched 3-Piece', 'Kids' => 'e.g. Kids Winter Jacket Age 5-6 Blue', 'Shoes' => 'e.g. Nike Air Max 270 Size 42 White', 'Accessories' => 'e.g. Ray-Ban Aviator Sunglasses Original'],
+            'Furniture' => ['Sofa' => 'e.g. 7-Seater L-Shape Sofa Set Brown', 'Beds' => 'e.g. King Size Wooden Bed with Side Tables', 'Tables' => 'e.g. Office Desk with Drawers Wooden', 'Chairs' => 'e.g. Gaming Chair Ergonomic with Lumbar Support'],
+            'Jobs' => ['Full Time' => 'e.g. Senior Software Developer - Laravel/PHP', 'Part Time' => 'e.g. Part Time Data Entry Operator', 'Freelance' => 'e.g. Graphic Designer for Social Media'],
+            'Services' => ['Home Services' => 'e.g. Professional House Painting Service', 'Repair' => 'e.g. AC Repair and Installation Service'],
+        ];
+
+        $parent = $this->selectedParentCategoryTitle;
+        $child = $this->selectedChildCategoryTitle;
+
+        if ($parent && $child && isset($examples[$parent][$child])) {
+            return $examples[$parent][$child];
+        }
+
+        if ($parent && isset($examples[$parent])) {
+            $first = reset($examples[$parent]);
+            return $first;
+        }
+
+        if ($child) {
+            return 'e.g. ' . $child . ' - Brand, Model, Condition';
+        }
+
+        if ($parent) {
+            return 'e.g. Your ' . $parent . ' product title here';
+        }
+
+        return 'e.g. iPhone 14 Pro Max 256GB';
+    }
+
     public function render()
     {
       	//dd($this->getWatermarkPath());
@@ -157,6 +193,7 @@ class PostComponentAdd extends Component
             ->get();
             
         $this->selectedChildCategory = null;
+        $this->selectedChildCategoryTitle = null;
         $this->customFieldsHtml = '';
         $this->productConditionHtml = '';
     }
@@ -164,6 +201,8 @@ class PostComponentAdd extends Component
     public function selectChildCategory($id)
   {
       $this->selectedChildCategory = $id;
+      $childCat = TblCategory::find($id);
+      $this->selectedChildCategoryTitle = $childCat ? $childCat->title : null;
       $this->customFieldsData = []; // Custom fields data ko reset karein
       $this->dynamicModels = [];    // Dynamic models ko reset karein
 

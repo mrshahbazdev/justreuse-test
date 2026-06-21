@@ -68,7 +68,7 @@
                                     <i class="fa-solid fa-tag"></i>
                                     <h2>Product Title</h2>
                                 </div>
-                                <input class="pa-input" type="text" placeholder="e.g. iPhone 14 Pro Max 256GB" wire:model.defer="title" required />
+                                <input class="pa-input" type="text" placeholder="{{ $this->titlePlaceholder }}" wire:model.defer="title" required />
                                 @error('title') <span class="pa-error">{{ $message }}</span> @enderror
                             </div>
 

@@ -206,8 +206,12 @@
     <script>
     (function() {
         var step = 0;
+        var syncing = false;
+        var syncTimer = null;
         function getSteps() { return document.querySelectorAll('#fmBody .fm-step'); }
         function syncUI() {
+            if (syncing) return;
+            syncing = true;
             var steps = getSteps();
             var total = steps.length || 1;
             if (step >= total) step = total - 1;
@@ -225,6 +229,15 @@
             if (backFooter) backFooter.style.display = step > 0 ? '' : 'none';
             if (spacer) spacer.style.display = step > 0 ? 'none' : '';
             if (nextBtn) nextBtn.style.display = step < total - 1 ? '' : 'none';
+            syncing = false;
+        }
+        function debouncedSync() {
+            clearTimeout(syncTimer);
+            syncTimer = setTimeout(function() {
+                if (document.getElementById('filterModal').style.display === 'flex') {
+                    syncUI();
+                }
+            }, 80);
         }
         window._fm = {
             open: function() {
@@ -248,9 +261,7 @@
         var body = document.getElementById('fmBody');
         if (body) {
             new MutationObserver(function() {
-                if (document.getElementById('filterModal').style.display === 'flex') {
-                    syncUI();
-                }
+                debouncedSync();
             }).observe(body, { childList: true, subtree: true });
         }
     })();

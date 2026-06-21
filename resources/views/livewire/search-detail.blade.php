@@ -75,100 +75,114 @@
     </div>
     @endif
 
-    {{-- Filter Panel Toggle + Slide-down Panel --}}
-    <div x-data="{ panelOpen: false }" class="filter-panel-wrapper">
-        <div class="filter-modal-toggle-bar">
-            <button class="filter-modal-open-btn" @click="panelOpen = !panelOpen">
-                <i class="fas fa-sliders-h"></i> Advanced Filters
-                @if($hasActiveFilters)
-                    <span class="filter-modal-badge">!</span>
-                @endif
-                <i class="fas fa-chevron-down" :class="{ 'fa-chevron-up': panelOpen }" style="margin-left:4px;font-size:12px;"></i>
-            </button>
-        </div>
+    {{-- Filter Modal Toggle + Popup Modal --}}
+    <div class="filter-modal-toggle-bar">
+        <button class="filter-modal-open-btn" onclick="document.getElementById('filterModal').style.display='flex'; document.body.style.overflow='hidden';">
+            <i class="fas fa-sliders-h"></i> Advanced Filters
+            @if($hasActiveFilters)
+                <span class="filter-modal-badge">!</span>
+            @endif
+        </button>
+    </div>
 
-        <div x-show="panelOpen" x-cloak x-collapse class="filter-panel">
-            @foreach($allFiltersList as $filter)
-            <div x-data="{ expanded: false }" class="filter-section" wire:key="fp-{{ $filter->id }}">
-                <button class="filter-section-header" @click="expanded = !expanded">
-                    <div class="filter-section-header-left">
-                        <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} filter-section-icon"></i>
-                        <span>{{ $filter->name }}</span>
-                    </div>
-                    <i class="fas fa-chevron-down filter-section-chevron" :class="{ 'rotated': expanded }"></i>
-                </button>
-                <div x-show="expanded" x-collapse class="filter-section-body">
-                    @if($filter->type === 'price')
-                        <div class="price-filter-inline">
-                            <div class="price-inputs-row">
-                                <div class="price-input-wrap">
-                                    <label>Min</label>
-                                    <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
-                                </div>
-                                <span class="price-separator">–</span>
-                                <div class="price-input-wrap">
-                                    <label>Max</label>
-                                    <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
-                                </div>
-                            </div>
-                            <div class="price-range-slider-inline">
-                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice" class="slider-min">
-                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice" class="slider-max">
-                            </div>
-                            <div class="price-range-labels">
-                                <span>{{ number_format($minPrice) }}</span>
-                                <span>{{ number_format($maxPrice) }}</span>
-                            </div>
-                        </div>
-                    @elseif($filter->type === 'distance')
-                        <div class="distance-filter-inline">
-                            <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="distance-slider-inline">
-                            <div class="distance-labels">
-                                <span>500 km</span>
-                                <span class="distance-current">{{ $distance }} km</span>
-                                <span>{{ $maxDistance }} km</span>
-                            </div>
-                        </div>
-                    @elseif($filter->type === 'main_category_radio')
-                        <ul class="filter-options-list">
-                            @foreach($filter->options as $option)
-                                <li wire:key="fp-cat-{{ $option->id }}">
-                                    <label class="filter-option-label">
-                                        <input type="radio" wire:model.live="categorySlug" name="panelCategorySlug" value="{{ $option->slug }}" class="filter-radio">
-                                        <span class="custom-radio-mark"></span>
-                                        <span class="option-text">{{ $option->title }}</span>
-                                    </label>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @elseif($filter->type === 'radio')
-                        <ul class="filter-options-list">
-                            @foreach($filter->options as $option)
-                                <li wire:key="fp-sub-{{ $option->id }}">
-                                    <label class="filter-option-label">
-                                        <input type="radio" wire:model.live="selectedSubCategory" name="panelSubCategory" value="{{ $option->slug }}" class="filter-radio">
-                                        <span class="custom-radio-mark"></span>
-                                        <span class="option-text">{{ $option->title }}</span>
-                                    </label>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <ul class="filter-options-list">
-                            @foreach($filter->options as $option)
-                                <li wire:key="fp-opt-{{ $option->id }}">
-                                    <label class="filter-option-label">
-                                        <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
-                                        <span class="custom-check-mark"></span>
-                                        <span class="option-text">{{ $option->key }}</span>
-                                    </label>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
+    <div id="filterModal" class="fm-overlay" style="display:none" @keydown.escape.window="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';">
+        <div class="fm-container" @click.stop>
+            {{-- Modal Header --}}
+            <div class="fm-header">
+                <h3 class="fm-title"><i class="fas fa-filter"></i> Filters</h3>
+                <button onclick="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';" class="fm-close-btn"><i class="fas fa-times"></i></button>
             </div>
-            @endforeach
+
+            {{-- Modal Body — scrollable accordion sections --}}
+            <div class="fm-body">
+                @foreach($allFiltersList as $filter)
+                <div x-data="{ expanded: false }" class="filter-section" wire:key="fm-{{ $filter->id }}">
+                    <button class="filter-section-header" @click="expanded = !expanded">
+                        <div class="filter-section-header-left">
+                            <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} filter-section-icon"></i>
+                            <span>{{ $filter->name }}</span>
+                        </div>
+                        <i class="fas fa-chevron-down filter-section-chevron" :class="{ 'rotated': expanded }"></i>
+                    </button>
+                    <div x-show="expanded" x-collapse class="filter-section-body">
+                        @if($filter->type === 'price')
+                            <div class="price-filter-inline">
+                                <div class="price-inputs-row">
+                                    <div class="price-input-wrap">
+                                        <label>Min</label>
+                                        <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
+                                    </div>
+                                    <span class="price-separator">–</span>
+                                    <div class="price-input-wrap">
+                                        <label>Max</label>
+                                        <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
+                                    </div>
+                                </div>
+                                <div class="price-range-slider-inline">
+                                    <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice" class="slider-min">
+                                    <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice" class="slider-max">
+                                </div>
+                                <div class="price-range-labels">
+                                    <span>{{ number_format($minPrice) }}</span>
+                                    <span>{{ number_format($maxPrice) }}</span>
+                                </div>
+                            </div>
+                        @elseif($filter->type === 'distance')
+                            <div class="distance-filter-inline">
+                                <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="distance-slider-inline">
+                                <div class="distance-labels">
+                                    <span>500 km</span>
+                                    <span class="distance-current">{{ $distance }} km</span>
+                                    <span>{{ $maxDistance }} km</span>
+                                </div>
+                            </div>
+                        @elseif($filter->type === 'main_category_radio')
+                            <ul class="filter-options-list">
+                                @foreach($filter->options as $option)
+                                    <li wire:key="fm-cat-{{ $option->id }}">
+                                        <label class="filter-option-label">
+                                            <input type="radio" wire:model.live="categorySlug" name="modalCatSlug" value="{{ $option->slug }}" class="filter-radio">
+                                            <span class="custom-radio-mark"></span>
+                                            <span class="option-text">{{ $option->title }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @elseif($filter->type === 'radio')
+                            <ul class="filter-options-list">
+                                @foreach($filter->options as $option)
+                                    <li wire:key="fm-sub-{{ $option->id }}">
+                                        <label class="filter-option-label">
+                                            <input type="radio" wire:model.live="selectedSubCategory" name="modalSubCat" value="{{ $option->slug }}" class="filter-radio">
+                                            <span class="custom-radio-mark"></span>
+                                            <span class="option-text">{{ $option->title }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <ul class="filter-options-list">
+                                @foreach($filter->options as $option)
+                                    <li wire:key="fm-opt-{{ $option->id }}">
+                                        <label class="filter-option-label">
+                                            <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
+                                            <span class="custom-check-mark"></span>
+                                            <span class="option-text">{{ $option->key }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="fm-footer">
+                <button class="fm-btn-clear" wire:click="clearAllFilters"><i class="fas fa-trash-alt"></i> Clear All</button>
+                <button class="fm-btn-apply" onclick="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';"><i class="fas fa-check"></i> Apply & Close</button>
+            </div>
         </div>
     </div>
 
@@ -365,22 +379,106 @@
             justify-content: center;
         }
 
-        /* ===== Filter Panel ===== */
+        /* ===== Filter Modal ===== */
         [x-cloak] { display: none !important; }
 
-        .filter-panel-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 25px;
+        .fm-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-        .filter-panel {
+        .fm-container {
             background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
-            margin-top: 8px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
+        .fm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafbfc;
+        }
+        .fm-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0;
+        }
+        .fm-title i { color: var(--primary); margin-right: 8px; }
+        .fm-close-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #adb5bd;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .fm-close-btn:hover { background: #fee2e2; color: #dc2626; }
+        .fm-body {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #dee2e6 transparent;
+        }
+        .fm-body::-webkit-scrollbar { width: 4px; }
+        .fm-body::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
+        .fm-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafbfc;
+            gap: 12px;
+        }
+        .fm-btn-clear {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .fm-btn-clear:hover { background: #fecaca; }
+        .fm-btn-clear i { margin-right: 6px; }
+        .fm-btn-apply {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(248, 153, 27, 0.3);
+            transition: all 0.2s ease;
+        }
+        .fm-btn-apply:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(248, 153, 27, 0.4); }
+        .fm-btn-apply i { margin-right: 6px; }
+
         .filter-section {
             border-bottom: 1px solid #f0f0f0;
         }
@@ -701,7 +799,12 @@
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
             .filter-modal-toggle-bar { padding: 0 15px; }
-            .filter-panel-wrapper { padding: 0 15px; }
+            .fm-overlay { align-items: flex-end; padding: 0; }
+            .fm-container {
+                max-width: 100%;
+                max-height: 90vh;
+                border-radius: 16px 16px 0 0;
+            }
             .filter-section-header { padding: 12px 16px; }
             .filter-section-body { padding: 0 16px 14px; }
             .active-filters-bar { padding: 0 15px; }

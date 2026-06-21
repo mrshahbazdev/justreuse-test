@@ -85,7 +85,7 @@
         </button>
     </div>
 
-    <div id="filterModal" class="fm-overlay" style="display:none">
+    <div id="filterModal" class="fm-overlay" style="display:none" wire:ignore.self>
         <div class="fm-container" onclick="event.stopPropagation()">
             {{-- Modal Header --}}
             <div class="fm-header">

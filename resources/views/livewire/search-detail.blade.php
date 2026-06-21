@@ -75,9 +75,9 @@
     </div>
     @endif
 
-    {{-- Filter Modal Toggle + Popup Modal --}}
+    {{-- Filter Modal Toggle + Step-by-Step Popup Modal --}}
     <div class="filter-modal-toggle-bar">
-        <button class="filter-modal-open-btn" onclick="document.getElementById('filterModal').style.display='flex'; document.body.style.overflow='hidden';">
+        <button class="filter-modal-open-btn" onclick="window._fm.open()">
             <i class="fas fa-sliders-h"></i> Advanced Filters
             @if($hasActiveFilters)
                 <span class="filter-modal-badge">!</span>
@@ -85,26 +85,37 @@
         </button>
     </div>
 
-    <div id="filterModal" class="fm-overlay" style="display:none" @keydown.escape.window="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';">
-        <div class="fm-container" @click.stop>
+    <div id="filterModal" class="fm-overlay" style="display:none">
+        <div class="fm-container" onclick="event.stopPropagation()">
             {{-- Modal Header --}}
             <div class="fm-header">
-                <h3 class="fm-title"><i class="fas fa-filter"></i> Filters</h3>
-                <button onclick="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';" class="fm-close-btn"><i class="fas fa-times"></i></button>
+                <div class="fm-header-left">
+                    <button id="fmBackBtn" class="fm-back-btn" onclick="window._fm.prev()" style="display:none"><i class="fas fa-arrow-left"></i></button>
+                    <h3 class="fm-title"><i class="fas fa-filter"></i> Filters</h3>
+                </div>
+                <div class="fm-header-right">
+                    <span id="fmStepLabel" class="fm-step-label"></span>
+                    <button onclick="window._fm.close()" class="fm-close-btn"><i class="fas fa-times"></i></button>
+                </div>
             </div>
 
-            {{-- Modal Body — scrollable accordion sections --}}
-            <div class="fm-body">
-                @foreach($allFiltersList as $filter)
-                <div x-data="{ expanded: false }" class="filter-section" wire:key="fm-{{ $filter->id }}">
-                    <button class="filter-section-header" @click="expanded = !expanded">
-                        <div class="filter-section-header-left">
-                            <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} filter-section-icon"></i>
-                            <span>{{ $filter->name }}</span>
+            {{-- Progress Bar --}}
+            <div class="fm-progress-bar">
+                <div id="fmProgressFill" class="fm-progress-fill"></div>
+            </div>
+
+            {{-- Modal Body — one step per filter --}}
+            <div class="fm-body" id="fmBody">
+                @foreach($allFiltersList as $stepIndex => $filter)
+                <div class="fm-step" data-step="{{ $stepIndex }}" style="display:none" wire:key="fm-step-{{ $filter->id }}">
+                    <div class="fm-step-header">
+                        <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
+                        <div>
+                            <h4 class="fm-step-name">{{ $filter->name }}</h4>
+                            <span class="fm-step-group">{{ $filter->group ?? '' }}</span>
                         </div>
-                        <i class="fas fa-chevron-down filter-section-chevron" :class="{ 'rotated': expanded }"></i>
-                    </button>
-                    <div x-show="expanded" x-collapse class="filter-section-body">
+                    </div>
+                    <div class="fm-step-options">
                         @if($filter->type === 'price')
                             <div class="price-filter-inline">
                                 <div class="price-inputs-row">
@@ -180,11 +191,69 @@
 
             {{-- Modal Footer --}}
             <div class="fm-footer">
-                <button class="fm-btn-clear" wire:click="clearAllFilters"><i class="fas fa-trash-alt"></i> Clear All</button>
-                <button class="fm-btn-apply" onclick="document.getElementById('filterModal').style.display='none'; document.body.style.overflow='';"><i class="fas fa-check"></i> Apply & Close</button>
+                <button id="fmBackFooter" class="fm-btn-back" onclick="window._fm.prev()" style="display:none">
+                    <i class="fas fa-chevron-left"></i> Back
+                </button>
+                <div id="fmFooterSpacer" class="fm-footer-spacer"></div>
+                <div class="fm-footer-right">
+                    <button class="fm-btn-apply" onclick="window._fm.close()"><i class="fas fa-check"></i> Apply & Close</button>
+                    <button id="fmNextBtn" class="fm-btn-next" onclick="window._fm.next()">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+    (function() {
+        var step = 0;
+        function getSteps() { return document.querySelectorAll('#fmBody .fm-step'); }
+        function syncUI() {
+            var steps = getSteps();
+            var total = steps.length || 1;
+            if (step >= total) step = total - 1;
+            if (step < 0) step = 0;
+            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === step) ? '' : 'none'; }
+            var label = document.getElementById('fmStepLabel');
+            if (label) label.textContent = 'Step ' + (step + 1) + ' / ' + total;
+            var fill = document.getElementById('fmProgressFill');
+            if (fill) fill.style.width = ((step + 1) / total * 100) + '%';
+            var backBtn = document.getElementById('fmBackBtn');
+            var backFooter = document.getElementById('fmBackFooter');
+            var spacer = document.getElementById('fmFooterSpacer');
+            var nextBtn = document.getElementById('fmNextBtn');
+            if (backBtn) backBtn.style.display = step > 0 ? '' : 'none';
+            if (backFooter) backFooter.style.display = step > 0 ? '' : 'none';
+            if (spacer) spacer.style.display = step > 0 ? 'none' : '';
+            if (nextBtn) nextBtn.style.display = step < total - 1 ? '' : 'none';
+        }
+        window._fm = {
+            open: function() {
+                step = 0;
+                document.getElementById('filterModal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+                syncUI();
+            },
+            close: function() {
+                document.getElementById('filterModal').style.display = 'none';
+                document.body.style.overflow = '';
+            },
+            next: function() { step++; syncUI(); },
+            prev: function() { step--; syncUI(); }
+        };
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('filterModal').style.display === 'flex') {
+                window._fm.close();
+            }
+        });
+        if (window.Livewire) {
+            Livewire.hook('message.processed', function() {
+                if (document.getElementById('filterModal').style.display === 'flex') {
+                    syncUI();
+                }
+            });
+        }
+    })();
+    </script>
 
     <div class="container">
         <main class="main-content">
@@ -408,9 +477,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 18px 24px;
+            padding: 16px 24px;
             border-bottom: 1px solid #f0f0f0;
             background: #fafbfc;
+        }
+        .fm-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .fm-header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
         .fm-title {
             font-size: 18px;
@@ -419,6 +498,28 @@
             margin: 0;
         }
         .fm-title i { color: var(--primary); margin-right: 8px; }
+        .fm-back-btn {
+            background: none;
+            border: 1px solid #e9ecef;
+            color: #495057;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .fm-back-btn:hover { background: #f0f0f0; }
+        .fm-step-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            background: #fff7ed;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
         .fm-close-btn {
             background: none;
             border: none;
@@ -434,14 +535,59 @@
             transition: all 0.2s ease;
         }
         .fm-close-btn:hover { background: #fee2e2; color: #dc2626; }
+
+        .fm-progress-bar {
+            height: 4px;
+            background: #e9ecef;
+            width: 100%;
+        }
+        .fm-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 0 4px 4px 0;
+            transition: width 0.35s ease;
+        }
+
         .fm-body {
             flex: 1;
             overflow-y: auto;
+            padding: 24px;
             scrollbar-width: thin;
             scrollbar-color: #dee2e6 transparent;
         }
         .fm-body::-webkit-scrollbar { width: 4px; }
         .fm-body::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
+
+        .fm-step-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+        .fm-step-icon {
+            color: var(--primary);
+            font-size: 18px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #fff7ed, #ffe8cc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .fm-step-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin: 0 0 2px;
+        }
+        .fm-step-group {
+            font-size: 12px;
+            color: #adb5bd;
+            font-weight: 500;
+        }
+
         .fm-footer {
             display: flex;
             align-items: center;
@@ -451,20 +597,44 @@
             background: #fafbfc;
             gap: 12px;
         }
-        .fm-btn-clear {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #fca5a5;
+        .fm-footer-spacer { flex: 1; }
+        .fm-footer-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+        .fm-btn-back {
+            background: #f0f0f0;
+            color: #495057;
+            border: none;
             padding: 10px 20px;
             border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             transition: all 0.2s ease;
         }
-        .fm-btn-clear:hover { background: #fecaca; }
-        .fm-btn-clear i { margin-right: 6px; }
+        .fm-btn-back:hover { background: #e2e2e2; }
         .fm-btn-apply {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .fm-btn-apply:hover { background: #c8e6c9; }
+        .fm-btn-next {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: #fff;
             border: none;
@@ -473,56 +643,13 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             box-shadow: 0 3px 10px rgba(248, 153, 27, 0.3);
             transition: all 0.2s ease;
         }
-        .fm-btn-apply:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(248, 153, 27, 0.4); }
-        .fm-btn-apply i { margin-right: 6px; }
-
-        .filter-section {
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .filter-section:last-child { border-bottom: none; }
-        .filter-section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 14px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a1a2e;
-            transition: background 0.15s ease;
-        }
-        .filter-section-header:hover { background: #fafbfc; }
-        .filter-section-header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .filter-section-icon {
-            color: var(--primary);
-            font-size: 14px;
-            width: 32px;
-            height: 32px;
-            background: #fff7ed;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .filter-section-chevron {
-            font-size: 12px;
-            color: #adb5bd;
-            transition: transform 0.2s ease;
-        }
-        .filter-section-chevron.rotated { transform: rotate(180deg); }
-        .filter-section-body {
-            padding: 0 20px 16px;
-        }
+        .fm-btn-next:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(248, 153, 27, 0.4); }
 
         /* ===== Options List ===== */
         .filter-options-list {
@@ -805,8 +932,9 @@
                 max-height: 90vh;
                 border-radius: 16px 16px 0 0;
             }
-            .filter-section-header { padding: 12px 16px; }
-            .filter-section-body { padding: 0 16px 14px; }
+            .fm-body { padding: 16px; }
+            .fm-header { padding: 14px 16px; }
+            .fm-footer { padding: 14px 16px; }
             .active-filters-bar { padding: 0 15px; }
         }
     </style>

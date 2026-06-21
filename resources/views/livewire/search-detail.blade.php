@@ -207,7 +207,6 @@
     (function() {
         var step = 0;
         var syncing = false;
-        var syncTimer = null;
         function getSteps() { return document.querySelectorAll('#fmBody .fm-step'); }
         function syncUI() {
             if (syncing) return;
@@ -231,14 +230,6 @@
             if (nextBtn) nextBtn.style.display = step < total - 1 ? '' : 'none';
             syncing = false;
         }
-        function debouncedSync() {
-            clearTimeout(syncTimer);
-            syncTimer = setTimeout(function() {
-                if (document.getElementById('filterModal').style.display === 'flex') {
-                    syncUI();
-                }
-            }, 80);
-        }
         window._fm = {
             open: function() {
                 step = 0;
@@ -258,12 +249,28 @@
                 window._fm.close();
             }
         });
-        var body = document.getElementById('fmBody');
-        if (body) {
+        // Observe filterModal (persists due to wire:ignore.self) for child changes
+        var modal = document.getElementById('filterModal');
+        if (modal) {
+            var syncTimer = null;
             new MutationObserver(function() {
-                debouncedSync();
-            }).observe(body, { childList: true, subtree: true });
+                if (syncing) return;
+                clearTimeout(syncTimer);
+                syncTimer = setTimeout(function() {
+                    if (modal.style.display === 'flex') syncUI();
+                }, 100);
+            }).observe(modal, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
         }
+        // Polling fallback: if modal is open and current step is hidden, re-sync
+        setInterval(function() {
+            var m = document.getElementById('filterModal');
+            if (m && m.style.display === 'flex') {
+                var steps = getSteps();
+                if (steps.length > 0 && step < steps.length && steps[step].style.display === 'none') {
+                    syncUI();
+                }
+            }
+        }, 300);
     })();
     </script>
 

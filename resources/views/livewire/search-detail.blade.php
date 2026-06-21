@@ -245,12 +245,13 @@
                 window._fm.close();
             }
         });
-        if (window.Livewire) {
-            Livewire.hook('message.processed', function() {
+        var body = document.getElementById('fmBody');
+        if (body) {
+            new MutationObserver(function() {
                 if (document.getElementById('filterModal').style.display === 'flex') {
                     syncUI();
                 }
-            });
+            }).observe(body, { childList: true, subtree: true });
         }
     })();
     </script>

@@ -28,17 +28,20 @@
     @if($hasActiveFilters)
     <div class="active-filters-bar">
         <div class="active-filters-inner">
-            <span class="active-filters-label"><i class="fas fa-filter"></i> Active Filters:</span>
+            <div class="active-filters-top">
+                <span class="active-filters-label"><i class="fas fa-filter"></i> Active Filters</span>
+                <button class="clear-all-btn" wire:click="clearAllFilters"><i class="fas fa-trash-alt"></i> Clear All</button>
+            </div>
             <div class="active-chips-list">
                 @if($categorySlug)
-                    <span class="active-chip">
+                    <span class="active-chip chip-category">
                         <i class="fas fa-folder"></i>
                         {{ $allCategories->firstWhere('slug', $categorySlug)->title ?? $categorySlug }}
                         <button wire:click="$set('categorySlug', '')" title="Remove"><i class="fas fa-times"></i></button>
                     </span>
                 @endif
                 @if($selectedSubCategory)
-                    <span class="active-chip">
+                    <span class="active-chip chip-subcategory">
                         <i class="fas fa-folder-open"></i>
                         {{ $subCategories->firstWhere('slug', $selectedSubCategory)->title ?? $selectedSubCategory }}
                         <button wire:click="removeSubCategory()" title="Remove"><i class="fas fa-times"></i></button>
@@ -55,7 +58,8 @@
                     @if(is_array($values))
                         @foreach($values as $val)
                             @if($val)
-                            <span class="active-chip">
+                            <span class="active-chip chip-custom">
+                                <i class="fas fa-tag"></i>
                                 {{ $val }}
                                 <button wire:click="removeCustomFilter('{{ $fieldId }}', '{{ $val }}')" title="Remove"><i class="fas fa-times"></i></button>
                             </span>
@@ -64,7 +68,6 @@
                     @endif
                 @endforeach
             </div>
-            <button class="clear-all-btn" wire:click="clearAllFilters"><i class="fas fa-trash-alt"></i> Clear All</button>
         </div>
     </div>
     @endif
@@ -141,7 +144,7 @@
              x-transition:leave="fm-fade-out"
              @keydown.escape.window="closeModal()">
 
-        <div class="filter-modal-container" @click.outside="closeModal()">
+        <div class="filter-modal-container">
             {{-- Modal Header --}}
             <div class="filter-modal-header">
                 <div class="filter-modal-header-left">
@@ -329,73 +332,96 @@
         /* ===== Active Filters Bar ===== */
         .active-filters-bar {
             max-width: 1200px;
-            margin: 0 auto 10px;
+            margin: 0 auto 16px;
             padding: 0 25px;
         }
         .active-filters-inner {
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 14px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .active-filters-top {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: var(--card-bg);
-            padding: 12px 18px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid var(--light-gray);
-            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 12px;
         }
         .active-filters-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray);
-            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a2e;
         }
-        .active-filters-label i { margin-right: 4px; }
+        .active-filters-label i {
+            margin-right: 6px;
+            color: var(--primary);
+        }
         .active-chips-list {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            flex: 1;
         }
         .active-chip {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: linear-gradient(135deg, #f0f4ff, #e8ecf8);
-            color: #3b5998;
-            padding: 5px 12px;
-            border-radius: 20px;
+            background: #f8f9fa;
+            color: #374151;
+            padding: 7px 14px;
+            border-radius: 8px;
             font-size: 13px;
             font-weight: 500;
-            border: 1px solid #d0d8f0;
+            border: 1px solid #e5e7eb;
             transition: all 0.2s ease;
         }
-        .active-chip:hover { background: linear-gradient(135deg, #e0e8ff, #d8dcf0); }
-        .active-chip i:first-child { font-size: 11px; opacity: 0.7; }
+        .active-chip:hover { background: #f0f1f3; border-color: #d1d5db; }
+        .active-chip i:first-child { font-size: 11px; color: #9ca3af; }
         .active-chip button {
             background: none;
             border: none;
-            color: #3b5998;
+            color: #9ca3af;
             cursor: pointer;
-            padding: 0;
+            padding: 0 0 0 2px;
             line-height: 1;
-            opacity: 0.6;
-            transition: opacity 0.2s;
+            transition: color 0.2s;
         }
-        .active-chip button:hover { opacity: 1; }
-        .active-chip.chip-price { background: linear-gradient(135deg, #f0fff0, #e0f5e0); color: #2a7a2a; border-color: #c0e0c0; }
+        .active-chip button:hover { color: #dc2626; }
+        .active-chip.chip-category {
+            background: #fff7ed;
+            border-color: #fed7aa;
+            color: #c2410c;
+        }
+        .active-chip.chip-category i:first-child { color: #f97316; }
+        .active-chip.chip-subcategory {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1d4ed8;
+        }
+        .active-chip.chip-subcategory i:first-child { color: #3b82f6; }
+        .active-chip.chip-price {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #15803d;
+        }
+        .active-chip.chip-price i:first-child { color: #22c55e; }
+        .active-chip.chip-custom {
+            background: #faf5ff;
+            border-color: #e9d5ff;
+            color: #7c3aed;
+        }
+        .active-chip.chip-custom i:first-child { color: #a78bfa; }
         .clear-all-btn {
-            background: #fee2e2;
+            background: none;
             color: #dc2626;
-            border: 1px solid #fca5a5;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
+            border: none;
+            padding: 4px 0;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
+            transition: opacity 0.2s;
         }
-        .clear-all-btn:hover { background: #fecaca; }
+        .clear-all-btn:hover { opacity: 0.7; }
         .clear-all-btn i { margin-right: 4px; font-size: 11px; }
 
         /* ===== Filter Modal Toggle Button ===== */

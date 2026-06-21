@@ -314,9 +314,17 @@
 
             <div class="card-grid">
                 @forelse($filtered_data as $product)
-                    {!! App\Models\Setting::htmlAdBlock($product->id) !!}
+                    @php $adHtml = App\Models\Setting::htmlAdBlock($product->id); @endphp
+                    @if(!empty(trim($adHtml)))
+                        {!! $adHtml !!}
+                    @endif
                 @empty
-                    <p style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #6c757d;">No products found matching your criteria.</p>
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h3>No products found</h3>
+                        <p>Try adjusting your filters or search query.</p>
+                        <button class="clear-filters-empty" wire:click="clearAllFilters"><i class="fas fa-times"></i> Clear All Filters</button>
+                    </div>
                 @endforelse
             </div>
 
@@ -329,6 +337,20 @@
     </div>
 
     <style>
+        /* ===== Card Grid ===== */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .card-grid > div:empty { display: none; }
+        @media (max-width: 768px) {
+            .card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        }
+        @media (max-width: 480px) {
+            .card-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        }
+
         /* ===== Active Filters Bar ===== */
         .active-filters-bar {
             max-width: 1200px;

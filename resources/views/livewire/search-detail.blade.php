@@ -2,10 +2,34 @@
     openFilter: null,
     filterSearch: '',
     mobileOpen: false,
-    openModal(id) { this.openFilter = id; this.filterSearch = ''; document.body.style.overflow = 'hidden'; },
-    closeModal() { this.openFilter = null; this.filterSearch = ''; document.body.style.overflow = ''; },
+    openModal(id) {
+        this.openFilter = id;
+        this.filterSearch = '';
+        document.body.style.overflow = 'hidden';
+        this.$nextTick(() => {
+            document.querySelectorAll('[data-af-modal]').forEach(el => {
+                el.style.display = el.getAttribute('data-af-modal') === id ? 'flex' : 'none';
+            });
+        });
+    },
+    closeModal() {
+        this.openFilter = null;
+        this.filterSearch = '';
+        document.body.style.overflow = '';
+        document.querySelectorAll('[data-af-modal]').forEach(el => { el.style.display = 'none'; });
+    },
     closeMobile() { this.mobileOpen = false; }
-}" @keydown.escape.window="closeModal(); closeMobile()">
+}" @keydown.escape.window="closeModal(); closeMobile()"
+   x-init="Livewire.hook('message.processed', () => {
+       if (openFilter) {
+           $nextTick(() => {
+               document.querySelectorAll('[data-af-modal]').forEach(el => {
+                   el.style.display = el.getAttribute('data-af-modal') === openFilter ? 'flex' : 'none';
+               });
+           });
+       }
+   })"
+>
 
     {{-- Search Section --}}
     <div class="af-search-section">
@@ -194,13 +218,7 @@
     {{-- POPUP MODALS — outside flex container for proper stacking --}}
     @foreach($allFiltersList as $idx => $filter)
     <div class="af-modal-overlay"
-         x-show="openFilter === '{{ $filter->id }}'"
-         x-transition:enter="af-modal-enter"
-         x-transition:enter-start="af-modal-enter-start"
-         x-transition:enter-end="af-modal-enter-end"
-         x-transition:leave="af-modal-leave"
-         x-transition:leave-start="af-modal-leave-start"
-         x-transition:leave-end="af-modal-leave-end"
+         data-af-modal="{{ $filter->id }}"
          @click="closeModal()"
          style="display:none"
          wire:key="af-modal-{{ $filter->id }}">
@@ -732,13 +750,7 @@
         box-shadow: 0 3px 10px rgba(248,153,27,0.3);
     }
 
-    /* Modal transitions */
-    .af-modal-enter { transition: opacity 0.2s ease; }
-    .af-modal-enter-start { opacity: 0; }
-    .af-modal-enter-end { opacity: 1; }
-    .af-modal-leave { transition: opacity 0.15s ease; }
-    .af-modal-leave-start { opacity: 1; }
-    .af-modal-leave-end { opacity: 0; }
+    /* Modal overlay uses display:none/flex toggled by JS */
 
     /* ===== PRICE Section inside modal ===== */
     .af-price-section { padding: 4px 0; }

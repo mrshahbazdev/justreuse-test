@@ -3,6 +3,7 @@
 namespace App\Http\Livewire;
 
 use App\Models\TblCategory;
+use App\Models\TblCity;
 use App\Models\TblPost;
 use App\Models\User;
 use App\Models\TblFieldsDetail;
@@ -20,6 +21,7 @@ class SearchDetail extends Component
 
     public $customFilters = [];
     public $customFieldsForView = [];
+    public $selectedCities = [];
 
     public $showFilterModal = false;
     public $modalHistory = [];
@@ -41,6 +43,7 @@ class SearchDetail extends Component
         'latitude' => ['except' => '', 'as' => 'lat'],
         'longitude' => ['except' => '', 'as' => 'lng'],
         'customFilters' => ['except' => []],
+        'selectedCities' => ['except' => [], 'as' => 'cities'],
     ];
     
     private function getFilterGroup($filterName, $categoryName = null)
@@ -216,6 +219,22 @@ class SearchDetail extends Component
             }
         }
 
+        $citiesWithPosts = TblCity::whereIn('id', function ($q) {
+            $q->select('city')->from('tbl_posts')
+              ->where('active', 1)->where('sold_status', 0)->whereNull('deleted_at')
+              ->distinct();
+        })->orderBy('name')->get();
+
+        if ($citiesWithPosts->isNotEmpty()) {
+            $allFilters->push((object)[
+                'id'      => 'location',
+                'name'    => 'Location',
+                'type'    => 'location',
+                'options' => $citiesWithPosts,
+                'group'   => 'General',
+            ]);
+        }
+
         $allFilters->push((object)[
             'id'      => 'price_range',
             'name'    => 'Price Range',
@@ -247,7 +266,7 @@ class SearchDetail extends Component
 
     public function clearAllFilters()
     {
-        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance']);
+        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance', 'selectedCities']);
         $this->selectedCategory = null;
         $this->subCategories = collect();
         $this->minPrice = 0;
@@ -292,6 +311,11 @@ class SearchDetail extends Component
         if ($this->categorySlug) $this->loadCategoryDetails();
     }
     
+    public function removeCity($cityId)
+    {
+        $this->selectedCities = array_values(array_filter($this->selectedCities, fn($id) => $id !== $cityId));
+    }
+
     public function removeCustomFilter($fieldId, $optionKey)
     {
         if (isset($this->customFilters[$fieldId]) && is_array($this->customFilters[$fieldId])) {
@@ -347,10 +371,12 @@ class SearchDetail extends Component
         
         if ($this->minPrice > 0 || $this->maxPrice < 500000) { $query->whereBetween('price', [(int)$this->minPrice, (int)$this->maxPrice]); }
         
-        $query->when($this->latitude && $this->longitude, function ($q) {
+        if (!empty($this->selectedCities)) {
+            $query->whereIn('city', $this->selectedCities);
+        } elseif ($this->latitude && $this->longitude) {
             $cityIds = TblPost::get_surrounding_city_ids($this->latitude, $this->longitude, $this->distance);
-            if (!empty($cityIds)) { $q->whereIn('city', $cityIds); } else { $q->whereRaw('1 = 0'); }
-        });
+            if (!empty($cityIds)) { $query->whereIn('city', $cityIds); } else { $query->whereRaw('1 = 0'); }
+        }
         
         if (isset($this->customFilters)) {
              $query->applyCustomFilters($this->customFilters);

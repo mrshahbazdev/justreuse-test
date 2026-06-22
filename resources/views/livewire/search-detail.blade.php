@@ -232,7 +232,6 @@
                     </div>
 
                 @elseif($filter->type === 'main_category_radio')
-                    @if($filter->options->count() > 5)
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search categories</span>
                         <div class="af-modal-search-wrap">
@@ -240,7 +239,6 @@
                             <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
-                    @endif
                     <ul class="af-options-list">
                         @foreach($filter->options->sortBy('title') as $option)
                         <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-mcat-{{ $option->id }}">
@@ -259,7 +257,6 @@
                     </ul>
 
                 @elseif($filter->type === 'radio')
-                    @if($filter->options->count() > 5)
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
@@ -267,7 +264,6 @@
                             <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
-                    @endif
                     <ul class="af-options-list">
                         @foreach($filter->options->sortBy('title') as $option)
                         <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-sub-{{ $option->id }}">
@@ -286,7 +282,6 @@
                     </ul>
 
                 @else
-                    @if($filter->options->count() > 5)
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
@@ -294,7 +289,6 @@
                             <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
-                    @endif
                     <ul class="af-options-list">
                         @foreach($filter->options->sortBy('key') as $option)
                         <li data-search-text="{{ strtolower($option->key) }}" wire:key="af-cust-{{ $option->id }}">

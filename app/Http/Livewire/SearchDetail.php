@@ -22,6 +22,7 @@ class SearchDetail extends Component
     public $customFilters = [];
     public $customFieldsForView = [];
     public $selectedCities = [];
+    public $locationText = '';
 
     public $showFilterModal = false;
     public $modalHistory = [];
@@ -44,6 +45,7 @@ class SearchDetail extends Component
         'longitude' => ['except' => '', 'as' => 'lng'],
         'customFilters' => ['except' => []],
         'selectedCities' => ['except' => [], 'as' => 'cities'],
+        'locationText' => ['except' => '', 'as' => 'loc'],
     ];
     
     private function getFilterGroup($filterName, $categoryName = null)
@@ -219,22 +221,6 @@ class SearchDetail extends Component
             }
         }
 
-        $citiesWithPosts = TblCity::whereIn('id', function ($q) {
-            $q->select('city')->from('tbl_posts')
-              ->where('active', 1)->where('sold_status', 0)->whereNull('deleted_at')
-              ->distinct();
-        })->orderBy('name')->get();
-
-        if ($citiesWithPosts->isNotEmpty()) {
-            $allFilters->push((object)[
-                'id'      => 'location',
-                'name'    => 'Location',
-                'type'    => 'location',
-                'options' => $citiesWithPosts,
-                'group'   => 'General',
-            ]);
-        }
-
         $allFilters->push((object)[
             'id'      => 'price_range',
             'name'    => 'Price Range',
@@ -266,7 +252,7 @@ class SearchDetail extends Component
 
     public function clearAllFilters()
     {
-        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance', 'selectedCities']);
+        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance', 'selectedCities', 'locationText', 'latitude', 'longitude']);
         $this->selectedCategory = null;
         $this->subCategories = collect();
         $this->minPrice = 0;
@@ -311,6 +297,20 @@ class SearchDetail extends Component
         if ($this->categorySlug) $this->loadCategoryDetails();
     }
     
+    public function setLocation($lat, $lng, $text)
+    {
+        $this->latitude = $lat;
+        $this->longitude = $lng;
+        $this->locationText = $text;
+    }
+
+    public function clearLocation()
+    {
+        $this->latitude = null;
+        $this->longitude = null;
+        $this->locationText = '';
+    }
+
     public function removeCity($cityId)
     {
         $this->selectedCities = array_values(array_filter($this->selectedCities, fn($id) => $id !== $cityId));

@@ -24,7 +24,7 @@
     </div>
 
     @php
-        $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || collect($customFilters)->flatten()->filter()->isNotEmpty();
+        $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || !empty($selectedCities) || collect($customFilters)->flatten()->filter()->isNotEmpty();
         $allFiltersList = $this->allFilters->values();
     @endphp
 
@@ -65,7 +65,11 @@
                     } elseif ($filter->id === 'distance' && $distance != 500) {
                         $activeCount = 1;
                         $activeValue = $distance . ' km';
-                    } elseif (!in_array($filter->type, ['price', 'distance', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id])) {
+                    } elseif ($filter->id === 'location' && !empty($selectedCities)) {
+                        $activeCount = count($selectedCities);
+                        $cityNames = $filter->options->whereIn('id', $selectedCities)->pluck('name')->toArray();
+                        $activeValue = implode(', ', array_slice($cityNames, 0, 2)) . (count($cityNames) > 2 ? '…' : '');
+                    } elseif (!in_array($filter->type, ['price', 'distance', 'location', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id])) {
                         $vals = array_filter($customFilters[$filter->id]);
                         $activeCount = count($vals);
                         $activeValue = implode(', ', array_slice($vals, 0, 2)) . (count($vals) > 2 ? '…' : '');
@@ -87,6 +91,8 @@
                                 <button class="af-remove-val" wire:click="clearPriceFilter" title="Remove"><i class="fas fa-times-circle"></i></button>
                             @elseif($filter->id === 'distance')
                                 <button class="af-remove-val" wire:click="$set('distance', 500)" title="Remove"><i class="fas fa-times-circle"></i></button>
+                            @elseif($filter->id === 'location')
+                                <button class="af-remove-val" wire:click="$set('selectedCities', [])" title="Remove"><i class="fas fa-times-circle"></i></button>
                             @else
                                 @foreach(array_filter($customFilters[$filter->id] ?? []) as $cv)
                                     <button class="af-remove-val" wire:click="removeCustomFilter('{{ $filter->id }}', '{{ $cv }}')" title="Remove {{ $cv }}"><i class="fas fa-times-circle"></i></button>
@@ -140,6 +146,20 @@
                         <button wire:click="clearPriceFilter"><i class="fas fa-times"></i></button>
                     </span>
                 @endif
+                @if(!empty($selectedCities))
+                    @php $allCitiesList = $this->allFilters->firstWhere('id', 'location'); @endphp
+                    @if($allCitiesList)
+                        @foreach($selectedCities as $cityId)
+                            @php $cityObj = $allCitiesList->options->firstWhere('id', $cityId); @endphp
+                            @if($cityObj)
+                            <span class="af-chip">
+                                <i class="fas fa-map-marker-alt" style="margin-right:4px"></i>{{ $cityObj->name }}
+                                <button wire:click="removeCity('{{ $cityId }}')"><i class="fas fa-times"></i></button>
+                            </span>
+                            @endif
+                        @endforeach
+                    @endif
+                @endif
                 @foreach($customFilters as $fieldId => $values)
                     @if(is_array($values))
                         @foreach($values as $val)
@@ -155,7 +175,7 @@
             </div>
             @endif
 
-            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters" style="display:none;" class="af-loading">
+            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, selectedCities, customFilters" style="display:none;" class="af-loading">
                 <div class="af-spinner"></div>
                 <span>Updating results...</span>
             </div>
@@ -230,6 +250,30 @@
                             <span>{{ $maxDistance }} km</span>
                         </div>
                     </div>
+
+                @elseif($filter->type === 'location')
+                    <div class="af-modal-search">
+                        <span class="af-modal-search-label">Search cities</span>
+                        <div class="af-modal-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
+                        </div>
+                    </div>
+                    <ul class="af-options-list">
+                        @foreach($filter->options as $option)
+                        <li data-search-text="{{ strtolower($option->name) }}" wire:key="af-loc-{{ $option->id }}">
+                            <label class="af-option-label">
+                                <input type="checkbox"
+                                       class="af-checkbox-input"
+                                       wire:model.live="selectedCities"
+                                       value="{{ $option->id }}">
+                                <span class="af-checkbox-mark"></span>
+                                <span class="af-option-text">{{ $option->name }}</span>
+                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                            </label>
+                        </li>
+                        @endforeach
+                    </ul>
 
                 @elseif($filter->type === 'main_category_radio')
                     <div class="af-modal-search">
@@ -315,7 +359,9 @@
                     <button class="af-modal-clear" wire:click="clearPriceFilter">Clear</button>
                 @elseif($filter->type === 'distance' && $distance != 500)
                     <button class="af-modal-clear" wire:click="$set('distance', 500)">Clear</button>
-                @elseif(!in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
+                @elseif($filter->type === 'location' && !empty($selectedCities))
+                    <button class="af-modal-clear" wire:click="$set('selectedCities', [])">Clear</button>
+                @elseif(!in_array($filter->type, ['price', 'distance', 'location', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
                     <button class="af-modal-clear" wire:click="$set('customFilters.{{ $filter->id }}', [])">Clear</button>
                 @else
                     <span></span>

@@ -109,164 +109,6 @@
         {{-- Mobile overlay --}}
         <div class="af-sidebar-overlay" x-show="mobileOpen" x-transition.opacity @click="closeMobile()" style="display:none"></div>
 
-        {{-- POPUP MODALS for each filter --}}
-        @foreach($allFiltersList as $idx => $filter)
-        <div class="af-modal-overlay"
-             x-show="openFilter === '{{ $filter->id }}'"
-             x-transition:enter="af-modal-enter"
-             x-transition:enter-start="af-modal-enter-start"
-             x-transition:enter-end="af-modal-enter-end"
-             x-transition:leave="af-modal-leave"
-             x-transition:leave-start="af-modal-leave-start"
-             x-transition:leave-end="af-modal-leave-end"
-             @click="closeModal()"
-             style="display:none"
-             wire:key="af-modal-{{ $filter->id }}">
-            <div class="af-modal" @click.stop>
-                {{-- Modal Header --}}
-                <div class="af-modal-header">
-                    <h3 class="af-modal-title">{{ $filter->name }}</h3>
-                    <button class="af-modal-close" @click="closeModal()"><i class="fas fa-times"></i></button>
-                </div>
-
-                {{-- Modal Body --}}
-                <div class="af-modal-body">
-                    @if($filter->type === 'price')
-                        <div class="af-price-section">
-                            <div class="af-price-row">
-                                <div class="af-price-field">
-                                    <label>Min Price</label>
-                                    <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
-                                </div>
-                                <span class="af-price-dash">–</span>
-                                <div class="af-price-field">
-                                    <label>Max Price</label>
-                                    <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
-                                </div>
-                            </div>
-                            <div class="af-price-slider">
-                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice">
-                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice">
-                            </div>
-                            <div class="af-price-labels">
-                                <span>{{ number_format($minPrice) }}</span>
-                                <span>{{ number_format($maxPrice) }}</span>
-                            </div>
-                        </div>
-
-                    @elseif($filter->type === 'distance')
-                        <div class="af-distance-section">
-                            <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="af-distance-slider">
-                            <div class="af-distance-labels">
-                                <span>500 km</span>
-                                <span class="af-distance-current">{{ $distance }} km</span>
-                                <span>{{ $maxDistance }} km</span>
-                            </div>
-                        </div>
-
-                    @elseif($filter->type === 'main_category_radio')
-                        @if($filter->options->count() > 5)
-                        <div class="af-modal-search">
-                            <span class="af-modal-search-label">Search categories</span>
-                            <div class="af-modal-search-wrap">
-                                <i class="fas fa-search"></i>
-                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
-                            </div>
-                        </div>
-                        @endif
-                        <ul class="af-options-list">
-                            @foreach($filter->options as $option)
-                            <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-mcat-{{ $option->id }}">
-                                <label class="af-option-label">
-                                    <input type="checkbox"
-                                           class="af-checkbox-input"
-                                           value="{{ $option->slug }}"
-                                           @if($categorySlug === $option->slug) checked @endif
-                                           wire:click="$set('categorySlug', '{{ $option->slug }}')">
-                                    <span class="af-checkbox-mark"></span>
-                                    <span class="af-option-text">{{ $option->title }}</span>
-                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                                </label>
-                            </li>
-                            @endforeach
-                        </ul>
-
-                    @elseif($filter->type === 'radio')
-                        @if($filter->options->count() > 5)
-                        <div class="af-modal-search">
-                            <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
-                            <div class="af-modal-search-wrap">
-                                <i class="fas fa-search"></i>
-                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
-                            </div>
-                        </div>
-                        @endif
-                        <ul class="af-options-list">
-                            @foreach($filter->options as $option)
-                            <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-sub-{{ $option->id }}">
-                                <label class="af-option-label">
-                                    <input type="checkbox"
-                                           class="af-checkbox-input"
-                                           value="{{ $option->slug }}"
-                                           @if($selectedSubCategory === $option->slug) checked @endif
-                                           wire:click="$set('selectedSubCategory', '{{ $option->slug }}')">
-                                    <span class="af-checkbox-mark"></span>
-                                    <span class="af-option-text">{{ $option->title }}</span>
-                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                                </label>
-                            </li>
-                            @endforeach
-                        </ul>
-
-                    @else
-                        @if($filter->options->count() > 5)
-                        <div class="af-modal-search">
-                            <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
-                            <div class="af-modal-search-wrap">
-                                <i class="fas fa-search"></i>
-                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
-                            </div>
-                        </div>
-                        @endif
-                        <ul class="af-options-list">
-                            @foreach($filter->options as $option)
-                            <li x-show="!filterSearch || '{{ strtolower($option->key) }}'.includes(filterSearch.toLowerCase())" wire:key="af-cust-{{ $option->id }}">
-                                <label class="af-option-label">
-                                    <input type="checkbox"
-                                           class="af-checkbox-input"
-                                           wire:model.live="customFilters.{{ $filter->id }}"
-                                           value="{{ $option->key }}">
-                                    <span class="af-checkbox-mark"></span>
-                                    <span class="af-option-text">{{ $option->key }}</span>
-                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                                </label>
-                            </li>
-                            @endforeach
-                        </ul>
-                    @endif
-                </div>
-
-                {{-- Modal Footer --}}
-                <div class="af-modal-footer">
-                    @if($filter->type === 'main_category_radio' && $categorySlug)
-                        <button class="af-modal-clear" wire:click="$set('categorySlug', '')">Clear</button>
-                    @elseif($filter->type === 'radio' && $selectedSubCategory)
-                        <button class="af-modal-clear" wire:click="removeSubCategory()">Clear</button>
-                    @elseif($filter->type === 'price' && ($minPrice > 0 || $maxPrice < 500000))
-                        <button class="af-modal-clear" wire:click="clearPriceFilter">Clear</button>
-                    @elseif($filter->type === 'distance' && $distance != 500)
-                        <button class="af-modal-clear" wire:click="$set('distance', 500)">Clear</button>
-                    @elseif(!in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
-                        <button class="af-modal-clear" wire:click="$set('customFilters.{{ $filter->id }}', [])">Clear</button>
-                    @else
-                        <span></span>
-                    @endif
-                    <button class="af-modal-search-btn" @click="closeModal()">Search</button>
-                </div>
-            </div>
-        </div>
-        @endforeach
-
         {{-- MAIN CONTENT --}}
         <main class="af-main">
             <div class="af-topbar">
@@ -348,6 +190,159 @@
             @endif
         </main>
     </div>
+
+    {{-- POPUP MODALS — outside flex container for proper stacking --}}
+    @foreach($allFiltersList as $idx => $filter)
+    <div class="af-modal-overlay"
+         x-show="openFilter === '{{ $filter->id }}'"
+         x-transition:enter="af-modal-enter"
+         x-transition:enter-start="af-modal-enter-start"
+         x-transition:enter-end="af-modal-enter-end"
+         x-transition:leave="af-modal-leave"
+         x-transition:leave-start="af-modal-leave-start"
+         x-transition:leave-end="af-modal-leave-end"
+         @click="closeModal()"
+         style="display:none"
+         wire:key="af-modal-{{ $filter->id }}">
+        <div class="af-modal" @click.stop>
+            <div class="af-modal-header">
+                <h3 class="af-modal-title">{{ $filter->name }}</h3>
+                <button class="af-modal-close" @click="closeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="af-modal-body">
+                @if($filter->type === 'price')
+                    <div class="af-price-section">
+                        <div class="af-price-row">
+                            <div class="af-price-field">
+                                <label>Min Price</label>
+                                <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
+                            </div>
+                            <span class="af-price-dash">–</span>
+                            <div class="af-price-field">
+                                <label>Max Price</label>
+                                <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
+                            </div>
+                        </div>
+                        <div class="af-price-slider">
+                            <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice">
+                            <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice">
+                        </div>
+                        <div class="af-price-labels">
+                            <span>{{ number_format($minPrice) }}</span>
+                            <span>{{ number_format($maxPrice) }}</span>
+                        </div>
+                    </div>
+
+                @elseif($filter->type === 'distance')
+                    <div class="af-distance-section">
+                        <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="af-distance-slider">
+                        <div class="af-distance-labels">
+                            <span>500 km</span>
+                            <span class="af-distance-current">{{ $distance }} km</span>
+                            <span>{{ $maxDistance }} km</span>
+                        </div>
+                    </div>
+
+                @elseif($filter->type === 'main_category_radio')
+                    @if($filter->options->count() > 5)
+                    <div class="af-modal-search">
+                        <span class="af-modal-search-label">Search categories</span>
+                        <div class="af-modal-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                        </div>
+                    </div>
+                    @endif
+                    <ul class="af-options-list">
+                        @foreach($filter->options as $option)
+                        <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-mcat-{{ $option->id }}">
+                            <label class="af-option-label">
+                                <input type="checkbox"
+                                       class="af-checkbox-input"
+                                       value="{{ $option->slug }}"
+                                       @if($categorySlug === $option->slug) checked @endif
+                                       wire:click="$set('categorySlug', '{{ $option->slug }}')">
+                                <span class="af-checkbox-mark"></span>
+                                <span class="af-option-text">{{ $option->title }}</span>
+                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                            </label>
+                        </li>
+                        @endforeach
+                    </ul>
+
+                @elseif($filter->type === 'radio')
+                    @if($filter->options->count() > 5)
+                    <div class="af-modal-search">
+                        <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
+                        <div class="af-modal-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                        </div>
+                    </div>
+                    @endif
+                    <ul class="af-options-list">
+                        @foreach($filter->options as $option)
+                        <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-sub-{{ $option->id }}">
+                            <label class="af-option-label">
+                                <input type="checkbox"
+                                       class="af-checkbox-input"
+                                       value="{{ $option->slug }}"
+                                       @if($selectedSubCategory === $option->slug) checked @endif
+                                       wire:click="$set('selectedSubCategory', '{{ $option->slug }}')">
+                                <span class="af-checkbox-mark"></span>
+                                <span class="af-option-text">{{ $option->title }}</span>
+                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                            </label>
+                        </li>
+                        @endforeach
+                    </ul>
+
+                @else
+                    @if($filter->options->count() > 5)
+                    <div class="af-modal-search">
+                        <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
+                        <div class="af-modal-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                        </div>
+                    </div>
+                    @endif
+                    <ul class="af-options-list">
+                        @foreach($filter->options as $option)
+                        <li x-show="!filterSearch || '{{ strtolower($option->key) }}'.includes(filterSearch.toLowerCase())" wire:key="af-cust-{{ $option->id }}">
+                            <label class="af-option-label">
+                                <input type="checkbox"
+                                       class="af-checkbox-input"
+                                       wire:model.live="customFilters.{{ $filter->id }}"
+                                       value="{{ $option->key }}">
+                                <span class="af-checkbox-mark"></span>
+                                <span class="af-option-text">{{ $option->key }}</span>
+                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                            </label>
+                        </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
+            <div class="af-modal-footer">
+                @if($filter->type === 'main_category_radio' && $categorySlug)
+                    <button class="af-modal-clear" wire:click="$set('categorySlug', '')">Clear</button>
+                @elseif($filter->type === 'radio' && $selectedSubCategory)
+                    <button class="af-modal-clear" wire:click="removeSubCategory()">Clear</button>
+                @elseif($filter->type === 'price' && ($minPrice > 0 || $maxPrice < 500000))
+                    <button class="af-modal-clear" wire:click="clearPriceFilter">Clear</button>
+                @elseif($filter->type === 'distance' && $distance != 500)
+                    <button class="af-modal-clear" wire:click="$set('distance', 500)">Clear</button>
+                @elseif(!in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
+                    <button class="af-modal-clear" wire:click="$set('customFilters.{{ $filter->id }}', [])">Clear</button>
+                @else
+                    <span></span>
+                @endif
+                <button class="af-modal-search-btn" @click="closeModal()">Search</button>
+            </div>
+        </div>
+    </div>
+    @endforeach
 
     <style>
     /* ========================================

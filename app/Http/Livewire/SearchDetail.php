@@ -207,7 +207,7 @@ class SearchDetail extends Component
                             'id'      => $modelFieldId,
                             'name'    => 'Model',
                             'type'    => 'checkbox-group',
-                            'options' => $modelOptions,
+                            'options' => $modelOptions->sortBy('key')->values(),
                             'group'   => $this->getFilterGroup('Model', $this->selectedCategory->title ?? null),
                             'form_field_name' => 'models_cascade',
                         ]);
@@ -295,12 +295,9 @@ class SearchDetail extends Component
     public function removeCustomFilter($fieldId, $optionKey)
     {
         if (isset($this->customFilters[$fieldId]) && is_array($this->customFilters[$fieldId])) {
-            $this->customFilters[$fieldId] = array_filter($this->customFilters[$fieldId], function ($val) use ($optionKey) {
+            $this->customFilters[$fieldId] = array_values(array_filter($this->customFilters[$fieldId], function ($val) use ($optionKey) {
                 return $val !== $optionKey;
-            });
-             if (empty($this->customFilters[$fieldId])) {
-                unset($this->customFilters[$fieldId]);
-            }
+            }));
         }
     }
 

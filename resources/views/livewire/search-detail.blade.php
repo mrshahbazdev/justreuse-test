@@ -1,4 +1,4 @@
-<div x-data="{ filterSearch: '', mobileOpen: false, closeMobile() { this.mobileOpen = false; } }">
+<div x-data="{ mobileOpen: false, closeMobile() { this.mobileOpen = false; } }">
 
     {{-- Search Section --}}
     <div class="af-search-section">
@@ -190,6 +190,7 @@
          data-af-modal="{{ $filter->id }}"
          onclick="window._afClose()"
          style="display:none"
+         wire:ignore.self
          wire:key="af-modal-{{ $filter->id }}">
         <div class="af-modal" onclick="event.stopPropagation()">
             <div class="af-modal-header">
@@ -236,13 +237,13 @@
                         <span class="af-modal-search-label">Search categories</span>
                         <div class="af-modal-search-wrap">
                             <i class="fas fa-search"></i>
-                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
                     @endif
                     <ul class="af-options-list">
-                        @foreach($filter->options as $option)
-                        <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-mcat-{{ $option->id }}">
+                        @foreach($filter->options->sortBy('title') as $option)
+                        <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-mcat-{{ $option->id }}">
                             <label class="af-option-label">
                                 <input type="checkbox"
                                        class="af-checkbox-input"
@@ -263,13 +264,13 @@
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
                             <i class="fas fa-search"></i>
-                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
                     @endif
                     <ul class="af-options-list">
-                        @foreach($filter->options as $option)
-                        <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-sub-{{ $option->id }}">
+                        @foreach($filter->options->sortBy('title') as $option)
+                        <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-sub-{{ $option->id }}">
                             <label class="af-option-label">
                                 <input type="checkbox"
                                        class="af-checkbox-input"
@@ -290,13 +291,13 @@
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
                             <i class="fas fa-search"></i>
-                            <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
                         </div>
                     </div>
                     @endif
                     <ul class="af-options-list">
-                        @foreach($filter->options as $option)
-                        <li x-show="!filterSearch || '{{ strtolower($option->key) }}'.includes(filterSearch.toLowerCase())" wire:key="af-cust-{{ $option->id }}">
+                        @foreach($filter->options->sortBy('key') as $option)
+                        <li data-search-text="{{ strtolower($option->key) }}" wire:key="af-cust-{{ $option->id }}">
                             <label class="af-option-label">
                                 <input type="checkbox"
                                        class="af-checkbox-input"
@@ -337,13 +338,27 @@
             id = String(id);
             document.body.style.overflow = 'hidden';
             document.querySelectorAll('[data-af-modal]').forEach(function(el) {
-                el.style.display = (el.getAttribute('data-af-modal') === id) ? 'flex' : 'none';
+                if (el.getAttribute('data-af-modal') === id) {
+                    el.style.display = 'flex';
+                    var searchInput = el.querySelector('.af-modal-search-input');
+                    if (searchInput) { searchInput.value = ''; window._afFilter(searchInput); }
+                } else {
+                    el.style.display = 'none';
+                }
             });
         };
         window._afClose = function() {
             document.body.style.overflow = '';
             document.querySelectorAll('[data-af-modal]').forEach(function(el) {
                 el.style.display = 'none';
+            });
+        };
+        window._afFilter = function(input) {
+            var query = input.value.toLowerCase();
+            var list = input.closest('.af-modal-body').querySelector('.af-options-list');
+            if (!list) return;
+            list.querySelectorAll('li[data-search-text]').forEach(function(li) {
+                li.style.display = li.getAttribute('data-search-text').includes(query) ? '' : 'none';
             });
         };
         document.addEventListener('keydown', function(e) {

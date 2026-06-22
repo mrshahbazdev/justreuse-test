@@ -156,7 +156,7 @@ class SearchDetail extends Component
             ]);
         }
         
-        $customFilters = collect($this->customFieldsForView)
+        $customFields = collect($this->customFieldsForView)
             ->where('form_field_name', '!=', 'modelswithbrand')
             ->filter(function ($field) {
                 return in_array($field->type, ['select', 'autocomplete', 'checkbox-group', 'radio-group']);
@@ -166,7 +166,55 @@ class SearchDetail extends Component
                 return $field;
             });
 
-        $allFilters = $allFilters->merge($customFilters);
+        foreach ($customFields as $field) {
+            $allFilters->push($field);
+
+            if ($field->form_field_name === 'brandwithmodel') {
+                $selectedBrands = $this->customFilters[$field->id] ?? [];
+                $selectedBrands = is_array($selectedBrands) ? array_filter($selectedBrands) : [];
+
+                if (!empty($selectedBrands)) {
+                    $modelOptions = collect();
+                    $brandOptions = TblFieldsOption::where('field_id', $field->id)
+                        ->whereIn('key', $selectedBrands)
+                        ->get();
+
+                    foreach ($brandOptions as $brandOpt) {
+                        if (!empty($brandOpt->value)) {
+                            $models = [];
+                            if (substr($brandOpt->value, 0, 1) === '[') {
+                                $models = json_decode($brandOpt->value, true) ?? [];
+                            } else {
+                                $models = array_map('trim', explode(',', $brandOpt->value));
+                            }
+                            foreach ($models as $model) {
+                                if ($model) {
+                                    $modelOptions->push((object)[
+                                        'id' => strtolower(str_replace(' ', '-', $model)),
+                                        'key' => $model,
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+
+                    if ($modelOptions->isNotEmpty()) {
+                        $modelFieldId = $field->id . '_models';
+                        if (!isset($this->customFilters[$modelFieldId])) {
+                            $this->customFilters[$modelFieldId] = [];
+                        }
+                        $allFilters->push((object)[
+                            'id'      => $modelFieldId,
+                            'name'    => 'Model',
+                            'type'    => 'checkbox-group',
+                            'options' => $modelOptions,
+                            'group'   => $this->getFilterGroup('Model', $this->selectedCategory->title ?? null),
+                            'form_field_name' => 'models_cascade',
+                        ]);
+                    }
+                }
+            }
+        }
 
         $allFilters->push((object)[
             'id'      => 'price_range',

@@ -1,35 +1,4 @@
-<div x-data="{
-    openFilter: null,
-    filterSearch: '',
-    mobileOpen: false,
-    openModal(id) {
-        this.openFilter = id;
-        this.filterSearch = '';
-        document.body.style.overflow = 'hidden';
-        this.$nextTick(() => {
-            document.querySelectorAll('[data-af-modal]').forEach(el => {
-                el.style.display = el.getAttribute('data-af-modal') === id ? 'flex' : 'none';
-            });
-        });
-    },
-    closeModal() {
-        this.openFilter = null;
-        this.filterSearch = '';
-        document.body.style.overflow = '';
-        document.querySelectorAll('[data-af-modal]').forEach(el => { el.style.display = 'none'; });
-    },
-    closeMobile() { this.mobileOpen = false; }
-}" @keydown.escape.window="closeModal(); closeMobile()"
-   x-init="Livewire.hook('message.processed', () => {
-       if (openFilter) {
-           $nextTick(() => {
-               document.querySelectorAll('[data-af-modal]').forEach(el => {
-                   el.style.display = el.getAttribute('data-af-modal') === openFilter ? 'flex' : 'none';
-               });
-           });
-       }
-   })"
->
+<div x-data="{ filterSearch: '', mobileOpen: false, closeMobile() { this.mobileOpen = false; } }">
 
     {{-- Search Section --}}
     <div class="af-search-section">
@@ -103,7 +72,7 @@
                     }
                 @endphp
                 <div class="af-filter-item" wire:key="af-item-{{ $filter->id }}">
-                    <div class="af-filter-row" @click="openModal('{{ $filter->id }}')">
+                    <div class="af-filter-row" onclick="window._afOpen('{{ $filter->id }}')">
                         <span class="af-filter-name">{{ $filter->name }}</span>
                         <span class="af-filter-chevron"><i class="fas fa-chevron-right"></i></span>
                     </div>
@@ -219,13 +188,13 @@
     @foreach($allFiltersList as $idx => $filter)
     <div class="af-modal-overlay"
          data-af-modal="{{ $filter->id }}"
-         @click="closeModal()"
+         onclick="window._afClose()"
          style="display:none"
          wire:key="af-modal-{{ $filter->id }}">
-        <div class="af-modal" @click.stop>
+        <div class="af-modal" onclick="event.stopPropagation()">
             <div class="af-modal-header">
                 <h3 class="af-modal-title">{{ $filter->name }}</h3>
-                <button class="af-modal-close" @click="closeModal()"><i class="fas fa-times"></i></button>
+                <button class="af-modal-close" onclick="window._afClose()"><i class="fas fa-times"></i></button>
             </div>
             <div class="af-modal-body">
                 @if($filter->type === 'price')
@@ -356,11 +325,32 @@
                 @else
                     <span></span>
                 @endif
-                <button class="af-modal-search-btn" @click="closeModal()">Search</button>
+                <button class="af-modal-search-btn" onclick="window._afClose()">Search</button>
             </div>
         </div>
     </div>
     @endforeach
+
+    <script>
+    (function() {
+        window._afOpen = function(id) {
+            id = String(id);
+            document.body.style.overflow = 'hidden';
+            document.querySelectorAll('[data-af-modal]').forEach(function(el) {
+                el.style.display = (el.getAttribute('data-af-modal') === id) ? 'flex' : 'none';
+            });
+        };
+        window._afClose = function() {
+            document.body.style.overflow = '';
+            document.querySelectorAll('[data-af-modal]').forEach(function(el) {
+                el.style.display = 'none';
+            });
+        };
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') window._afClose();
+        });
+    })();
+    </script>
 
     <style>
     /* ========================================

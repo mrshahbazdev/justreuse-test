@@ -1,16 +1,25 @@
-<div>
-    <div class="search-section">
-        <div class="search-content">
-            <h1 class="search-title">Find What You Need</h1>
-            <p class="search-subtitle">Browse through thousands of pre-loved goods in multiple categories.</p>
-            <div class="search-form">
-                <div class="search-input-group">
+<div x-data="{
+    openFilter: null,
+    filterSearch: '',
+    mobileOpen: false,
+    openModal(id) { this.openFilter = id; this.filterSearch = ''; document.body.style.overflow = 'hidden'; },
+    closeModal() { this.openFilter = null; this.filterSearch = ''; document.body.style.overflow = ''; },
+    closeMobile() { this.mobileOpen = false; }
+}" @keydown.escape.window="closeModal(); closeMobile()">
+
+    {{-- Search Section --}}
+    <div class="af-search-section">
+        <div class="af-search-content">
+            <h1 class="af-search-title">Find What You Need</h1>
+            <p class="af-search-subtitle">Browse through thousands of pre-loved goods in multiple categories.</p>
+            <div class="af-search-form">
+                <div class="af-search-group">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="What are you looking for?" wire:model.live.debounce.500ms="searchQuery" class="search-input">
+                    <input type="text" placeholder="What are you looking for?" wire:model.live.debounce.500ms="searchQuery" class="af-search-input">
                 </div>
-                <div class="search-input-group location-input-group">
+                <div class="af-search-group af-search-cat">
                     <i class="fas fa-list"></i>
-                    <select wire:model.live="categorySlug" class="category-select">
+                    <select wire:model.live="categorySlug" class="af-cat-select">
                         <option value="">All Categories</option>
                         @foreach ($allCategories as $category)
                             <option value="{{ $category->slug }}">{{ $category->title }}</option>
@@ -21,265 +30,251 @@
         </div>
     </div>
 
-    {{-- Active Filters + Filter Panel --}}
     @php
         $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || collect($customFilters)->flatten()->filter()->isNotEmpty();
         $allFiltersList = $this->allFilters->values();
     @endphp
 
-    {{-- Active Filters Chips Bar --}}
-    @if($hasActiveFilters)
-    <div class="active-filters-bar">
-        <div class="active-filters-inner">
-            <div class="active-filters-top">
-                <span class="active-filters-label"><i class="fas fa-filter"></i> Active Filters</span>
-                <button class="clear-all-btn" wire:click="clearAllFilters"><i class="fas fa-trash-alt"></i> Clear All</button>
+    {{-- Mobile Filter Button --}}
+    <button class="af-mobile-toggle" @click="mobileOpen = true">
+        <i class="fas fa-sliders-h"></i> Filters
+        @if($hasActiveFilters)<span class="af-mobile-badge">!</span>@endif
+    </button>
+
+    <div class="af-container">
+        {{-- LEFT SIDEBAR (Carsales-style) --}}
+        <aside class="af-sidebar" :class="{ 'af-sidebar-open': mobileOpen }">
+            {{-- Mobile close --}}
+            <button class="af-sidebar-close" @click="closeMobile()"><i class="fas fa-times"></i></button>
+
+            <div class="af-sidebar-head">
+                <h2 class="af-sidebar-title">Filters</h2>
+                @if($hasActiveFilters)
+                    <button class="af-clear-all" wire:click="clearAllFilters">Clear all</button>
+                @endif
             </div>
-            <div class="active-chips-list">
-                @if($categorySlug)
-                    <span class="active-chip chip-category">
-                        <i class="fas fa-folder"></i>
-                        {{ $allCategories->firstWhere('slug', $categorySlug)->title ?? $categorySlug }}
-                        <button wire:click="$set('categorySlug', '')" title="Remove"><i class="fas fa-times"></i></button>
-                    </span>
-                @endif
-                @if($selectedSubCategory)
-                    <span class="active-chip chip-subcategory">
-                        <i class="fas fa-folder-open"></i>
-                        {{ $subCategories->firstWhere('slug', $selectedSubCategory)->title ?? $selectedSubCategory }}
-                        <button wire:click="removeSubCategory()" title="Remove"><i class="fas fa-times"></i></button>
-                    </span>
-                @endif
-                @if($minPrice > 0 || $maxPrice < 500000)
-                    <span class="active-chip chip-price">
-                        <i class="fas fa-dollar-sign"></i>
-                        {{ number_format($minPrice) }} – {{ number_format($maxPrice) }}
-                        <button wire:click="clearPriceFilter" title="Remove"><i class="fas fa-times"></i></button>
-                    </span>
-                @endif
-                @foreach($customFilters as $fieldId => $values)
-                    @if(is_array($values))
-                        @foreach($values as $val)
-                            @if($val)
-                            <span class="active-chip chip-custom">
-                                <i class="fas fa-tag"></i>
-                                {{ $val }}
-                                <button wire:click="removeCustomFilter('{{ $fieldId }}', '{{ $val }}')" title="Remove"><i class="fas fa-times"></i></button>
-                            </span>
+
+            {{-- Filter Items List --}}
+            <div class="af-filter-list">
+                @foreach($allFiltersList as $idx => $filter)
+                @php
+                    $activeCount = 0;
+                    $activeValue = null;
+                    if ($filter->id === 'main_categories' && $categorySlug) {
+                        $activeCount = 1;
+                        $activeValue = $allCategories->firstWhere('slug', $categorySlug)->title ?? $categorySlug;
+                    } elseif ($filter->id === 'sub_categories' && $selectedSubCategory) {
+                        $activeCount = 1;
+                        $activeValue = $subCategories->firstWhere('slug', $selectedSubCategory)->title ?? $selectedSubCategory;
+                    } elseif ($filter->id === 'price_range' && ($minPrice > 0 || $maxPrice < 500000)) {
+                        $activeCount = 1;
+                        $activeValue = number_format($minPrice) . ' – ' . number_format($maxPrice);
+                    } elseif ($filter->id === 'distance' && $distance != 500) {
+                        $activeCount = 1;
+                        $activeValue = $distance . ' km';
+                    } elseif (!in_array($filter->type, ['price', 'distance', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id])) {
+                        $vals = array_filter($customFilters[$filter->id]);
+                        $activeCount = count($vals);
+                        $activeValue = implode(', ', array_slice($vals, 0, 2)) . (count($vals) > 2 ? '…' : '');
+                    }
+                @endphp
+                <div class="af-filter-item" wire:key="af-item-{{ $filter->id }}">
+                    <div class="af-filter-row" @click="openModal('{{ $filter->id }}')">
+                        <span class="af-filter-name">{{ $filter->name }}</span>
+                        <span class="af-filter-chevron"><i class="fas fa-chevron-right"></i></span>
+                    </div>
+                    @if($activeValue)
+                        <div class="af-filter-active-value">
+                            <span class="af-active-text">{{ $activeValue }}</span>
+                            @if($filter->id === 'main_categories')
+                                <button class="af-remove-val" wire:click="$set('categorySlug', '')" title="Remove"><i class="fas fa-times-circle"></i></button>
+                            @elseif($filter->id === 'sub_categories')
+                                <button class="af-remove-val" wire:click="removeSubCategory()" title="Remove"><i class="fas fa-times-circle"></i></button>
+                            @elseif($filter->id === 'price_range')
+                                <button class="af-remove-val" wire:click="clearPriceFilter" title="Remove"><i class="fas fa-times-circle"></i></button>
+                            @elseif($filter->id === 'distance')
+                                <button class="af-remove-val" wire:click="$set('distance', 500)" title="Remove"><i class="fas fa-times-circle"></i></button>
+                            @else
+                                @foreach(array_filter($customFilters[$filter->id] ?? []) as $cv)
+                                    <button class="af-remove-val" wire:click="removeCustomFilter('{{ $filter->id }}', '{{ $cv }}')" title="Remove {{ $cv }}"><i class="fas fa-times-circle"></i></button>
+                                @endforeach
                             @endif
-                        @endforeach
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </div>
-    @endif
-
-    {{-- Filter Modal Toggle + Step-by-Step Popup Modal --}}
-    <div class="filter-modal-toggle-bar">
-        <button class="filter-modal-open-btn" onclick="window._fm.open()">
-            <i class="fas fa-sliders-h"></i> Advanced Filters
-            @if($hasActiveFilters)
-                <span class="filter-modal-badge">!</span>
-            @endif
-        </button>
-    </div>
-
-    <div id="filterModal" class="fm-overlay" style="display:none" wire:ignore.self>
-        <div class="fm-container" onclick="event.stopPropagation()">
-            {{-- Modal Header --}}
-            <div class="fm-header">
-                <div class="fm-header-left">
-                    <button id="fmBackBtn" class="fm-back-btn" onclick="window._fm.prev()" style="display:none"><i class="fas fa-arrow-left"></i></button>
-                    <h3 class="fm-title"><i class="fas fa-filter"></i> Filters</h3>
-                </div>
-                <div class="fm-header-right">
-                    <span id="fmStepLabel" class="fm-step-label"></span>
-                    <button onclick="window._fm.close()" class="fm-close-btn"><i class="fas fa-times"></i></button>
-                </div>
-            </div>
-
-            {{-- Progress Bar --}}
-            <div class="fm-progress-bar">
-                <div id="fmProgressFill" class="fm-progress-fill"></div>
-            </div>
-
-            {{-- Modal Body — one step per filter --}}
-            <div class="fm-body" id="fmBody">
-                @foreach($allFiltersList as $stepIndex => $filter)
-                <div class="fm-step" data-step="{{ $stepIndex }}" style="display:none" wire:key="fm-step-{{ $filter->id }}">
-                    <div class="fm-step-header">
-                        <i class="{{ $this->getGroupIcon($filter->group ?? 'General') }} fm-step-icon"></i>
-                        <div>
-                            <h4 class="fm-step-name">{{ $filter->name }}</h4>
-                            <span class="fm-step-group">{{ $filter->group ?? '' }}</span>
                         </div>
-                    </div>
-                    <div class="fm-step-options">
-                        @if($filter->type === 'price')
-                            <div class="price-filter-inline">
-                                <div class="price-inputs-row">
-                                    <div class="price-input-wrap">
-                                        <label>Min</label>
-                                        <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
-                                    </div>
-                                    <span class="price-separator">–</span>
-                                    <div class="price-input-wrap">
-                                        <label>Max</label>
-                                        <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
-                                    </div>
-                                </div>
-                                <div class="price-range-slider-inline">
-                                    <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice" class="slider-min">
-                                    <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice" class="slider-max">
-                                </div>
-                                <div class="price-range-labels">
-                                    <span>{{ number_format($minPrice) }}</span>
-                                    <span>{{ number_format($maxPrice) }}</span>
-                                </div>
-                            </div>
-                        @elseif($filter->type === 'distance')
-                            <div class="distance-filter-inline">
-                                <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="distance-slider-inline">
-                                <div class="distance-labels">
-                                    <span>500 km</span>
-                                    <span class="distance-current">{{ $distance }} km</span>
-                                    <span>{{ $maxDistance }} km</span>
-                                </div>
-                            </div>
-                        @elseif($filter->type === 'main_category_radio')
-                            <ul class="filter-options-list">
-                                @foreach($filter->options as $option)
-                                    <li wire:key="fm-cat-{{ $option->id }}">
-                                        <label class="filter-option-label">
-                                            <input type="radio" wire:model.live="categorySlug" name="modalCatSlug" value="{{ $option->slug }}" class="filter-radio">
-                                            <span class="custom-radio-mark"></span>
-                                            <span class="option-text">{{ $option->title }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @elseif($filter->type === 'radio')
-                            <ul class="filter-options-list">
-                                @foreach($filter->options as $option)
-                                    <li wire:key="fm-sub-{{ $option->id }}">
-                                        <label class="filter-option-label">
-                                            <input type="radio" wire:model.live="selectedSubCategory" name="modalSubCat" value="{{ $option->slug }}" class="filter-radio">
-                                            <span class="custom-radio-mark"></span>
-                                            <span class="option-text">{{ $option->title }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <ul class="filter-options-list">
-                                @foreach($filter->options as $option)
-                                    <li wire:key="fm-opt-{{ $option->id }}">
-                                        <label class="filter-option-label">
-                                            <input type="checkbox" wire:model.live="customFilters.{{ $filter->id }}" value="{{ $option->key }}" class="filter-checkbox">
-                                            <span class="custom-check-mark"></span>
-                                            <span class="option-text">{{ $option->key }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
-                    </div>
+                    @endif
                 </div>
                 @endforeach
             </div>
+        </aside>
 
-            {{-- Modal Footer --}}
-            <div class="fm-footer">
-                <button id="fmBackFooter" class="fm-btn-back" onclick="window._fm.prev()" style="display:none">
-                    <i class="fas fa-chevron-left"></i> Back
-                </button>
-                <div id="fmFooterSpacer" class="fm-footer-spacer"></div>
-                <div class="fm-footer-right">
-                    <button class="fm-btn-apply" onclick="window._fm.close()"><i class="fas fa-check"></i> Apply & Close</button>
-                    <button id="fmNextBtn" class="fm-btn-next" onclick="window._fm.next()">Next <i class="fas fa-chevron-right"></i></button>
+        {{-- Mobile overlay --}}
+        <div class="af-sidebar-overlay" x-show="mobileOpen" x-transition.opacity @click="closeMobile()" style="display:none"></div>
+
+        {{-- POPUP MODALS for each filter --}}
+        @foreach($allFiltersList as $idx => $filter)
+        <div class="af-modal-overlay"
+             x-show="openFilter === '{{ $filter->id }}'"
+             x-transition:enter="af-modal-enter"
+             x-transition:enter-start="af-modal-enter-start"
+             x-transition:enter-end="af-modal-enter-end"
+             x-transition:leave="af-modal-leave"
+             x-transition:leave-start="af-modal-leave-start"
+             x-transition:leave-end="af-modal-leave-end"
+             @click="closeModal()"
+             style="display:none"
+             wire:key="af-modal-{{ $filter->id }}">
+            <div class="af-modal" @click.stop>
+                {{-- Modal Header --}}
+                <div class="af-modal-header">
+                    <h3 class="af-modal-title">{{ $filter->name }}</h3>
+                    <button class="af-modal-close" @click="closeModal()"><i class="fas fa-times"></i></button>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="af-modal-body">
+                    @if($filter->type === 'price')
+                        <div class="af-price-section">
+                            <div class="af-price-row">
+                                <div class="af-price-field">
+                                    <label>Min Price</label>
+                                    <input type="number" wire:model.live.debounce.500ms="minPrice" min="0" max="500000" placeholder="0">
+                                </div>
+                                <span class="af-price-dash">–</span>
+                                <div class="af-price-field">
+                                    <label>Max Price</label>
+                                    <input type="number" wire:model.live.debounce.500ms="maxPrice" min="0" max="500000" placeholder="500,000">
+                                </div>
+                            </div>
+                            <div class="af-price-slider">
+                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="minPrice">
+                                <input type="range" min="0" max="500000" step="1000" wire:model.live.debounce.300ms="maxPrice">
+                            </div>
+                            <div class="af-price-labels">
+                                <span>{{ number_format($minPrice) }}</span>
+                                <span>{{ number_format($maxPrice) }}</span>
+                            </div>
+                        </div>
+
+                    @elseif($filter->type === 'distance')
+                        <div class="af-distance-section">
+                            <input type="range" min="500" max="{{ $maxDistance }}" step="10" wire:model.live.debounce.300ms="distance" class="af-distance-slider">
+                            <div class="af-distance-labels">
+                                <span>500 km</span>
+                                <span class="af-distance-current">{{ $distance }} km</span>
+                                <span>{{ $maxDistance }} km</span>
+                            </div>
+                        </div>
+
+                    @elseif($filter->type === 'main_category_radio')
+                        @if($filter->options->count() > 5)
+                        <div class="af-modal-search">
+                            <span class="af-modal-search-label">Search categories</span>
+                            <div class="af-modal-search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            </div>
+                        </div>
+                        @endif
+                        <ul class="af-options-list">
+                            @foreach($filter->options as $option)
+                            <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-mcat-{{ $option->id }}">
+                                <label class="af-option-label">
+                                    <input type="checkbox"
+                                           class="af-checkbox-input"
+                                           value="{{ $option->slug }}"
+                                           @if($categorySlug === $option->slug) checked @endif
+                                           wire:click="$set('categorySlug', '{{ $option->slug }}')">
+                                    <span class="af-checkbox-mark"></span>
+                                    <span class="af-option-text">{{ $option->title }}</span>
+                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                </label>
+                            </li>
+                            @endforeach
+                        </ul>
+
+                    @elseif($filter->type === 'radio')
+                        @if($filter->options->count() > 5)
+                        <div class="af-modal-search">
+                            <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
+                            <div class="af-modal-search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            </div>
+                        </div>
+                        @endif
+                        <ul class="af-options-list">
+                            @foreach($filter->options as $option)
+                            <li x-show="!filterSearch || '{{ strtolower($option->title) }}'.includes(filterSearch.toLowerCase())" wire:key="af-sub-{{ $option->id }}">
+                                <label class="af-option-label">
+                                    <input type="checkbox"
+                                           class="af-checkbox-input"
+                                           value="{{ $option->slug }}"
+                                           @if($selectedSubCategory === $option->slug) checked @endif
+                                           wire:click="$set('selectedSubCategory', '{{ $option->slug }}')">
+                                    <span class="af-checkbox-mark"></span>
+                                    <span class="af-option-text">{{ $option->title }}</span>
+                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                </label>
+                            </li>
+                            @endforeach
+                        </ul>
+
+                    @else
+                        @if($filter->options->count() > 5)
+                        <div class="af-modal-search">
+                            <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
+                            <div class="af-modal-search-wrap">
+                                <i class="fas fa-search"></i>
+                                <input type="text" x-model="filterSearch" placeholder="Search..." class="af-modal-search-input">
+                            </div>
+                        </div>
+                        @endif
+                        <ul class="af-options-list">
+                            @foreach($filter->options as $option)
+                            <li x-show="!filterSearch || '{{ strtolower($option->key) }}'.includes(filterSearch.toLowerCase())" wire:key="af-cust-{{ $option->id }}">
+                                <label class="af-option-label">
+                                    <input type="checkbox"
+                                           class="af-checkbox-input"
+                                           wire:model.live="customFilters.{{ $filter->id }}"
+                                           value="{{ $option->key }}">
+                                    <span class="af-checkbox-mark"></span>
+                                    <span class="af-option-text">{{ $option->key }}</span>
+                                    <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                </label>
+                            </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="af-modal-footer">
+                    @if($filter->type === 'main_category_radio' && $categorySlug)
+                        <button class="af-modal-clear" wire:click="$set('categorySlug', '')">Clear</button>
+                    @elseif($filter->type === 'radio' && $selectedSubCategory)
+                        <button class="af-modal-clear" wire:click="removeSubCategory()">Clear</button>
+                    @elseif($filter->type === 'price' && ($minPrice > 0 || $maxPrice < 500000))
+                        <button class="af-modal-clear" wire:click="clearPriceFilter">Clear</button>
+                    @elseif($filter->type === 'distance' && $distance != 500)
+                        <button class="af-modal-clear" wire:click="$set('distance', 500)">Clear</button>
+                    @elseif(!in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
+                        <button class="af-modal-clear" wire:click="$set('customFilters.{{ $filter->id }}', [])">Clear</button>
+                    @else
+                        <span></span>
+                    @endif
+                    <button class="af-modal-search-btn" @click="closeModal()">Search</button>
                 </div>
             </div>
         </div>
-    </div>
+        @endforeach
 
-    <script>
-    (function() {
-        var step = 0;
-        var syncing = false;
-        function getSteps() { return document.querySelectorAll('#fmBody .fm-step'); }
-        function syncUI() {
-            if (syncing) return;
-            syncing = true;
-            var steps = getSteps();
-            var total = steps.length || 1;
-            if (step >= total) step = total - 1;
-            if (step < 0) step = 0;
-            for (var i = 0; i < steps.length; i++) { steps[i].style.display = (i === step) ? '' : 'none'; }
-            var label = document.getElementById('fmStepLabel');
-            if (label) label.textContent = 'Step ' + (step + 1) + ' / ' + total;
-            var fill = document.getElementById('fmProgressFill');
-            if (fill) fill.style.width = ((step + 1) / total * 100) + '%';
-            var backBtn = document.getElementById('fmBackBtn');
-            var backFooter = document.getElementById('fmBackFooter');
-            var spacer = document.getElementById('fmFooterSpacer');
-            var nextBtn = document.getElementById('fmNextBtn');
-            if (backBtn) backBtn.style.display = step > 0 ? '' : 'none';
-            if (backFooter) backFooter.style.display = step > 0 ? '' : 'none';
-            if (spacer) spacer.style.display = step > 0 ? 'none' : '';
-            if (nextBtn) nextBtn.style.display = step < total - 1 ? '' : 'none';
-            syncing = false;
-        }
-        window._fm = {
-            open: function() {
-                step = 0;
-                document.getElementById('filterModal').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                syncUI();
-            },
-            close: function() {
-                document.getElementById('filterModal').style.display = 'none';
-                document.body.style.overflow = '';
-            },
-            next: function() { step++; syncUI(); },
-            prev: function() { step--; syncUI(); }
-        };
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('filterModal').style.display === 'flex') {
-                window._fm.close();
-            }
-        });
-        // Observe filterModal (persists due to wire:ignore.self) for child changes
-        var modal = document.getElementById('filterModal');
-        if (modal) {
-            var syncTimer = null;
-            new MutationObserver(function() {
-                if (syncing) return;
-                clearTimeout(syncTimer);
-                syncTimer = setTimeout(function() {
-                    if (modal.style.display === 'flex') syncUI();
-                }, 100);
-            }).observe(modal, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
-        }
-        // Polling fallback: if modal is open and current step is hidden, re-sync
-        setInterval(function() {
-            var m = document.getElementById('filterModal');
-            if (m && m.style.display === 'flex') {
-                var steps = getSteps();
-                if (steps.length > 0 && step < steps.length && steps[step].style.display === 'none') {
-                    syncUI();
-                }
-            }
-        }, 300);
-    })();
-    </script>
-
-    <div class="container">
-        <main class="main-content">
-            <div class="top-bar">
-                <div class="results-count">Showing {{ $filtered_data->count() }} of {{ $total_posts }} results</div>
-                <div class="sort-options">
-                    <label>Sort By:</label>
+        {{-- MAIN CONTENT --}}
+        <main class="af-main">
+            <div class="af-topbar">
+                <div class="af-results-count">
+                    {{ $total_posts }} results
+                </div>
+                <div class="af-sort">
+                    <label>Sort by</label>
                     <select wire:model.live="sortBy">
                         <option value="post-desc">Recently Posted</option>
                         <option value="price-asc">Price: Low to High</option>
@@ -289,674 +284,819 @@
                 </div>
             </div>
 
-            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters" style="display:none;" class="loading-overlay">
-                <div class="loading-spinner"></div>
-                <span class="loading-text">Updating results...</span>
+            {{-- Active Filters Chips --}}
+            @if($hasActiveFilters)
+            <div class="af-active-bar">
+                @if($categorySlug)
+                    <span class="af-chip">
+                        {{ $allCategories->firstWhere('slug', $categorySlug)->title ?? $categorySlug }}
+                        <button wire:click="$set('categorySlug', '')"><i class="fas fa-times"></i></button>
+                    </span>
+                @endif
+                @if($selectedSubCategory)
+                    <span class="af-chip">
+                        {{ $subCategories->firstWhere('slug', $selectedSubCategory)->title ?? $selectedSubCategory }}
+                        <button wire:click="removeSubCategory()"><i class="fas fa-times"></i></button>
+                    </span>
+                @endif
+                @if($minPrice > 0 || $maxPrice < 500000)
+                    <span class="af-chip af-chip-price">
+                        {{ number_format($minPrice) }} – {{ number_format($maxPrice) }}
+                        <button wire:click="clearPriceFilter"><i class="fas fa-times"></i></button>
+                    </span>
+                @endif
+                @foreach($customFilters as $fieldId => $values)
+                    @if(is_array($values))
+                        @foreach($values as $val)
+                            @if($val)
+                            <span class="af-chip">
+                                {{ $val }}
+                                <button wire:click="removeCustomFilter('{{ $fieldId }}', '{{ $val }}')"><i class="fas fa-times"></i></button>
+                            </span>
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+            </div>
+            @endif
+
+            <div wire:loading wire:target="searchQuery, categorySlug, selectedSubCategory, minPrice, maxPrice, sortBy, distance, customFilters" style="display:none;" class="af-loading">
+                <div class="af-spinner"></div>
+                <span>Updating results...</span>
             </div>
 
-            <div class="card-grid">
+            <div class="af-grid">
                 @forelse($filtered_data as $product)
                     @php $adHtml = App\Models\Setting::htmlAdBlock($product->id); @endphp
                     @if(!empty(trim($adHtml)))
                         {!! $adHtml !!}
                     @endif
                 @empty
-                    <div class="empty-state">
+                    <div class="af-empty">
                         <i class="fas fa-search"></i>
                         <h3>No products found</h3>
                         <p>Try adjusting your filters or search query.</p>
-                        <button class="clear-filters-empty" wire:click="clearAllFilters"><i class="fas fa-times"></i> Clear All Filters</button>
+                        <button class="af-empty-btn" wire:click="clearAllFilters"><i class="fas fa-times"></i> Clear All Filters</button>
                     </div>
                 @endforelse
             </div>
 
             @if($filtered_data->count() < $total_posts)
-                <div class="load-more-btn-container">
-                    <button class="load-more-btn" wire:click="loadMore"><i class="fas fa-arrow-down"></i> Load More</button>
+                <div class="af-loadmore-wrap">
+                    <button class="af-loadmore-btn" wire:click="loadMore"><i class="fas fa-arrow-down"></i> Load More</button>
                 </div>
             @endif
         </main>
     </div>
 
     <style>
-        /* ===== Card Grid ===== */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 20px;
-        }
-        .card-grid > div:empty { display: none; }
-        @media (max-width: 768px) {
-            .card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        }
-        @media (max-width: 480px) {
-            .card-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        }
+    /* ========================================
+       Advanced Filter — Carsales-style
+       All classes prefixed with af-
+       ======================================== */
 
-        /* ===== Active Filters Bar ===== */
-        .active-filters-bar {
-            max-width: 1200px;
-            margin: 0 auto 16px;
-            padding: 0 25px;
-        }
-        .active-filters-inner {
-            background: #fff;
-            padding: 16px 20px;
-            border-radius: 14px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .active-filters-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        .active-filters-label {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-        .active-filters-label i {
-            margin-right: 6px;
-            color: var(--primary);
-        }
-        .active-chips-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .active-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: #f8f9fa;
-            color: #374151;
-            padding: 7px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        .active-chip:hover { background: #f0f1f3; border-color: #d1d5db; }
-        .active-chip i:first-child { font-size: 11px; color: #9ca3af; }
-        .active-chip button {
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 0 0 0 2px;
-            line-height: 1;
-            transition: color 0.2s;
-        }
-        .active-chip button:hover { color: #dc2626; }
-        .active-chip.chip-category {
-            background: #fff7ed;
-            border-color: #fed7aa;
-            color: #c2410c;
-        }
-        .active-chip.chip-category i:first-child { color: #f97316; }
-        .active-chip.chip-subcategory {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #1d4ed8;
-        }
-        .active-chip.chip-subcategory i:first-child { color: #3b82f6; }
-        .active-chip.chip-price {
-            background: #f0fdf4;
-            border-color: #bbf7d0;
-            color: #15803d;
-        }
-        .active-chip.chip-price i:first-child { color: #22c55e; }
-        .active-chip.chip-custom {
-            background: #faf5ff;
-            border-color: #e9d5ff;
-            color: #7c3aed;
-        }
-        .active-chip.chip-custom i:first-child { color: #a78bfa; }
-        .clear-all-btn {
-            background: none;
-            color: #dc2626;
-            border: none;
-            padding: 4px 0;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .clear-all-btn:hover { opacity: 0.7; }
-        .clear-all-btn i { margin-right: 4px; font-size: 11px; }
+    /* Search Section */
+    .af-search-section {
+        background: #fff;
+        padding: 2.5rem 1.5rem;
+        margin: 20px auto;
+        max-width: 1200px;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid #e5e7eb;
+        position: relative;
+        overflow: hidden;
+    }
+    .af-search-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(248,153,27,0.04), rgba(57,118,58,0.04));
+        z-index: 0;
+    }
+    .af-search-content { position: relative; z-index: 1; }
+    .af-search-title {
+        text-align: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0 0 0.3rem;
+    }
+    .af-search-subtitle {
+        text-align: center;
+        font-size: 1rem;
+        color: #6b7280;
+        margin: 0 0 1.5rem;
+    }
+    .af-search-form {
+        display: flex;
+        gap: 10px;
+        background: #f9fafb;
+        padding: 8px;
+        border-radius: 10px;
+        border: 2px solid var(--primary);
+    }
+    .af-search-form:focus-within {
+        box-shadow: 0 0 0 3px rgba(248,153,27,0.15);
+    }
+    .af-search-group {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        background: #fff;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+    .af-search-group i {
+        color: #9ca3af;
+        margin-right: 10px;
+        font-size: 14px;
+    }
+    .af-search-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 15px;
+        background: transparent;
+        color: #1a1a2e;
+    }
+    .af-search-input::placeholder { color: #9ca3af; }
+    .af-search-cat { border-left: 1px solid #e5e7eb; }
+    .af-cat-select {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 15px;
+        color: #1a1a2e;
+        cursor: pointer;
+        flex: 1;
+        padding-left: 6px;
+    }
 
-        /* ===== Filter Modal Toggle Button ===== */
-        .filter-modal-toggle-bar {
-            max-width: 1200px;
-            margin: 0 auto 16px;
-            padding: 0 25px;
-            display: flex;
-            justify-content: flex-start;
-        }
-        .filter-modal-open-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #fff;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 30px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(248, 153, 27, 0.35);
-            transition: all 0.3s ease;
-        }
-        .filter-modal-open-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(248, 153, 27, 0.45);
-        }
-        .filter-modal-badge {
-            background: #dc2626;
-            color: #fff;
-            font-size: 10px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
+    /* Container */
+    .af-container {
+        display: flex;
+        gap: 24px;
+        padding: 0 24px 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-        /* ===== Filter Modal ===== */
-        [x-cloak] { display: none !important; }
+    /* ===== SIDEBAR ===== */
+    .af-sidebar {
+        width: 280px;
+        flex-shrink: 0;
+        position: sticky;
+        top: 80px;
+        height: fit-content;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #e5e7eb transparent;
+    }
+    .af-sidebar::-webkit-scrollbar { width: 3px; }
+    .af-sidebar::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+    .af-sidebar-close {
+        display: none;
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #6b7280;
+        cursor: pointer;
+        z-index: 10;
+    }
+    .af-sidebar-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 0 16px;
+    }
+    .af-sidebar-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0;
+    }
+    .af-clear-all {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        transition: opacity 0.2s;
+    }
+    .af-clear-all:hover { opacity: 0.7; }
 
-        .fm-overlay {
+    /* Filter Items */
+    .af-filter-list {
+        border-top: 1px solid #e5e7eb;
+    }
+    .af-filter-item {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .af-filter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 4px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        border-radius: 4px;
+    }
+    .af-filter-row:hover { background: #f9fafb; }
+    .af-filter-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #374151;
+    }
+    .af-filter-chevron {
+        color: #d1d5db;
+        font-size: 12px;
+        transition: color 0.2s;
+    }
+    .af-filter-row:hover .af-filter-chevron { color: #9ca3af; }
+
+    /* Active value under filter name */
+    .af-filter-active-value {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 4px 12px 16px;
+        flex-wrap: wrap;
+    }
+    .af-active-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--primary);
+    }
+    .af-remove-val {
+        background: none;
+        border: none;
+        color: var(--primary);
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    .af-remove-val:hover { opacity: 1; }
+
+    /* ===== POPUP MODAL ===== */
+    .af-modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(3px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .af-modal {
+        background: #fff;
+        border-radius: 14px;
+        width: 100%;
+        max-width: 520px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+    .af-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .af-modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin: 0;
+    }
+    .af-modal-close {
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #9ca3af;
+        cursor: pointer;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .af-modal-close:hover { background: #fee2e2; color: #dc2626; }
+
+    .af-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+        scrollbar-width: thin;
+        scrollbar-color: #e5e7eb transparent;
+    }
+    .af-modal-body::-webkit-scrollbar { width: 4px; }
+    .af-modal-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+
+    /* Modal Search */
+    .af-modal-search { margin-bottom: 16px; }
+    .af-modal-search-label {
+        display: block;
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 6px;
+    }
+    .af-modal-search-wrap {
+        position: relative;
+    }
+    .af-modal-search-wrap i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #d1d5db;
+        font-size: 13px;
+    }
+    .af-modal-search-input {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        background: #fff;
+        transition: border-color 0.2s;
+    }
+    .af-modal-search-input:focus { border-color: var(--primary); }
+
+    /* Options List */
+    .af-options-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .af-options-list li {
+        border-bottom: 1px solid #f5f5f5;
+    }
+    .af-options-list li:last-child { border-bottom: none; }
+    .af-option-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 4px;
+        cursor: pointer;
+        transition: background 0.15s;
+        border-radius: 4px;
+    }
+    .af-option-label:hover { background: #f9fafb; }
+
+    /* Custom Checkbox (Carsales-style) */
+    .af-checkbox-input { display: none; }
+    .af-checkbox-mark {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        color: transparent;
+        font-size: 12px;
+    }
+    .af-checkbox-mark::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+    }
+    .af-checkbox-input:checked + .af-checkbox-mark {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .af-option-text {
+        flex: 1;
+        font-size: 15px;
+        color: #374151;
+        font-weight: 400;
+    }
+    .af-option-count {
+        font-size: 11px;
+        color: #d1d5db;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Modal Footer */
+    .af-modal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
+        background: #fafbfc;
+    }
+    .af-modal-clear {
+        background: none;
+        border: none;
+        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0;
+        transition: opacity 0.2s;
+    }
+    .af-modal-clear:hover { opacity: 0.7; }
+    .af-modal-search-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .af-modal-search-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(248,153,27,0.3);
+    }
+
+    /* Modal transitions */
+    .af-modal-enter { transition: opacity 0.2s ease; }
+    .af-modal-enter-start { opacity: 0; }
+    .af-modal-enter-end { opacity: 1; }
+    .af-modal-leave { transition: opacity 0.15s ease; }
+    .af-modal-leave-start { opacity: 1; }
+    .af-modal-leave-end { opacity: 0; }
+
+    /* ===== PRICE Section inside modal ===== */
+    .af-price-section { padding: 4px 0; }
+    .af-price-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .af-price-field { flex: 1; }
+    .af-price-field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+    .af-price-field input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 15px;
+        outline: none;
+        text-align: center;
+        transition: border-color 0.2s;
+    }
+    .af-price-field input:focus { border-color: var(--primary); }
+    .af-price-dash {
+        font-size: 20px;
+        color: #d1d5db;
+        padding-bottom: 10px;
+    }
+    .af-price-slider {
+        position: relative;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        margin: 0 0 8px;
+    }
+    .af-price-slider input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        position: absolute;
+        top: 0;
+        background: transparent;
+        pointer-events: none;
+        z-index: 2;
+    }
+    .af-price-slider input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 20px;
+        width: 20px;
+        background: var(--primary);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .af-price-slider input[type="range"]::-moz-range-thumb {
+        height: 20px;
+        width: 20px;
+        background: var(--primary);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        pointer-events: all;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .af-price-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* ===== DISTANCE Section inside modal ===== */
+    .af-distance-section { padding: 4px 0; }
+    .af-distance-slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 6px;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+        border-radius: 3px;
+        outline: none;
+        margin: 10px 0 10px;
+    }
+    .af-distance-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        background: var(--secondary);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .af-distance-slider::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        background: var(--secondary);
+        border: 3px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .af-distance-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #6b7280;
+    }
+    .af-distance-current {
+        font-weight: 700;
+        color: var(--secondary);
+        font-size: 14px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .af-main { flex: 1; min-width: 0; }
+    .af-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 14px 20px;
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .af-results-count {
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    .af-sort {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .af-sort label {
+        font-size: 14px;
+        color: #374151;
+        font-weight: 500;
+    }
+    .af-sort select {
+        padding: 7px 12px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        font-size: 13px;
+        background: #fff;
+        cursor: pointer;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .af-sort select:focus { border-color: var(--primary); }
+
+    /* Active Filters Chips */
+    .af-active-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .af-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f3f4f6;
+        color: #374151;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+    .af-chip:hover { background: #e5e7eb; }
+    .af-chip button {
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0;
+        font-size: 11px;
+        transition: color 0.2s;
+    }
+    .af-chip button:hover { color: #dc2626; }
+    .af-chip-price { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+
+    /* Card Grid */
+    .af-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 20px;
+    }
+    .af-grid > div:empty { display: none; }
+
+    /* Loading */
+    .af-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        gap: 12px;
+    }
+    .af-spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        animation: af-spin 0.8s linear infinite;
+    }
+    @keyframes af-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .af-loading span { font-size: 14px; color: #6b7280; }
+
+    /* Empty State */
+    .af-empty {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #6b7280;
+    }
+    .af-empty i { font-size: 48px; color: #e5e7eb; margin-bottom: 16px; display: block; }
+    .af-empty h3 { font-size: 20px; font-weight: 600; color: #374151; margin: 0 0 8px; }
+    .af-empty p { font-size: 14px; margin: 0 0 20px; }
+    .af-empty-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .af-empty-btn:hover { opacity: 0.9; }
+
+    /* Load More */
+    .af-loadmore-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 24px;
+    }
+    .af-loadmore-btn {
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    .af-loadmore-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(248,153,27,0.3);
+    }
+
+    /* Mobile Filter Toggle */
+    .af-mobile-toggle {
+        display: none;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 998;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 30px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(248,153,27,0.4);
+        align-items: center;
+        gap: 8px;
+    }
+    .af-mobile-badge {
+        background: #dc2626;
+        color: #fff;
+        font-size: 10px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 4px;
+    }
+
+    /* Mobile sidebar overlay */
+    .af-sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0,0,0,0.4);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .af-mobile-toggle { display: flex; }
+        .af-sidebar {
             position: fixed;
-            inset: 0;
-            z-index: 9999;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .fm-container {
-            background: #fff;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 560px;
-            max-height: 85vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-        .fm-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            border-bottom: 1px solid #f0f0f0;
-            background: #fafbfc;
-        }
-        .fm-header-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .fm-header-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .fm-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0;
-        }
-        .fm-title i { color: var(--primary); margin-right: 8px; }
-        .fm-back-btn {
-            background: none;
-            border: 1px solid #e9ecef;
-            color: #495057;
-            width: 34px;
-            height: 34px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        .fm-back-btn:hover { background: #f0f0f0; }
-        .fm-step-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-            background: #fff7ed;
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-        .fm-close-btn {
-            background: none;
-            border: none;
-            font-size: 18px;
-            color: #adb5bd;
-            cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        .fm-close-btn:hover { background: #fee2e2; color: #dc2626; }
-
-        .fm-progress-bar {
-            height: 4px;
-            background: #e9ecef;
-            width: 100%;
-        }
-        .fm-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 0 4px 4px 0;
-            transition: width 0.35s ease;
-        }
-
-        .fm-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-            scrollbar-width: thin;
-            scrollbar-color: #dee2e6 transparent;
-        }
-        .fm-body::-webkit-scrollbar { width: 4px; }
-        .fm-body::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
-
-        .fm-step-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .fm-step-icon {
-            color: var(--primary);
-            font-size: 18px;
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #fff7ed, #ffe8cc);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .fm-step-name {
-            font-size: 17px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin: 0 0 2px;
-        }
-        .fm-step-group {
-            font-size: 12px;
-            color: #adb5bd;
-            font-weight: 500;
-        }
-
-        .fm-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px;
-            border-top: 1px solid #f0f0f0;
-            background: #fafbfc;
-            gap: 12px;
-        }
-        .fm-footer-spacer { flex: 1; }
-        .fm-footer-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-        .fm-btn-back {
-            background: #f0f0f0;
-            color: #495057;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
-        }
-        .fm-btn-back:hover { background: #e2e2e2; }
-        .fm-btn-apply {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-        }
-        .fm-btn-apply:hover { background: #c8e6c9; }
-        .fm-btn-next {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 10px rgba(248, 153, 27, 0.3);
-            transition: all 0.2s ease;
-        }
-        .fm-btn-next:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(248, 153, 27, 0.4); }
-
-        /* ===== Options List ===== */
-        .filter-options-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            max-height: 220px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #dee2e6 transparent;
-        }
-        .filter-options-list::-webkit-scrollbar { width: 4px; }
-        .filter-options-list::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 4px; }
-
-        .filter-options-list li { margin: 0; padding: 0; }
-
-        .filter-option-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 8px;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background 0.15s ease;
-            font-size: 14px;
-            color: #495057;
-        }
-        .filter-option-label:hover { background: #f8f9fa; }
-
-        /* Hidden native inputs */
-        .filter-radio, .filter-checkbox { display: none; }
-
-        /* Custom radio */
-        .custom-radio-mark {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #ced4da;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s ease;
-        }
-        .custom-radio-mark::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: transparent;
-            transition: background 0.2s ease;
-        }
-        .filter-radio:checked + .custom-radio-mark {
-            border-color: var(--primary);
-        }
-        .filter-radio:checked + .custom-radio-mark::after {
-            background: var(--primary);
-        }
-
-        /* Custom checkbox */
-        .custom-check-mark {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #ced4da;
-            border-radius: 5px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.2s ease;
-            font-size: 11px;
-            color: transparent;
-        }
-        .custom-check-mark::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-        }
-        .filter-checkbox:checked + .custom-check-mark {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-        }
-
-        .option-text { flex: 1; }
-
-        /* ===== Price Filter Inline ===== */
-        .price-filter-inline { padding: 4px 0; }
-        .price-inputs-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .price-input-wrap {
-            flex: 1;
-        }
-        .price-input-wrap label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            color: #adb5bd;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .price-input-wrap input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            text-align: center;
-            transition: border-color 0.2s ease;
-        }
-        .price-input-wrap input:focus { border-color: var(--primary); }
-        .price-separator {
-            font-size: 18px;
-            color: #ced4da;
-            padding-top: 18px;
-        }
-        .price-range-slider-inline {
-            position: relative;
-            height: 6px;
-            background: #e9ecef;
-            border-radius: 3px;
-            margin: 16px 0 8px;
-        }
-        .price-range-slider-inline input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            position: absolute;
             top: 0;
-            background: transparent;
-            pointer-events: none;
-            z-index: 2;
+            left: -320px;
+            width: 300px !important;
+            height: 100vh;
+            z-index: 1001;
+            background: #fff;
+            padding: 24px 20px;
+            border-radius: 0;
+            box-shadow: none;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            max-height: 100vh;
         }
-        .price-range-slider-inline input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
-            background: var(--primary);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: all;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            transition: transform 0.15s ease;
+        .af-sidebar.af-sidebar-open {
+            left: 0;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.15);
         }
-        .price-range-slider-inline input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
+        .af-sidebar-close { display: block; }
+        .af-container { padding: 0 16px 16px; }
+        .af-search-section { margin: 12px 16px; padding: 1.5rem 1rem; }
+    }
+    @media (max-width: 768px) {
+        .af-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .af-topbar { flex-direction: column; gap: 10px; align-items: flex-start; }
+        .af-search-form { flex-direction: column; }
+        .af-search-cat { border-left: none; border-top: 1px solid #e5e7eb; }
+        .af-modal-overlay { align-items: flex-end; padding: 0; }
+        .af-modal {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 14px 14px 0 0;
         }
-        .price-range-slider-inline input[type="range"]::-moz-range-thumb {
-            height: 20px;
-            width: 20px;
-            background: var(--primary);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: all;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-        .price-range-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        /* ===== Distance Filter Inline ===== */
-        .distance-filter-inline { padding: 4px 0; }
-        .distance-slider-inline {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            border-radius: 3px;
-            outline: none;
-            margin: 10px 0 8px;
-        }
-        .distance-slider-inline::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            background: var(--secondary);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            transition: transform 0.15s ease;
-        }
-        .distance-slider-inline::-webkit-slider-thumb:hover { transform: scale(1.15); }
-        .distance-slider-inline::-moz-range-thumb {
-            width: 22px;
-            height: 22px;
-            background: var(--secondary);
-            border: 3px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-        .distance-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #6c757d;
-        }
-        .distance-current {
-            font-weight: 700;
-            color: var(--secondary);
-            font-size: 14px;
-        }
-
-        /* ===== Loading Overlay ===== */
-        .loading-overlay {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
-            gap: 12px;
-        }
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text {
-            font-size: 14px;
-            color: var(--gray);
-            font-weight: 500;
-        }
-
-        /* ===== Empty State ===== */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: #6c757d;
-        }
-        .empty-state i {
-            font-size: 48px;
-            color: #dee2e6;
-            margin-bottom: 16px;
-        }
-        .empty-state h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-        .empty-state p { font-size: 14px; margin-bottom: 20px; }
-        .clear-filters-empty {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .clear-filters-empty:hover { opacity: 0.9; }
-        .clear-filters-empty i { margin-right: 6px; }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 768px) {
-            .filter-modal-toggle-bar { padding: 0 15px; }
-            .fm-overlay { align-items: flex-end; padding: 0; }
-            .fm-container {
-                max-width: 100%;
-                max-height: 90vh;
-                border-radius: 16px 16px 0 0;
-            }
-            .fm-body { padding: 16px; }
-            .fm-header { padding: 14px 16px; }
-            .fm-footer { padding: 14px 16px; }
-            .active-filters-bar { padding: 0 15px; }
-        }
+    }
+    @media (max-width: 480px) {
+        .af-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    }
     </style>
-
-
 </div>

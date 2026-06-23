@@ -245,31 +245,63 @@
                     </div>
 
                 @elseif($filter->type === 'main_category_radio')
-                    <div class="af-modal-search">
-                        <span class="af-modal-search-label">Search categories</span>
-                        <div class="af-modal-search-wrap">
-                            <i class="fas fa-search"></i>
-                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
+                    <div class="af-drilldown" data-af-drilldown="{{ $filter->id }}">
+                        {{-- Level 0: Parent Categories --}}
+                        <div class="af-drill-level" data-drill-level="0">
+                            <div class="af-modal-search">
+                                <span class="af-modal-search-label">Search categories</span>
+                                <div class="af-modal-search-wrap">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
+                                </div>
+                            </div>
+                            <ul class="af-options-list">
+                                @foreach($filter->options->sortBy('title') as $option)
+                                <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-mcat-{{ $option->id }}">
+                                    <div class="af-option-label af-drill-item" onclick="window._afDrillCategory('{{ $option->slug }}', '{{ addslashes($option->title) }}')">
+                                        @if($option->picture)
+                                        <img src="{{ asset('storage/' . $option->picture) }}" class="af-drill-icon" alt="">
+                                        @else
+                                        <span class="af-drill-icon-placeholder"><i class="fas fa-folder"></i></span>
+                                        @endif
+                                        <span class="af-option-text">{{ $option->title }}</span>
+                                        <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                    </div>
+                                </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        {{-- Level 1: Sub Categories (populated dynamically) --}}
+                        <div class="af-drill-level" data-drill-level="1" style="display:none">
+                            <div class="af-drill-back" onclick="window._afDrillBack()">
+                                <i class="fas fa-arrow-left"></i>
+                                <span class="af-drill-back-title">Back</span>
+                            </div>
+                            <div class="af-modal-search">
+                                <span class="af-modal-search-label">Search sub-categories</span>
+                                <div class="af-modal-search-wrap">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
+                                </div>
+                            </div>
+                            <ul class="af-options-list af-drill-subcats">
+                                @if($subCategories->isNotEmpty())
+                                    @foreach($subCategories->sortBy('title') as $sub)
+                                    <li data-search-text="{{ strtolower($sub->title) }}" wire:key="af-dsub-{{ $sub->id }}">
+                                        <div class="af-option-label af-drill-item" onclick="window._afSelectSubCat('{{ $sub->slug }}')">
+                                            <span class="af-checkbox-mark" style="display:none"></span>
+                                            <span class="af-option-text">{{ $sub->title }}</span>
+                                            <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                        </div>
+                                    </li>
+                                    @endforeach
+                                @endif
+                            </ul>
                         </div>
                     </div>
-                    <ul class="af-options-list">
-                        @foreach($filter->options->sortBy('title') as $option)
-                        <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-mcat-{{ $option->id }}">
-                            <label class="af-option-label">
-                                <input type="checkbox"
-                                       class="af-checkbox-input"
-                                       value="{{ $option->slug }}"
-                                       @if($categorySlug === $option->slug) checked @endif
-                                       wire:click="$set('categorySlug', '{{ $option->slug }}')">
-                                <span class="af-checkbox-mark"></span>
-                                <span class="af-option-text">{{ $option->title }}</span>
-                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                            </label>
-                        </li>
-                        @endforeach
-                    </ul>
 
                 @elseif($filter->type === 'radio')
+                    {{-- Sub-categories also accessible from sidebar separately --}}
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
@@ -349,6 +381,26 @@
                     el.style.display = 'flex';
                     var searchInput = el.querySelector('.af-modal-search-input');
                     if (searchInput) { searchInput.value = ''; window._afFilter(searchInput); }
+                    // Reset drill-down to level 0 if category modal and no category selected
+                    var drilldown = el.querySelector('[data-af-drilldown]');
+                    if (drilldown) {
+                        var level0 = drilldown.querySelector('[data-drill-level="0"]');
+                        var level1 = drilldown.querySelector('[data-drill-level="1"]');
+                        // If category already selected, show sub-categories (level 1)
+                        if (@this.get('categorySlug') && level1 && level1.querySelector('.af-drill-subcats li')) {
+                            if (level0) level0.style.display = 'none';
+                            level1.style.display = '';
+                        } else {
+                            if (level0) level0.style.display = '';
+                            if (level1) level1.style.display = 'none';
+                        }
+                        // Reset modal title
+                        var modal = el.querySelector('.af-modal');
+                        if (modal) {
+                            var modalTitle = modal.querySelector('.af-modal-title');
+                            if (modalTitle) modalTitle.textContent = 'Categories';
+                        }
+                    }
                 } else {
                     el.style.display = 'none';
                 }
@@ -368,6 +420,52 @@
                 li.style.display = li.getAttribute('data-search-text').includes(query) ? '' : 'none';
             });
         };
+        // Category drill-down functions
+        window._afDrillCategory = function(slug, title) {
+            // Set category via Livewire
+            @this.set('categorySlug', slug);
+            // Show level 1 (sub-categories), hide level 0
+            var drilldown = document.querySelector('[data-af-drilldown]');
+            if (!drilldown) return;
+            var level0 = drilldown.querySelector('[data-drill-level="0"]');
+            var level1 = drilldown.querySelector('[data-drill-level="1"]');
+            if (level0) level0.style.display = 'none';
+            if (level1) {
+                level1.style.display = '';
+                var backTitle = level1.querySelector('.af-drill-back-title');
+                if (backTitle) backTitle.textContent = title;
+                // Update modal title
+                var modal = drilldown.closest('.af-modal');
+                if (modal) {
+                    var modalTitle = modal.querySelector('.af-modal-title');
+                    if (modalTitle) modalTitle.textContent = title;
+                }
+                // Clear search
+                var searchInput = level1.querySelector('.af-modal-search-input');
+                if (searchInput) { searchInput.value = ''; window._afFilter(searchInput); }
+            }
+        };
+        window._afDrillBack = function() {
+            var drilldown = document.querySelector('[data-af-drilldown]');
+            if (!drilldown) return;
+            var level0 = drilldown.querySelector('[data-drill-level="0"]');
+            var level1 = drilldown.querySelector('[data-drill-level="1"]');
+            if (level0) level0.style.display = '';
+            if (level1) level1.style.display = 'none';
+            // Reset modal title
+            var modal = drilldown.closest('.af-modal');
+            if (modal) {
+                var modalTitle = modal.querySelector('.af-modal-title');
+                if (modalTitle) modalTitle.textContent = 'Categories';
+            }
+            // Clear category selection
+            @this.set('categorySlug', '');
+        };
+        window._afSelectSubCat = function(slug) {
+            @this.set('selectedSubCategory', slug);
+            window._afClose();
+        };
+
         window._afClearLoc = function() {
             var input = document.getElementById('af-location-input');
             if (input) input.value = '';
@@ -513,6 +611,51 @@
         font-size: 14px;
     }
     .af-loc-clear:hover { color: #ef4444; }
+
+    /* Drill-down navigation */
+    .af-drilldown { width: 100%; }
+    .af-drill-level { animation: af-slide-in 0.2s ease; }
+    @keyframes af-slide-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+    .af-drill-back {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        cursor: pointer;
+        color: var(--primary, #f8991b);
+        font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.15s;
+    }
+    .af-drill-back:hover { background: #fef9f3; }
+    .af-drill-back i { font-size: 13px; }
+    .af-drill-item {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        gap: 12px;
+        transition: background 0.15s;
+    }
+    .af-drill-item:hover { background: #f9fafb; }
+    .af-drill-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        object-fit: cover;
+    }
+    .af-drill-icon-placeholder {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 14px;
+    }
 
     /* Container */
     .af-container {

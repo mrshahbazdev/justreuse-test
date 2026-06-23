@@ -19,12 +19,19 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="af-search-group af-search-loc" wire:ignore>
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" id="af-location-input" placeholder="Location..." class="af-loc-input" value="{{ $locationText }}">
+                    @if($locationText)
+                    <button type="button" class="af-loc-clear" onclick="window._afClearLoc()"><i class="fas fa-times"></i></button>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
     @php
-        $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || !empty($selectedCities) || collect($customFilters)->flatten()->filter()->isNotEmpty();
+        $hasActiveFilters = $categorySlug || $selectedSubCategory || ($minPrice > 0 || $maxPrice < 500000) || $locationText || collect($customFilters)->flatten()->filter()->isNotEmpty();
         $allFiltersList = $this->allFilters->values();
     @endphp
 
@@ -65,11 +72,7 @@
                     } elseif ($filter->id === 'distance' && $distance != 500) {
                         $activeCount = 1;
                         $activeValue = $distance . ' km';
-                    } elseif ($filter->id === 'location' && !empty($selectedCities)) {
-                        $activeCount = count($selectedCities);
-                        $cityNames = $filter->options->whereIn('id', $selectedCities)->pluck('name')->toArray();
-                        $activeValue = implode(', ', array_slice($cityNames, 0, 2)) . (count($cityNames) > 2 ? '…' : '');
-                    } elseif (!in_array($filter->type, ['price', 'distance', 'location', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id])) {
+                    } elseif (!in_array($filter->type, ['price', 'distance', 'radio', 'main_category_radio']) && !empty($customFilters[$filter->id]) && is_array($customFilters[$filter->id])) {
                         $vals = array_filter($customFilters[$filter->id]);
                         $activeCount = count($vals);
                         $activeValue = implode(', ', array_slice($vals, 0, 2)) . (count($vals) > 2 ? '…' : '');
@@ -91,8 +94,6 @@
                                 <button class="af-remove-val" wire:click="clearPriceFilter" title="Remove"><i class="fas fa-times-circle"></i></button>
                             @elseif($filter->id === 'distance')
                                 <button class="af-remove-val" wire:click="$set('distance', 500)" title="Remove"><i class="fas fa-times-circle"></i></button>
-                            @elseif($filter->id === 'location')
-                                <button class="af-remove-val" wire:click="$set('selectedCities', [])" title="Remove"><i class="fas fa-times-circle"></i></button>
                             @else
                                 @foreach(array_filter($customFilters[$filter->id] ?? []) as $cv)
                                     <button class="af-remove-val" wire:click="removeCustomFilter('{{ $filter->id }}', '{{ $cv }}')" title="Remove {{ $cv }}"><i class="fas fa-times-circle"></i></button>
@@ -146,19 +147,11 @@
                         <button wire:click="clearPriceFilter"><i class="fas fa-times"></i></button>
                     </span>
                 @endif
-                @if(!empty($selectedCities))
-                    @php $allCitiesList = $this->allFilters->firstWhere('id', 'location'); @endphp
-                    @if($allCitiesList)
-                        @foreach($selectedCities as $cityId)
-                            @php $cityObj = $allCitiesList->options->firstWhere('id', $cityId); @endphp
-                            @if($cityObj)
-                            <span class="af-chip">
-                                <i class="fas fa-map-marker-alt" style="margin-right:4px"></i>{{ $cityObj->name }}
-                                <button wire:click="removeCity('{{ $cityId }}')"><i class="fas fa-times"></i></button>
-                            </span>
-                            @endif
-                        @endforeach
-                    @endif
+                @if($locationText)
+                    <span class="af-chip">
+                        <i class="fas fa-map-marker-alt" style="margin-right:4px"></i>{{ $locationText }}
+                        <button wire:click="clearLocation"><i class="fas fa-times"></i></button>
+                    </span>
                 @endif
                 @foreach($customFilters as $fieldId => $values)
                     @if(is_array($values))
@@ -251,30 +244,6 @@
                         </div>
                     </div>
 
-                @elseif($filter->type === 'location')
-                    <div class="af-modal-search">
-                        <span class="af-modal-search-label">Search cities</span>
-                        <div class="af-modal-search-wrap">
-                            <i class="fas fa-search"></i>
-                            <input type="text" oninput="window._afFilter(this)" placeholder="Search..." class="af-modal-search-input">
-                        </div>
-                    </div>
-                    <ul class="af-options-list">
-                        @foreach($filter->options as $option)
-                        <li data-search-text="{{ strtolower($option->name) }}" wire:key="af-loc-{{ $option->id }}">
-                            <label class="af-option-label">
-                                <input type="checkbox"
-                                       class="af-checkbox-input"
-                                       wire:model.live="selectedCities"
-                                       value="{{ $option->id }}">
-                                <span class="af-checkbox-mark"></span>
-                                <span class="af-option-text">{{ $option->name }}</span>
-                                <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                            </label>
-                        </li>
-                        @endforeach
-                    </ul>
-
                 @elseif($filter->type === 'main_category_radio')
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search categories</span>
@@ -359,9 +328,7 @@
                     <button class="af-modal-clear" wire:click="clearPriceFilter">Clear</button>
                 @elseif($filter->type === 'distance' && $distance != 500)
                     <button class="af-modal-clear" wire:click="$set('distance', 500)">Clear</button>
-                @elseif($filter->type === 'location' && !empty($selectedCities))
-                    <button class="af-modal-clear" wire:click="$set('selectedCities', [])">Clear</button>
-                @elseif(!in_array($filter->type, ['price', 'distance', 'location', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
+                @elseif(!in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']) && !empty($customFilters[$filter->id]))
                     <button class="af-modal-clear" wire:click="$set('customFilters.{{ $filter->id }}', [])">Clear</button>
                 @else
                     <span></span>
@@ -401,6 +368,37 @@
                 li.style.display = li.getAttribute('data-search-text').includes(query) ? '' : 'none';
             });
         };
+        window._afClearLoc = function() {
+            var input = document.getElementById('af-location-input');
+            if (input) input.value = '';
+            var clearBtn = document.querySelector('.af-loc-clear');
+            if (clearBtn) clearBtn.style.display = 'none';
+            @this.clearLocation();
+        };
+        function _afInitPlaces() {
+            if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
+            var input = document.getElementById('af-location-input');
+            if (!input || input._afInit) return;
+            input._afInit = true;
+            var ac = new google.maps.places.Autocomplete(input, { types: ['(cities)'] });
+            ac.addListener('place_changed', function() {
+                var place = ac.getPlace();
+                if (!place || !place.geometry) return;
+                var lat = place.geometry.location.lat();
+                var lng = place.geometry.location.lng();
+                var text = place.formatted_address || place.name || input.value;
+                @this.setLocation(lat, lng, text);
+                var clearBtn = document.querySelector('.af-loc-clear');
+                if (clearBtn) clearBtn.style.display = 'flex';
+            });
+            input.addEventListener('keydown', function(e) { if (e.key === 'Enter') e.preventDefault(); });
+        }
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            _afInitPlaces();
+        } else {
+            var _origInit = window.initMap;
+            window.initMap = function() { if (typeof _origInit === 'function') _origInit(); _afInitPlaces(); };
+        }
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') window._afClose();
         });
@@ -481,6 +479,7 @@
     }
     .af-search-input::placeholder { color: #9ca3af; }
     .af-search-cat { border-left: 1px solid #e5e7eb; }
+    .af-search-loc { border-left: 1px solid #e5e7eb; position: relative; }
     .af-cat-select {
         border: none;
         outline: none;
@@ -491,6 +490,29 @@
         flex: 1;
         padding-left: 6px;
     }
+    .af-loc-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 15px;
+        color: #1a1a2e;
+        flex: 1;
+        padding-left: 6px;
+        min-width: 0;
+    }
+    .af-loc-input::placeholder { color: #9ca3af; }
+    .af-loc-clear {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 0 4px;
+        font-size: 14px;
+    }
+    .af-loc-clear:hover { color: #ef4444; }
 
     /* Container */
     .af-container {
@@ -1140,6 +1162,7 @@
         .af-topbar { flex-direction: column; gap: 10px; align-items: flex-start; }
         .af-search-form { flex-direction: column; }
         .af-search-cat { border-left: none; border-top: 1px solid #e5e7eb; }
+        .af-search-loc { border-left: none; border-top: 1px solid #e5e7eb; }
         .af-modal-overlay { align-items: flex-end; padding: 0; }
         .af-modal {
             max-width: 100%;

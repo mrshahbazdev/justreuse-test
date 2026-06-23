@@ -310,7 +310,7 @@ class SearchDetail extends Component
         } else {
             $this->selectedSubCategory = $slug;
             $this->subCatDrillParent = null;
-            $this->emit('subCatSelected');
+            $this->dispatchBrowserEvent('af-close-modal');
         }
     }
 

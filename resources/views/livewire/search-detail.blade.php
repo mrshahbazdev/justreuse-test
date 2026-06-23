@@ -451,7 +451,7 @@
             if (e.key === 'Escape') window._afClose();
         });
         // Close modal when sub-category is finally selected
-        Livewire.on('subCatSelected', function() {
+        window.addEventListener('af-close-modal', function() {
             window._afClose();
         });
     })();

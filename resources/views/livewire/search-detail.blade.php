@@ -314,7 +314,7 @@
                         <div class="af-drill-level" data-drill-level="2" @if(!$showFieldsLevel) style="display:none" @endif>
                             <div class="af-drill-back" onclick="window._afDrillBackToSubs()">
                                 <i class="fas fa-arrow-left"></i>
-                                <span class="af-drill-back-title">{{ TblCategory::where('slug', $selectedSubCategory)->value('title') ?? 'Back' }}</span>
+                                <span class="af-drill-back-title">{{ \App\Models\TblCategory::where('slug', $selectedSubCategory)->value('title') ?? 'Back' }}</span>
                             </div>
                             <ul class="af-options-list">
                                 @foreach(collect($customFieldsForView)->filter(fn($f) => in_array($f->type, ['select','autocomplete','checkbox-group','radio-group'])) as $cf)

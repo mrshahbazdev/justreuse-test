@@ -207,7 +207,13 @@
          wire:key="af-modal-{{ $filter->id }}">
         <div class="af-modal" onclick="event.stopPropagation()">
             <div class="af-modal-header">
-                <h3 class="af-modal-title">{{ $filter->name }}</h3>
+                <h3 class="af-modal-title">
+                    @if($filter->type === 'main_category_radio' && $categorySlug && $selectedCategory)
+                        {{ $selectedCategory->title }}
+                    @else
+                        {{ $filter->name }}
+                    @endif
+                </h3>
                 <button class="af-modal-close" onclick="window._afClose()"><i class="fas fa-times"></i></button>
             </div>
             <div class="af-modal-body">
@@ -245,9 +251,10 @@
                     </div>
 
                 @elseif($filter->type === 'main_category_radio')
+                    @php $showSubLevel = $categorySlug && $subCategories->isNotEmpty(); @endphp
                     <div class="af-drilldown" data-af-drilldown="{{ $filter->id }}">
                         {{-- Level 0: Parent Categories --}}
-                        <div class="af-drill-level" data-drill-level="0">
+                        <div class="af-drill-level" data-drill-level="0" @if($showSubLevel) style="display:none" @endif>
                             <div class="af-modal-search">
                                 <span class="af-modal-search-label">Search categories</span>
                                 <div class="af-modal-search-wrap">
@@ -271,11 +278,11 @@
                                 @endforeach
                             </ul>
                         </div>
-                        {{-- Level 1: Sub Categories (populated dynamically) --}}
-                        <div class="af-drill-level" data-drill-level="1" style="display:none">
+                        {{-- Level 1: Sub Categories --}}
+                        <div class="af-drill-level" data-drill-level="1" @if(!$showSubLevel) style="display:none" @endif>
                             <div class="af-drill-back" onclick="window._afDrillBack()">
                                 <i class="fas fa-arrow-left"></i>
-                                <span class="af-drill-back-title">Back</span>
+                                <span class="af-drill-back-title">{{ $selectedCategory->title ?? 'Back' }}</span>
                             </div>
                             <div class="af-modal-search">
                                 <span class="af-modal-search-label">Search sub-categories</span>
@@ -289,7 +296,6 @@
                                     @foreach($subCategories->sortBy('title') as $sub)
                                     <li data-search-text="{{ strtolower($sub->title) }}" wire:key="af-dsub-{{ $sub->id }}">
                                         <div class="af-option-label af-drill-item" onclick="window._afSelectSubCat('{{ $sub->slug }}')">
-                                            <span class="af-checkbox-mark" style="display:none"></span>
                                             <span class="af-option-text">{{ $sub->title }}</span>
                                             <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
                                         </div>
@@ -301,7 +307,12 @@
                     </div>
 
                 @elseif($filter->type === 'radio')
-                    {{-- Sub-categories also accessible from sidebar separately --}}
+                    @if($subCatDrillParent)
+                    <div class="af-drill-back" onclick="@this.call('drillBackSubCat')">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="af-drill-back-title">Back</span>
+                    </div>
+                    @endif
                     <div class="af-modal-search">
                         <span class="af-modal-search-label">Search {{ strtolower($filter->name) }}</span>
                         <div class="af-modal-search-wrap">
@@ -312,16 +323,10 @@
                     <ul class="af-options-list">
                         @foreach($filter->options->sortBy('title') as $option)
                         <li data-search-text="{{ strtolower($option->title) }}" wire:key="af-sub-{{ $option->id }}">
-                            <label class="af-option-label">
-                                <input type="checkbox"
-                                       class="af-checkbox-input"
-                                       value="{{ $option->slug }}"
-                                       @if($selectedSubCategory === $option->slug) checked @endif
-                                       wire:click="$set('selectedSubCategory', '{{ $option->slug }}')">
-                                <span class="af-checkbox-mark"></span>
+                            <div class="af-option-label af-drill-item" onclick="window._afSelectSubCat('{{ $option->slug }}')">
                                 <span class="af-option-text">{{ $option->title }}</span>
                                 <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
-                            </label>
+                            </div>
                         </li>
                         @endforeach
                     </ul>
@@ -381,26 +386,6 @@
                     el.style.display = 'flex';
                     var searchInput = el.querySelector('.af-modal-search-input');
                     if (searchInput) { searchInput.value = ''; window._afFilter(searchInput); }
-                    // Reset drill-down to level 0 if category modal and no category selected
-                    var drilldown = el.querySelector('[data-af-drilldown]');
-                    if (drilldown) {
-                        var level0 = drilldown.querySelector('[data-drill-level="0"]');
-                        var level1 = drilldown.querySelector('[data-drill-level="1"]');
-                        // If category already selected, show sub-categories (level 1)
-                        if (@this.get('categorySlug') && level1 && level1.querySelector('.af-drill-subcats li')) {
-                            if (level0) level0.style.display = 'none';
-                            level1.style.display = '';
-                        } else {
-                            if (level0) level0.style.display = '';
-                            if (level1) level1.style.display = 'none';
-                        }
-                        // Reset modal title
-                        var modal = el.querySelector('.af-modal');
-                        if (modal) {
-                            var modalTitle = modal.querySelector('.af-modal-title');
-                            if (modalTitle) modalTitle.textContent = 'Categories';
-                        }
-                    }
                 } else {
                     el.style.display = 'none';
                 }
@@ -422,48 +407,13 @@
         };
         // Category drill-down functions
         window._afDrillCategory = function(slug, title) {
-            // Set category via Livewire
             @this.set('categorySlug', slug);
-            // Show level 1 (sub-categories), hide level 0
-            var drilldown = document.querySelector('[data-af-drilldown]');
-            if (!drilldown) return;
-            var level0 = drilldown.querySelector('[data-drill-level="0"]');
-            var level1 = drilldown.querySelector('[data-drill-level="1"]');
-            if (level0) level0.style.display = 'none';
-            if (level1) {
-                level1.style.display = '';
-                var backTitle = level1.querySelector('.af-drill-back-title');
-                if (backTitle) backTitle.textContent = title;
-                // Update modal title
-                var modal = drilldown.closest('.af-modal');
-                if (modal) {
-                    var modalTitle = modal.querySelector('.af-modal-title');
-                    if (modalTitle) modalTitle.textContent = title;
-                }
-                // Clear search
-                var searchInput = level1.querySelector('.af-modal-search-input');
-                if (searchInput) { searchInput.value = ''; window._afFilter(searchInput); }
-            }
         };
         window._afDrillBack = function() {
-            var drilldown = document.querySelector('[data-af-drilldown]');
-            if (!drilldown) return;
-            var level0 = drilldown.querySelector('[data-drill-level="0"]');
-            var level1 = drilldown.querySelector('[data-drill-level="1"]');
-            if (level0) level0.style.display = '';
-            if (level1) level1.style.display = 'none';
-            // Reset modal title
-            var modal = drilldown.closest('.af-modal');
-            if (modal) {
-                var modalTitle = modal.querySelector('.af-modal-title');
-                if (modalTitle) modalTitle.textContent = 'Categories';
-            }
-            // Clear category selection
             @this.set('categorySlug', '');
         };
         window._afSelectSubCat = function(slug) {
-            @this.set('selectedSubCategory', slug);
-            window._afClose();
+            @this.call('drillIntoSubCat', slug);
         };
 
         window._afClearLoc = function() {
@@ -499,6 +449,10 @@
         }
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') window._afClose();
+        });
+        // Close modal when sub-category is finally selected
+        Livewire.on('subCatSelected', function() {
+            window._afClose();
         });
     })();
     </script>

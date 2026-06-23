@@ -22,6 +22,7 @@ class SearchDetail extends Component
     public $customFieldsForView = [];
     public $selectedCities = [];
     public $locationText = '';
+    public $subCatDrillParent = null; // tracks sub-cat drill-down parent slug
 
     public $showFilterModal = false;
     public $modalHistory = [];
@@ -251,7 +252,7 @@ class SearchDetail extends Component
 
     public function clearAllFilters()
     {
-        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance', 'selectedCities', 'locationText', 'latitude', 'longitude']);
+        $this->reset(['categorySlug', 'selectedSubCategory', 'minPrice', 'maxPrice', 'customFilters', 'customFieldsForView', 'distance', 'selectedCities', 'locationText', 'latitude', 'longitude', 'subCatDrillParent']);
         $this->selectedCategory = null;
         $this->subCategories = collect();
         $this->minPrice = 0;
@@ -267,7 +268,7 @@ class SearchDetail extends Component
 
     public function updatedCategorySlug($slug)
     {
-        $this->reset('selectedSubCategory', 'customFilters', 'customFieldsForView');
+        $this->reset('selectedSubCategory', 'customFilters', 'customFieldsForView', 'subCatDrillParent');
         
         if ($slug) {
             $this->loadCategoryDetails();
@@ -292,8 +293,36 @@ class SearchDetail extends Component
     public function removeSubCategory()
     {
         $this->selectedSubCategory = null;
+        $this->subCatDrillParent = null;
         $this->reset('customFieldsForView', 'customFilters');
         if ($this->categorySlug) $this->loadCategoryDetails();
+    }
+
+    public function drillIntoSubCat($slug)
+    {
+        $category = TblCategory::where('slug', $slug)->first();
+        if (!$category) return;
+
+        $children = TblCategory::where('parent_id', $category->id)->get();
+        if ($children->isNotEmpty()) {
+            $this->subCatDrillParent = $slug;
+            $this->subCategories = $children;
+        } else {
+            $this->selectedSubCategory = $slug;
+            $this->subCatDrillParent = null;
+            $this->emit('subCatSelected');
+        }
+    }
+
+    public function drillBackSubCat()
+    {
+        $this->subCatDrillParent = null;
+        if ($this->categorySlug) {
+            $category = TblCategory::where('slug', $this->categorySlug)->first();
+            if ($category) {
+                $this->subCategories = TblCategory::where('parent_id', $category->id)->get();
+            }
+        }
     }
     
     public function setLocation($lat, $lng, $text)

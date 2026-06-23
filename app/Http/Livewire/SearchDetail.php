@@ -3,7 +3,6 @@
 namespace App\Http\Livewire;
 
 use App\Models\TblCategory;
-use App\Models\TblCity;
 use App\Models\TblPost;
 use App\Models\User;
 use App\Models\TblFieldsDetail;

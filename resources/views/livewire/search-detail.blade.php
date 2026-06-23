@@ -198,6 +198,9 @@
     </div>
 
     {{-- POPUP MODALS — outside flex container for proper stacking --}}
+    @php
+        $customFieldIds = collect($allFiltersList)->filter(fn($f) => !in_array($f->type ?? '', ['price','distance','main_category_radio','radio']))->pluck('id')->values()->toArray();
+    @endphp
     @foreach($allFiltersList as $idx => $filter)
     <div class="af-modal-overlay"
          data-af-modal="{{ $filter->id }}"
@@ -399,7 +402,15 @@
                 @else
                     <span></span>
                 @endif
-                <button class="af-modal-search-btn" onclick="window._afClose()">Search</button>
+                @php
+                    $currentFieldIdx = array_search($filter->id, $customFieldIds);
+                    $nextFieldId = ($currentFieldIdx !== false && isset($customFieldIds[$currentFieldIdx + 1])) ? $customFieldIds[$currentFieldIdx + 1] : null;
+                @endphp
+                @if($nextFieldId && !in_array($filter->type, ['price', 'distance', 'main_category_radio', 'radio']))
+                    <button class="af-modal-next-btn" onclick="window._afClose(); setTimeout(function(){ window._afOpen('{{ $nextFieldId }}'); }, 100);">Next <i class="fas fa-arrow-right"></i></button>
+                @else
+                    <button class="af-modal-search-btn" onclick="window._afClose()">Done</button>
+                @endif
             </div>
         </div>
     </div>
@@ -959,6 +970,25 @@
         background: var(--primary-dark);
         transform: translateY(-1px);
         box-shadow: 0 3px 10px rgba(248,153,27,0.3);
+    }
+    .af-modal-next-btn {
+        background: var(--secondary, #39763a);
+        color: #fff;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .af-modal-next-btn:hover {
+        background: #2d5f2e;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(57,118,58,0.3);
     }
 
     /* Modal overlay uses display:none/flex toggled by JS */

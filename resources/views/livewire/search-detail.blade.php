@@ -208,7 +208,9 @@
         <div class="af-modal" onclick="event.stopPropagation()">
             <div class="af-modal-header">
                 <h3 class="af-modal-title">
-                    @if($filter->type === 'main_category_radio' && $categorySlug && $selectedCategory)
+                    @if($filter->type === 'main_category_radio' && $selectedSubCategory && collect($customFieldsForView)->isNotEmpty())
+                        {{ \App\Models\TblCategory::where('slug', $selectedSubCategory)->value('title') ?? 'Filters' }}
+                    @elseif($filter->type === 'main_category_radio' && $categorySlug && $selectedCategory)
                         {{ $selectedCategory->title }}
                     @else
                         {{ $filter->name }}
@@ -251,10 +253,14 @@
                     </div>
 
                 @elseif($filter->type === 'main_category_radio')
-                    @php $showSubLevel = $categorySlug && $subCategories->isNotEmpty(); @endphp
+                    @php
+                        $hasCustomFields = $selectedSubCategory && collect($customFieldsForView)->isNotEmpty();
+                        $showSubLevel = $categorySlug && $subCategories->isNotEmpty() && !$hasCustomFields;
+                        $showFieldsLevel = $hasCustomFields;
+                    @endphp
                     <div class="af-drilldown" data-af-drilldown="{{ $filter->id }}">
                         {{-- Level 0: Parent Categories --}}
-                        <div class="af-drill-level" data-drill-level="0" @if($showSubLevel) style="display:none" @endif>
+                        <div class="af-drill-level" data-drill-level="0" @if($showSubLevel || $showFieldsLevel) style="display:none" @endif>
                             <div class="af-modal-search">
                                 <span class="af-modal-search-label">Search categories</span>
                                 <div class="af-modal-search-wrap">
@@ -303,6 +309,29 @@
                                     @endforeach
                                 @endif
                             </ul>
+                        </div>
+                        {{-- Level 2: Custom Fields (Make, Model, etc.) after sub-category selection --}}
+                        <div class="af-drill-level" data-drill-level="2" @if(!$showFieldsLevel) style="display:none" @endif>
+                            <div class="af-drill-back" onclick="window._afDrillBackToSubs()">
+                                <i class="fas fa-arrow-left"></i>
+                                <span class="af-drill-back-title">{{ TblCategory::where('slug', $selectedSubCategory)->value('title') ?? 'Back' }}</span>
+                            </div>
+                            <ul class="af-options-list">
+                                @foreach(collect($customFieldsForView)->filter(fn($f) => in_array($f->type, ['select','autocomplete','checkbox-group','radio-group'])) as $cf)
+                                <li data-search-text="{{ strtolower($cf->name) }}" wire:key="af-cflvl-{{ $cf->id }}">
+                                    <div class="af-option-label af-drill-item" onclick="window._afClose(); setTimeout(function(){ window._afOpen('{{ $cf->id }}'); }, 100);">
+                                        <span class="af-option-text">{{ $cf->name }}</span>
+                                        @if(!empty($customFilters[$cf->id]) && count(array_filter($customFilters[$cf->id])) > 0)
+                                        <span class="af-drill-badge">{{ count(array_filter($customFilters[$cf->id])) }}</span>
+                                        @endif
+                                        <span class="af-option-count"><i class="fas fa-chevron-right"></i></span>
+                                    </div>
+                                </li>
+                                @endforeach
+                            </ul>
+                            <div style="padding: 12px 16px;">
+                                <button class="af-modal-search-btn" onclick="window._afClose()" style="width:100%">Done</button>
+                            </div>
                         </div>
                     </div>
 
@@ -412,6 +441,9 @@
         window._afDrillBack = function() {
             @this.set('categorySlug', '');
         };
+        window._afDrillBackToSubs = function() {
+            @this.call('drillBackFromFields');
+        };
         window._afSelectSubCat = function(slug) {
             @this.call('drillIntoSubCat', slug);
         };
@@ -450,7 +482,7 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') window._afClose();
         });
-        // Close modal when sub-category is finally selected
+        // Close modal on browser event from Livewire
         window.addEventListener('af-close-modal', function() {
             window._afClose();
         });
@@ -609,6 +641,21 @@
         justify-content: center;
         color: #9ca3af;
         font-size: 14px;
+    }
+    .af-drill-badge {
+        background: var(--primary, #f8991b);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+        margin-left: auto;
+        margin-right: 8px;
     }
 
     /* Container */

@@ -308,9 +308,16 @@ class SearchDetail extends Component
             $this->subCatDrillParent = $slug;
             $this->subCategories = $children;
         } else {
+            // Leaf node — select sub-category and load custom fields
             $this->selectedSubCategory = $slug;
             $this->subCatDrillParent = null;
-            $this->dispatchBrowserEvent('af-close-modal');
+            $this->reset('customFieldsForView', 'customFilters');
+            $this->prepareCustomFieldsForView($category->id);
+            // If no filterable custom fields, close modal
+            $filterableFields = collect($this->customFieldsForView)->filter(fn($f) => in_array($f->type, ['select','autocomplete','checkbox-group','radio-group']));
+            if ($filterableFields->isEmpty()) {
+                $this->dispatchBrowserEvent('af-close-modal');
+            }
         }
     }
 
@@ -322,6 +329,15 @@ class SearchDetail extends Component
             if ($category) {
                 $this->subCategories = TblCategory::where('parent_id', $category->id)->get();
             }
+        }
+    }
+
+    public function drillBackFromFields()
+    {
+        $this->selectedSubCategory = null;
+        $this->reset('customFieldsForView', 'customFilters');
+        if ($this->categorySlug) {
+            $this->loadCategoryDetails();
         }
     }
     
